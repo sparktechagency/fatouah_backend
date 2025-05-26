@@ -8,7 +8,7 @@ const createFaqToDB = async (payload: IFaq) => {
   return result;
 };
 
-const faqsFromDB = async () => {
+const getFaqsFromDB = async () => {
   const faqs = await Faq.find();
   return faqs;
 };
@@ -33,7 +33,7 @@ const deleteFaqFromDB = async (id: string) => {
 
 export const FaqServices = {
   createFaqToDB,
-  faqsFromDB,
+  getFaqsFromDB,
   updateFaqToDB,
   deleteFaqFromDB,
 };
