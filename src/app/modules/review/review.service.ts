@@ -27,6 +27,10 @@ const createReviewToDB = async (
 
   const result = await Review.create(payload);
 
+  if (!result) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create review');
+  }
+
   return result;
 };
 
