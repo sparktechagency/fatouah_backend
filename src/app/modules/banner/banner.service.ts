@@ -32,15 +32,17 @@ const updateBannerToDB = async (id: string, payload: Partial<IBanner>) => {
   return result;
 };
 
-const deleteBannerFromDB=async(id:string)=>{
-    const result=await Banner.findByIdAndDelete(id);
-    if(!result){
-        throw new ApiError(StatusCodes.BAD_REQUEST,"Failed to delete banner")
-    }
-}
+const deleteBannerFromDB = async (id: string) => {
+  const result = await Banner.findByIdAndDelete(id);
+  if (!result) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to delete banner');
+  }
+  return result;
+};
 
 export const BannerServices = {
   createBannerToDB,
   getBannersFromDB,
   updateBannerToDB,
+  deleteBannerFromDB,
 };
