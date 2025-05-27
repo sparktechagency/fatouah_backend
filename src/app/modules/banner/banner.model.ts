@@ -22,6 +22,7 @@ const bannerSchema = new Schema<IBanner>(
         values: ['active', 'inActive'],
         message: '{VALUE} is not a valid status',
       },
+      default:"active"
     },
   },
   {
