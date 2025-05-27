@@ -1,3 +1,4 @@
+import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 import { AdminServices } from './admin.service';
@@ -14,7 +15,7 @@ const createAdmin = catchAsync(async (req, res) => {
 });
 
 const getAdmins = catchAsync(async (req, res) => {
-  const result = await AdminServices.getAdminsFromDB();
+  const result = await AdminServices.getAdminFromDB();
   sendResponse(res, {
     success: true,
     statusCode: 200,
@@ -23,37 +24,14 @@ const getAdmins = catchAsync(async (req, res) => {
   });
 });
 
-const updateAdmin = catchAsync(async (req, res) => {
-  const updatedPayload = req.body;
-  const id = req.params.id;
-  const result = await AdminServices.updateAdminToDB(id, updatedPayload);
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Admin is updated successfully',
-    data: result,
-  });
-});
-
-const updateAdminStatus = catchAsync(async (req, res) => {
-  const updatedStatus = req.body;
-  const id = req.params.id;
-  const result = await AdminServices.updateAdminStatusToDB(id, updatedStatus);
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Admin status updated successfully',
-    data: result,
-  });
-});
-
 const deleteAdmin = catchAsync(async (req, res) => {
   const id = req.params.id;
   const result = await AdminServices.deleteAdminFromDB(id);
+
   sendResponse(res, {
-    success: true,
     statusCode: 200,
-    message: 'Admin is deleted successfully',
+    success: true,
+    message: 'Admin Deleted Successfully',
     data: result,
   });
 });
@@ -61,7 +39,5 @@ const deleteAdmin = catchAsync(async (req, res) => {
 export const AdminControllers = {
   createAdmin,
   getAdmins,
-  updateAdmin,
-  updateAdminStatus,
   deleteAdmin,
 };

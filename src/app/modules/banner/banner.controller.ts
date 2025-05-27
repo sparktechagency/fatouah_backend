@@ -10,7 +10,7 @@ const createBanner = catchAsync(async (req, res) => {
         image = `/images/${req.files.image[0].filename}`;
     }
     
-    const data = {
+    const data = { 
         ...bannerData,
         image,
     };

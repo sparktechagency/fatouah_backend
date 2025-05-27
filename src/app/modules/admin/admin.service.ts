@@ -1,65 +1,43 @@
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
 import { User } from '../user/user.model';
-import { IAdmin } from './admin.interface';
+import { IUser } from '../user/user.interface';
 
-const createAdminToDB = async (payload: IAdmin) => {
-  const result = await User.create({
-    ...payload,
-    verified: true,
-    role: 'ADMIN',
-  });
-  if (!result) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create admin');
-  }
-  return result;
+
+const createAdminToDB = async (payload: IUser) => {
+    const createAdmin: any = await User.create(payload);
+    if (!createAdmin) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create Admin');
+    }
+    if (createAdmin) {
+        await User.findByIdAndUpdate(
+        { _id: createAdmin?._id },
+        { verified: true },
+        { new: true }
+        );
+    }
+    return createAdmin;
 };
 
-const getAdminsFromDB = async () => {
-  const result = await User.find({ role: 'ADMIN' });
-  if (result.length === 0) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'No admin found in database');
-  }
-  return result;
+const getAdminFromDB = async (): Promise<IUser[]> => {
+    const admins = await User.find({ role: 'ADMIN' })
+        .select('name email profile contact location');
+    return admins;
 };
 
-const updateAdminToDB = async (id: string, payload: Partial<IAdmin>) => {
-  const result = await User.findByIdAndUpdate({ _id: id }, payload, {
-    new: true,
-  });
-  if (!result) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to update admin');
-  }
-  return result;
+
+const deleteAdminFromDB = async (id: any): Promise<IUser | undefined> => {
+    const isExistAdmin = await User.findByIdAndDelete(id);
+    if (!isExistAdmin) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to delete Admin');
+    }
+    return;
 };
 
-const updateAdminStatusToDB = async (id: string, status: string) => {
-  const result = await User.findByIdAndUpdate(
-    { _id: id },
-    { status },
-    { new: true }
-  );
-  if (!result) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Failed to update admin status'
-    );
-  }
-  return result;
-};
 
-const deleteAdminFromDB = async (id: string) => {
-  const result = await User.findByIdAndDelete(id);
-  if (!result) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to delete admin');
-  }
-  return result;
-};
 
 export const AdminServices = {
   createAdminToDB,
-  getAdminsFromDB,
-  updateAdminToDB,
-  updateAdminStatusToDB,
+  getAdminFromDB,
   deleteAdminFromDB,
 };

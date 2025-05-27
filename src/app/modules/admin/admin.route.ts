@@ -2,26 +2,29 @@ import express from 'express';
 import auth from '../../middlewares/auth';
 import { USER_ROLES } from '../../../enums/user';
 import { AdminControllers } from './admin.controller';
+import validateRequest from '../../middlewares/validateRequest';
+import { AdminValidation } from './admin.validation';
 
 const router = express.Router();
 
-router
-  .route('/')
-  .post(auth(USER_ROLES.SUPER_ADMIN), AdminControllers.createAdmin)
-  .get(
-    auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-    AdminControllers.getAdmins
-  );
 
-router.patch(
-  '/:id/status',
-  auth(USER_ROLES.SUPER_ADMIN),
-  AdminControllers.updateAdminStatus
+router.post(
+    '/create-admin',
+    auth(USER_ROLES.SUPER_ADMIN),
+    validateRequest(AdminValidation.createAdminZodSchema),
+    AdminControllers.createAdmin
 );
 
-router
-  .route('/:id')
-  .patch(auth(USER_ROLES.SUPER_ADMIN), AdminControllers.updateAdmin)
-  .delete(auth(USER_ROLES.SUPER_ADMIN), AdminControllers.deleteAdmin);
+router.get(
+    '/get-admin',
+    auth(USER_ROLES.SUPER_ADMIN),
+    AdminControllers.getAdmins
+);
+
+router.delete(
+    '/:id',
+    auth(USER_ROLES.SUPER_ADMIN),
+    AdminControllers.deleteAdmin
+);
 
 export const AdminRoutes = router;
