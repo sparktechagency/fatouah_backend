@@ -4,7 +4,11 @@ import { User } from '../user/user.model';
 import { IAdmin } from './admin.interface';
 
 const createAdminToDB = async (payload: IAdmin) => {
-  const result = await User.create({ ...payload, verified: true });
+  const result = await User.create({
+    ...payload,
+    verified: true,
+    role: 'ADMIN',
+  });
   if (!result) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create admin');
   }

@@ -4,7 +4,7 @@ import { VEHICLE_TYPE } from './user.constant';
 
 export type IUser = {
   name: string;
-  role: USER_ROLES;
+  role?: USER_ROLES;
   contact: string;
   email: string;
   password: string;

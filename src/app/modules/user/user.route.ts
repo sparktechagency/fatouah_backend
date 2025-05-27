@@ -23,11 +23,25 @@ router
     }
   );
 
+router.patch(
+  '/:id/status',
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  UserController.updateUserStatus
+);
+
 router
   .route('/')
   .post(
     validateRequest(UserValidation.createUserZodSchema),
     UserController.createUser
+  )
+  .get(auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN), UserController.getUsers);
+
+router
+  .route('/:id')
+  .delete(
+    auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+    UserController.deleteUserFromDB
   );
 
 export const UserRoutes = router;

@@ -31,6 +31,29 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getUsers = catchAsync(async (req, res) => {
+  const result = await UserService.getUsersFromDB();
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Users are retrieved successfully',
+    data: result,
+  });
+});
+
+const updateUserStatus = catchAsync(async (req, res) => {
+  const id = req.params.id;
+  const updatedStatus = req.body.status;
+  console.log(updatedStatus);
+  const result = await UserService.updateUserStatusToDB(id, updatedStatus);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'User status updated successfully',
+    data: result,
+  });
+});
+
 //update profile
 const updateProfile = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -52,4 +75,22 @@ const updateProfile = catchAsync(
   }
 );
 
-export const UserController = { createUser, getUserProfile, updateProfile };
+const deleteUserFromDB = catchAsync(async (req, res) => {
+  const id = req.params.id;
+  const result = await UserService.deleteUserFromDB(id);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'User is deleted successfully',
+    data: result,
+  });
+});
+
+export const UserController = {
+  createUser,
+  getUserProfile,
+  getUsers,
+  updateUserStatus,
+  updateProfile,
+  deleteUserFromDB,
+};
