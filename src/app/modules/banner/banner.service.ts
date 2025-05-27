@@ -27,6 +27,9 @@ const updateBannerToDB = async (id: string, payload: Partial<IBanner>) => {
     new: true,
   });
   if (!result) {
+    if (payload.image) {
+      unlinkFile(payload.image);
+    }
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to update banner');
   }
   return result;
@@ -36,12 +39,12 @@ const updateBannerStatusToDB = async (id: string, status: string) => {
   const result = await Banner.findByIdAndUpdate(
     { _id: id },
     { status },
-    { new: true }
+    { new: true },
   );
   if (!result) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'Failed to updated banner status'
+      'Failed to updated banner status',
     );
   }
   return result;

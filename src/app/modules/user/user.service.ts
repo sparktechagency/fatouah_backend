@@ -14,7 +14,7 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
   if (payload.role && forbiddenRoles.includes(payload.role)) {
     throw new ApiError(
       StatusCodes.FORBIDDEN,
-      'You are not allowed to register with this role'
+      'You are not allowed to register with this role',
     );
   }
 
@@ -41,14 +41,14 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
   };
   await User.findOneAndUpdate(
     { _id: createUser._id },
-    { $set: { authentication } }
+    { $set: { authentication } },
   );
 
   return createUser;
 };
 
 const getUserProfileFromDB = async (
-  user: JwtPayload
+  user: JwtPayload,
 ): Promise<Partial<IUser>> => {
   const { id } = user;
   const isExistUser = await User.isExistUserById(id);
@@ -60,12 +60,11 @@ const getUserProfileFromDB = async (
 };
 
 const getUsersFromDB = async (role: string) => {
-  
   const result = await User.find({ role: role });
   if (result.length === 0) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'No user found in the database'
+      'No user found in the database',
     );
   }
   return result;
@@ -75,7 +74,7 @@ const updateUserStatusToDB = async (id: string, status: string) => {
   const result = await User.findByIdAndUpdate(
     { _id: id },
     { status },
-    { new: true }
+    { new: true },
   );
   if (!result) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to update user status');
@@ -85,7 +84,7 @@ const updateUserStatusToDB = async (id: string, status: string) => {
 
 const updateProfileToDB = async (
   user: JwtPayload,
-  payload: Partial<IUser>
+  payload: Partial<IUser>,
 ): Promise<Partial<IUser | null>> => {
   const { id } = user;
   const isExistUser = await User.isExistUserById(id);

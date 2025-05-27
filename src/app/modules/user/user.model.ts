@@ -84,7 +84,7 @@ const userSchema = new Schema<IUser, UserModal>(
       type: String,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 //exist user check
@@ -101,7 +101,7 @@ userSchema.statics.isExistUserByEmail = async (email: string) => {
 //is match password
 userSchema.statics.isMatchPassword = async (
   password: string,
-  hashPassword: string
+  hashPassword: string,
 ): Promise<boolean> => {
   return await bcrypt.compare(password, hashPassword);
 };
@@ -117,7 +117,7 @@ userSchema.pre('save', async function (next) {
   //password hash
   this.password = await bcrypt.hash(
     this.password,
-    Number(config.bcrypt_salt_rounds)
+    Number(config.bcrypt_salt_rounds),
   );
   next();
 });

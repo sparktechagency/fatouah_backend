@@ -12,7 +12,7 @@ router
   .post(
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.USER),
     validateRequest(ReviewValidation.createReviewZodSchema),
-    ReviewControllers.createReview
+    ReviewControllers.createReview,
   );
 
 router.route('/:id').get(ReviewControllers.getRiderReviews);

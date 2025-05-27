@@ -9,7 +9,7 @@ router
   .route('/')
   .post(
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-    FaqControllers.createFaq
+    FaqControllers.createFaq,
   )
   .get(FaqControllers.getFaqs);
 
@@ -17,11 +17,11 @@ router
   .route('/:id')
   .patch(
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-    FaqControllers.updateFaq
+    FaqControllers.updateFaq,
   )
   .delete(
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-    FaqControllers.deleteFaq
+    FaqControllers.deleteFaq,
   );
 
 export const FaqRoutes = router;

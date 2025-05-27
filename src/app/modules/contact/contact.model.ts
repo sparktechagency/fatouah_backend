@@ -22,7 +22,7 @@ const contactSchema = new Schema<IContact>(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 export const Contact = model<IContact>('Contact', contactSchema);

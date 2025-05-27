@@ -12,7 +12,7 @@ const createAdminToDB = async (payload: IUser) => {
     await User.findByIdAndUpdate(
       { _id: createAdmin?._id },
       { verified: true },
-      { new: true }
+      { new: true },
     );
   }
   return createAdmin;
@@ -20,7 +20,7 @@ const createAdminToDB = async (payload: IUser) => {
 
 const getAdminFromDB = async (): Promise<IUser[]> => {
   const admins = await User.find({ role: 'ADMIN' }).select(
-    'name email profile role status contact location'
+    'name email profile role status contact location',
   );
   return admins;
 };
@@ -29,7 +29,7 @@ const updateAdminStatusToDB = async (id: string, status: string) => {
   const result = await User.findByIdAndUpdate(
     { _id: id },
     { status },
-    { new: true }
+    { new: true },
   );
   if (!result) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to update status');
@@ -43,7 +43,7 @@ const deleteAdminFromDB = async (id: any): Promise<IUser | undefined> => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to delete Admin');
   }
   return;
-};   
+};
 
 export const AdminServices = {
   createAdminToDB,

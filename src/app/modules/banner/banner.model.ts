@@ -24,7 +24,7 @@ const bannerSchema = new Schema<IBanner>(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 export const Banner = model<IBanner>('Banner', bannerSchema);

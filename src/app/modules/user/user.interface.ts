@@ -18,11 +18,11 @@ export type IUser = {
     expireAt: Date;
   };
   // rider
-  nid?:string;
-  vehicleType?:VEHICLE_TYPE;
-  vehicleModel?:string;
-  registrationNumber?:string;
-  drivingLicense? :string;
+  nid?: string;
+  vehicleType?: VEHICLE_TYPE;
+  vehicleModel?: string;
+  registrationNumber?: string;
+  drivingLicense?: string;
 };
 
 export type UserModal = {

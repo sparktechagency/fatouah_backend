@@ -11,25 +11,25 @@ router.post(
   '/create-admin',
   auth(USER_ROLES.SUPER_ADMIN),
   validateRequest(AdminValidation.createAdminZodSchema),
-  AdminControllers.createAdmin
+  AdminControllers.createAdmin,
 );
 
 router.get(
   '/get-admin',
   auth(USER_ROLES.SUPER_ADMIN),
-  AdminControllers.getAdmins
+  AdminControllers.getAdmins,
 );
 
 router.patch(
   '/:id/status',
   auth(USER_ROLES.SUPER_ADMIN),
-  AdminControllers.updateAdminStatus
+  AdminControllers.updateAdminStatus,
 );
 
 router.delete(
   '/:id',
   auth(USER_ROLES.SUPER_ADMIN),
-  AdminControllers.deleteAdmin
+  AdminControllers.deleteAdmin,
 );
 
 export const AdminRoutes = router;

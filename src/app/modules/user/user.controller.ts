@@ -16,7 +16,7 @@ const createUser = catchAsync(
       message: 'User created successfully',
       data: result,
     });
-  }
+  },
 );
 
 const getUserProfile = catchAsync(async (req: Request, res: Response) => {
@@ -33,7 +33,7 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
 
 const getUsers = catchAsync(async (req, res) => {
   const role = req.params.role;
- 
+
   const result = await UserService.getUsersFromDB(role);
   sendResponse(res, {
     success: true,
@@ -74,7 +74,7 @@ const updateProfile = catchAsync(
       message: 'Profile updated successfully',
       data: result,
     });
-  }
+  },
 );
 
 const deleteUserFromDB = catchAsync(async (req, res) => {

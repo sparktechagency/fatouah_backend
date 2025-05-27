@@ -88,7 +88,7 @@ const orderSchema = new Schema<IOrder>(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 export const Order = model('Order', orderSchema);

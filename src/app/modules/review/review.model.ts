@@ -27,7 +27,7 @@ const reviewSchema = new Schema<IReview>(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 export const Review = model<IReview>('Review', reviewSchema);

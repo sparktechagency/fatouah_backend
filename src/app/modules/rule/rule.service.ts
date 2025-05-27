@@ -12,7 +12,7 @@ const createPrivacyPolicyToDB = async (payload: IRule) => {
     const result = await Rule.findOneAndUpdate(
       { type: 'privacy' },
       { content: payload?.content },
-      { new: true }
+      { new: true },
     );
 
     return result;
@@ -28,7 +28,7 @@ const getPrivacyPolicyFromDB = async () => {
   if (!result) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'No privacy policy found in database'
+      'No privacy policy found in database',
     );
   }
   return result;
@@ -41,7 +41,7 @@ const createTermsAndConditionToDB = async (payload: IRule) => {
     const result = await Rule.findOneAndUpdate(
       { type: 'terms' },
       { content: payload.content },
-      { new: true }
+      { new: true },
     );
     return result;
   } else {
@@ -56,7 +56,7 @@ const getTermsAndConditionFromDB = async () => {
   if (!result) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'No terms and condition found in database'
+      'No terms and condition found in database',
     );
   }
   return result;
@@ -70,7 +70,7 @@ const createAboutToDB = async (payload: IRule) => {
     const result = await Rule.findOneAndUpdate(
       { type: 'about' },
       { content: payload.content },
-      { new: true }
+      { new: true },
     );
     return result;
   } else {

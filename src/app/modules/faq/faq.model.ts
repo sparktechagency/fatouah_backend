@@ -17,7 +17,7 @@ const faqSchema = new Schema<IFaq>(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 export const Faq = model('Faq', faqSchema);

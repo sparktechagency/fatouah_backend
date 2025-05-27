@@ -37,7 +37,7 @@ const apiRoutes = [
   {
     path: '/admin',
     route: AdminRoutes,
-  }
+  },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));

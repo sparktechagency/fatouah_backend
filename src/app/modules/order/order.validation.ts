@@ -5,13 +5,13 @@ const createOrderZodSchema = z.object({
     pickupLocation: z.object({
       address: z.string({ required_error: 'Pickup address is required' }),
       coordinates: z.array(
-        z.number({ required_error: 'Coordinates is required' })
+        z.number({ required_error: 'Coordinates is required' }),
       ),
     }),
     deliveryLocation: z.object({
       address: z.string({ required_error: 'Delivery address is required' }),
       coordinates: z.array(
-        z.number({ required_error: 'Coordinates is required' })
+        z.number({ required_error: 'Coordinates is required' }),
       ),
     }),
     receiversName: z.string({ required_error: 'Receivers Name is required' }),

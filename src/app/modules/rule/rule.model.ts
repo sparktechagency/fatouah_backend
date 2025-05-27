@@ -15,7 +15,7 @@ const ruleSchema = new Schema<IRule>(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 export const Rule = model('Rule', ruleSchema);

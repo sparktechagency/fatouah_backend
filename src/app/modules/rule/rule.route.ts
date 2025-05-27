@@ -9,7 +9,7 @@ router
   .route('/terms-and-conditions')
   .post(
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-    RuleControllers.createTermsAndCondition
+    RuleControllers.createTermsAndCondition,
   )
   .get(RuleControllers.getTermsAndCondition);
 
@@ -17,7 +17,7 @@ router
   .route('/privacy-policy')
   .post(
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-    RuleControllers.createPrivacyPolicy
+    RuleControllers.createPrivacyPolicy,
   )
   .get(RuleControllers.getPrivacyPolicy);
 
@@ -25,7 +25,7 @@ router
   .route('/about')
   .post(
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-    RuleControllers.createAbout
+    RuleControllers.createAbout,
   )
   .get(RuleControllers.getAbout);
 

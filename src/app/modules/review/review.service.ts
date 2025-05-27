@@ -15,7 +15,7 @@ const createReviewToDB = async (payload: IReview, user: JwtPayload) => {
   if (rating < 1 || rating > 5) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'Rating must be between 1 and 5'
+      'Rating must be between 1 and 5',
     );
   }
 
@@ -36,7 +36,7 @@ const createReviewToDB = async (payload: IReview, user: JwtPayload) => {
   if (existingReview) {
     throw new ApiError(
       StatusCodes.CONFLICT,
-      'You have already reviewed this rider'
+      'You have already reviewed this rider',
     );
   }
 
@@ -56,7 +56,7 @@ export const getRiderReviewsFromDB = async (id: string) => {
           (
             reviews.reduce((sum, review) => sum + review.rating, 0) /
             totalReviews
-          ).toFixed(1)
+          ).toFixed(1),
         );
 
   return {

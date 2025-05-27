@@ -11,14 +11,14 @@ router
   .post(
     fileUploadHandler(),
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-    BannerControllers.createBanner
+    BannerControllers.createBanner,
   )
   .get(BannerControllers.getBanners);
 
 router.patch(
   '/:id/status',
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-  BannerControllers.updateBannerStatus
+  BannerControllers.updateBannerStatus,
 );
 
 router
@@ -26,11 +26,11 @@ router
   .patch(
     fileUploadHandler(),
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-    BannerControllers.updateBanner
+    BannerControllers.updateBanner,
   )
   .delete(
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
-    BannerControllers.deleteBanner
+    BannerControllers.deleteBanner,
   );
 
 export const BannerRoutes = router;
