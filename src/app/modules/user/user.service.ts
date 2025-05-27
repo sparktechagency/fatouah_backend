@@ -15,6 +15,7 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
     throw new ApiError(StatusCodes.FORBIDDEN, 'You are not allowed to register with this role');
   }
 
+
   const createUser = await User.create(payload);
 
   if (!createUser) {

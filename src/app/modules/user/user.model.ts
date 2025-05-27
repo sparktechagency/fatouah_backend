@@ -5,6 +5,7 @@ import config from '../../../config';
 import { USER_ROLES } from '../../../enums/user';
 import ApiError from '../../../errors/ApiError';
 import { IUser, UserModal } from './user.interface';
+import { VEHICLE_TYPE } from './user.constant';
 
 const userSchema = new Schema<IUser, UserModal>(
   {
@@ -66,6 +67,22 @@ const userSchema = new Schema<IUser, UserModal>(
         },
       },
       select: 0,
+    },
+    // rider
+    nid: {
+      type: String,
+    },
+    vehicleType: {
+      type: Object.values(VEHICLE_TYPE),
+    },
+    vehicleModel: {
+      type: String,
+    },
+    registrationNumber: {
+      type: String,
+    },
+    drivingLicense: {
+      type: String,
     },
   },
   { timestamps: true }

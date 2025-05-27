@@ -4,20 +4,19 @@ import { User } from '../user/user.model';
 import { IReview } from './review.interface';
 import { Review } from './review.model';
 import { JwtPayload } from 'jsonwebtoken';
-import mongoose from 'mongoose';
 
-const createReviewToDB = async (
-  payload: IReview,
-  user: JwtPayload
-) => {
+const createReviewToDB = async (payload: IReview, user: JwtPayload) => {
   const { rider, rating } = payload;
 
-  payload.customer=user.id;
-  const customer=user.id
+  payload.customer = user.id;
+  const customer = user.id;
 
   // validate rating
   if (rating < 1 || rating > 5) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Rating must be between 1 and 5');
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Rating must be between 1 and 5'
+    );
   }
 
   // check if customer exists
@@ -35,7 +34,10 @@ const createReviewToDB = async (
   // check if user is already review this rider
   const existingReview = await Review.findOne({ customer, rider });
   if (existingReview) {
-    throw new ApiError(StatusCodes.CONFLICT, 'You have already reviewed this rider');
+    throw new ApiError(
+      StatusCodes.CONFLICT,
+      'You have already reviewed this rider'
+    );
   }
 
   const result = await Review.create(payload);
@@ -43,15 +45,19 @@ const createReviewToDB = async (
   return result;
 };
 
-
-export const getRiderReviews = async (id: string) => {
+export const getRiderReviewsFromDB = async (id: string) => {
   const reviews = await Review.find({ rider: id }).populate('customer', 'name');
 
   const totalReviews = reviews.length;
-  const averageRating = totalReviews === 0 ? 0 :
-    parseFloat(
-      (reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews).toFixed(1)
-    );
+  const averageRating =
+    totalReviews === 0
+      ? 0
+      : parseFloat(
+          (
+            reviews.reduce((sum, review) => sum + review.rating, 0) /
+            totalReviews
+          ).toFixed(1)
+        );
 
   return {
     totalReviews,
@@ -60,7 +66,7 @@ export const getRiderReviews = async (id: string) => {
   };
 };
 
-
 export const ReviewServices = {
   createReviewToDB,
+  getRiderReviewsFromDB,
 };

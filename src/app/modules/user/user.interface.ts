@@ -1,5 +1,6 @@
 import { Model } from 'mongoose';
 import { USER_ROLES } from '../../../enums/user';
+import { VEHICLE_TYPE } from './user.constant';
 
 export type IUser = {
   name: string;
@@ -16,6 +17,12 @@ export type IUser = {
     oneTimeCode: number;
     expireAt: Date;
   };
+  // rider
+  nid?:string;
+  vehicleType?:VEHICLE_TYPE;
+  vehicleModel?:string;
+  registrationNumber?:string;
+  drivingLicense? :string;
 };
 
 export type UserModal = {

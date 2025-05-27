@@ -7,6 +7,14 @@ import { ReviewValidation } from './review.validation';
 
 const router = express.Router();
 
-router.route("/").post(auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN,USER_ROLES.USER),validateRequest(ReviewValidation.createReviewZodSchema),ReviewControllers.createReview)
+router
+  .route('/')
+  .post(
+    auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.USER),
+    validateRequest(ReviewValidation.createReviewZodSchema),
+    ReviewControllers.createReview
+  );
+
+router.route('/:id').get(ReviewControllers.getRiderReviews);
 
 export const ReviewRoutes = router;
