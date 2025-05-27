@@ -10,9 +10,13 @@ import { IUser } from './user.interface';
 import { User } from './user.model';
 
 const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
-  //set role
-  // payload.role = USER_ROLES.USER;
+  const forbiddenRoles = ['ADMIN', 'SUPER_ADMIN'];
+  if (payload.role && forbiddenRoles.includes(payload.role)) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You are not allowed to register with this role');
+  }
+
   const createUser = await User.create(payload);
+
   if (!createUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user');
   }
