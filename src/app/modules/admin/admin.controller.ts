@@ -24,6 +24,8 @@ const getAdmins = catchAsync(async (req, res) => {
   });
 });
 
+
+
 const deleteAdmin = catchAsync(async (req, res) => {
   const id = req.params.id;
   const result = await AdminServices.deleteAdminFromDB(id);

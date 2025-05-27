@@ -23,7 +23,7 @@ const createBanner = catchAsync(async (req, res) => {
         message: "Banner is created successfully",
         data: result,
     });
-});
+}); 
 
 
 
