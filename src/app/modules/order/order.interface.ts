@@ -4,18 +4,18 @@ import { Parcel_Types, RIDES } from '../../../enums/order';
 export type IOrder = {
   pickupLocation: {
     address: string;
-    coordinates: [Number];
+    coordinates: [number, number];
   };
   deliveryLocation: {
     address: string;
-    coordinates: [Number];
+    coordinates: [number, number];
   };
-  receiversName: string; 
+  receiversName: string;
   contact: string;
   additionalInformation?: string;
   parcelType: Parcel_Types;
-  parcelValue: Number;
-  parcelWeight: number; 
+  parcelValue: number;
+  parcelWeight: number;
   ride: RIDES;
   distance: number;
   deliveryCharge: number;

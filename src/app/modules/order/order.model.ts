@@ -11,7 +11,7 @@ const orderSchema = new Schema<IOrder>(
         trim: true,
       },
       coordinates: {
-        type: [Number],
+        type: [Number, Number],
         required: true,
       },
     },
@@ -22,7 +22,7 @@ const orderSchema = new Schema<IOrder>(
         trim: true,
       },
       coordinates: {
-        type: [Number],
+        type: [Number, Number],
         required: true,
       },
     },

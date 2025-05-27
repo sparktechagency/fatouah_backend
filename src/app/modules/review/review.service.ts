@@ -4,35 +4,70 @@ import { User } from '../user/user.model';
 import { IReview } from './review.interface';
 import { Review } from './review.model';
 import { JwtPayload } from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 const createReviewToDB = async (
-  payload: IReview,
+  payload: Omit<IReview, 'customer'>,
   user: JwtPayload
-): Promise<IReview> => {
-  // check if the user is exists
-  const rider: any = await User.findById(payload.rider);
-  if (!rider) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found in the database');
+) => {
+  const { rider, rating } = payload;
+
+  const customer = user.id;
+
+  if (!customer) {
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
   }
 
-  payload.customer = user.id;
+  // validate IDs
+  if (!mongoose.Types.ObjectId.isValid(String(customer)) || !mongoose.Types.ObjectId.isValid(String(rider))) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid customer or rider ID');
+  }
 
-  if (payload.rating) {
-    // check the rating is valid;
-    const rating = Number(payload.rating);
-    if (rating < 1 || rating > 5) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, 'Rating is invalid');
-    }
+  // validate rating
+  if (rating < 1 || rating > 5) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Rating must be between 1 and 5');
+  }
+
+  // check if customer exists
+  const isCustomerExist = await User.findById(customer);
+  if (!isCustomerExist) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Customer not found in database');
+  }
+
+  // check if rider exists
+  const isRiderExist = await User.findById(rider);
+  if (!isRiderExist) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Rider not found in database');
+  }
+
+  // check if user is already review this rider
+  const existingReview = await Review.findOne({ customer, rider });
+  if (existingReview) {
+    throw new ApiError(StatusCodes.CONFLICT, 'You have already reviewed this rider');
   }
 
   const result = await Review.create(payload);
 
-  if (!result) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create review');
-  }
-
   return result;
 };
+
+
+export const getRiderReviews = async (id: string) => {
+  const reviews = await Review.find({ rider: id }).populate('customer', 'name');
+
+  const totalReviews = reviews.length;
+  const averageRating = totalReviews === 0 ? 0 :
+    parseFloat(
+      (reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews).toFixed(1)
+    );
+
+  return {
+    totalReviews,
+    averageRating,
+    reviews,
+  };
+};
+
 
 export const ReviewServices = {
   createReviewToDB,
