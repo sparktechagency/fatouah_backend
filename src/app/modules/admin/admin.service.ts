@@ -2,7 +2,6 @@ import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
 import { User } from '../user/user.model';
 import { IUser } from '../user/user.interface';
-import { USER_ROLES } from '../../../enums/user';
 
 const createAdminToDB = async (payload: IUser) => {
   const createAdmin: any = await User.create(payload);
@@ -21,7 +20,7 @@ const createAdminToDB = async (payload: IUser) => {
 
 const getAdminFromDB = async (): Promise<IUser[]> => {
   const admins = await User.find({ role: 'ADMIN' }).select(
-    'name email profile contact location'
+    'name email profile role status contact location'
   );
   return admins;
 };
@@ -44,7 +43,7 @@ const deleteAdminFromDB = async (id: any): Promise<IUser | undefined> => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to delete Admin');
   }
   return;
-};
+};   
 
 export const AdminServices = {
   createAdminToDB,
