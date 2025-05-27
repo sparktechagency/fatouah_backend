@@ -15,9 +15,16 @@ router
   )
   .get(BannerControllers.getBanners);
 
+router.patch(
+  '/:id/status',
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  BannerControllers.updateBannerStatus
+);
+
 router
   .route('/:id')
   .patch(
+    fileUploadHandler(),
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
     BannerControllers.updateBanner
   )

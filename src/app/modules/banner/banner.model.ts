@@ -17,12 +17,8 @@ const bannerSchema = new Schema<IBanner>(
       type: String,
     },
     status: {
-      type: String,
-      enum: {
-        values: ['active', 'inActive'],
-        message: '{VALUE} is not a valid status',
-      },
-      default:"active"
+      type: Boolean,
+      default: true,
     },
   },
   {
