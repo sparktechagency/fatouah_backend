@@ -3,15 +3,29 @@ import sendResponse from '../../../shared/sendResponse';
 import { BannerServices } from './banner.service';
 
 const createBanner = catchAsync(async (req, res) => {
-  const bannerData = req.body;
-  const result = await BannerServices.createBannerToDB(bannerData);
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Banner is created successfully',
-    data: result,
-  });
+
+    const bannerData = req.body;
+    let image = "";
+    if (req.files && "image" in req.files && req.files.image[0]) {
+        image = `/images/${req.files.image[0].filename}`;
+    }
+    
+    const data = {
+        ...bannerData,
+        image,
+    };
+  
+    const result = await BannerServices.createBannerToDB(data);
+  
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Banner is created successfully",
+        data: result,
+    });
 });
+
+
 
 const getBanners = catchAsync(async (req, res) => {
   const result = await BannerServices.getBannersFromDB();

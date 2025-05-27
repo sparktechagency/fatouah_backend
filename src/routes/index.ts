@@ -6,6 +6,7 @@ import { RuleRoutes } from '../app/modules/rule/rule.route';
 import { FaqRoutes } from '../app/modules/faq/faq.route';
 import { BannerRoutes } from '../app/modules/banner/banner.route';
 import { AdminRoutes } from '../app/modules/admin/admin.route';
+
 const router = express.Router();
 
 const apiRoutes = [
@@ -36,7 +37,7 @@ const apiRoutes = [
   {
     path: '/admin',
     route: AdminRoutes,
-  },
+  }
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));
