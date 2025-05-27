@@ -24,7 +24,17 @@ const getAdmins = catchAsync(async (req, res) => {
   });
 });
 
-
+const updateAdminStatus = catchAsync(async (req, res) => {
+  const id = req.params.id;
+  const statusData = req.body.status;
+  const result = await AdminServices.updateAdminStatusToDB(id, statusData);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Admin status updated successfully',
+    data: result,
+  });
+});
 
 const deleteAdmin = catchAsync(async (req, res) => {
   const id = req.params.id;
@@ -41,5 +51,6 @@ const deleteAdmin = catchAsync(async (req, res) => {
 export const AdminControllers = {
   createAdmin,
   getAdmins,
+  updateAdminStatus,
   deleteAdmin,
 };
