@@ -35,7 +35,8 @@ router
     validateRequest(UserValidation.createUserZodSchema),
     UserController.createUser
   )
-  .get(auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN), UserController.getUsers);
+
+router.get("/:role",auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN), UserController.getUsers)
 
 router
   .route('/:id')

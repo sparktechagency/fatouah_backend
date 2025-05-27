@@ -59,8 +59,9 @@ const getUserProfileFromDB = async (
   return isExistUser;
 };
 
-const getUsersFromDB = async () => {
-  const result = await User.find({ role: 'USER' });
+const getUsersFromDB = async (role: string) => {
+  
+  const result = await User.find({ role: role });
   if (result.length === 0) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
