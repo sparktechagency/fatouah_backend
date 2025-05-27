@@ -7,21 +7,13 @@ import { JwtPayload } from 'jsonwebtoken';
 import mongoose from 'mongoose';
 
 const createReviewToDB = async (
-  payload: Omit<IReview, 'customer'>,
+  payload: IReview,
   user: JwtPayload
 ) => {
   const { rider, rating } = payload;
 
-  const customer = user.id;
-
-  if (!customer) {
-    throw new ApiError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
-  }
-
-  // validate IDs
-  if (!mongoose.Types.ObjectId.isValid(String(customer)) || !mongoose.Types.ObjectId.isValid(String(rider))) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid customer or rider ID');
-  }
+  payload.customer=user.id;
+  const customer=user.id
 
   // validate rating
   if (rating < 1 || rating > 5) {
