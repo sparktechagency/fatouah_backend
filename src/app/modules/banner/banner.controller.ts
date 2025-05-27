@@ -35,6 +35,18 @@ const updateBanner = catchAsync(async (req, res) => {
   });
 });
 
+const updateBannerStatus = catchAsync(async (req, res) => {
+  const id = req.params.id;
+  const statusData = req.body;
+  const result = await BannerServices.updateBannerStatusToDB(id, statusData);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Banner status updated successfully',
+    data: result,
+  });
+});
+
 const deleteBanner = catchAsync(async (req, res) => {
   const id = req.params.id;
   const result = await BannerServices.deleteBannerFromDB(id);
@@ -50,5 +62,6 @@ export const BannerControllers = {
   createBanner,
   getBanners,
   updateBanner,
+  updateBannerStatus,
   deleteBanner,
 };
