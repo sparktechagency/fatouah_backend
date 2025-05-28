@@ -1,12 +1,9 @@
 import admin from 'firebase-admin';
-import path from 'path';
+import serviceAccount from "../../../../serviceAccountKey.json"
 
-const serviceAccount = require(
-  path.join(__dirname, 'serviceAccountKey.json'),
-);
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
 });
 
 export const sendToTopic = async (topic: any, message: any) => {
@@ -27,5 +24,3 @@ export const sendToTopic = async (topic: any, message: any) => {
     throw error;
   }
 };
-
-
