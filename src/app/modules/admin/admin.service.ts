@@ -2,11 +2,11 @@ import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
 import { User } from '../user/user.model';
 import { IUser } from '../user/user.interface';
-import bcrypt from "bcrypt"
+import bcrypt from 'bcrypt';
 import config from '../../../config';
 
 const createAdminToDB = async (payload: IUser) => {
-  const createAdmin: any = await User.create({ ...payload, role: "ADMIN" });
+  const createAdmin: any = await User.create({ ...payload, role: 'ADMIN' });
   if (!createAdmin) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create Admin');
   }
@@ -31,9 +31,9 @@ const updateAdminToDB = async (id: string, payload: Partial<IUser>) => {
   const { name, email, password } = payload;
 
   // check if admin is exist
-  const isExist = await User.findById(id)
+  const isExist = await User.findById(id);
   if (!isExist) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Admin not found")
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Admin not found');
   }
 
   const updatePayload: Partial<IUser> = {};
@@ -43,26 +43,27 @@ const updateAdminToDB = async (id: string, payload: Partial<IUser>) => {
   if (email) {
     const isEmailTaken = await User.findOne({
       email,
-      _id: { $ne: id }
-    })
+      _id: { $ne: id },
+    });
 
     if (isEmailTaken) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Email is already in use")
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Email is already in use');
     }
     updatePayload.email = email;
-
   }
 
   if (password) {
-    const hashedPassword = await bcrypt.hash(password, Number(config.bcrypt_salt_rounds))
-    updatePayload.password = hashedPassword
+    const hashedPassword = await bcrypt.hash(
+      password,
+      Number(config.bcrypt_salt_rounds),
+    );
+    updatePayload.password = hashedPassword;
   }
 
-  const result = await User.findByIdAndUpdate(id, updatePayload, { new: true })
+  const result = await User.findByIdAndUpdate(id, updatePayload, { new: true });
 
   return result;
-
-}
+};
 
 const updateAdminStatusToDB = async (id: string, status: string) => {
   const result = await User.findByIdAndUpdate(

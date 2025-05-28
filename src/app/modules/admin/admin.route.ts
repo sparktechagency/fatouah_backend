@@ -20,7 +20,11 @@ router.get(
   AdminControllers.getAdmins,
 );
 
-router.patch("/update-admin/:id", auth(USER_ROLES.SUPER_ADMIN), AdminControllers.updateAdmin)
+router.patch(
+  '/update-admin/:id',
+  auth(USER_ROLES.SUPER_ADMIN),
+  AdminControllers.updateAdmin,
+);
 
 router.patch(
   '/:id/status',

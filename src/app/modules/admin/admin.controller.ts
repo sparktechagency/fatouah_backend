@@ -32,10 +32,10 @@ const updateAdmin = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Admin is updated successfully",
+    message: 'Admin is updated successfully',
     data: result,
-  })
-})
+  });
+});
 
 const updateAdminStatus = catchAsync(async (req, res) => {
   const id = req.params.id;

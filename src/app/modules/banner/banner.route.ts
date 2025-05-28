@@ -25,7 +25,11 @@ router.patch(
 );
 
 // get all banners regardless of status
-router.get("/admin", auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN), BannerControllers.getAllBanners)
+router.get(
+  '/admin',
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  BannerControllers.getAllBanners,
+);
 
 router
   .route('/:id')

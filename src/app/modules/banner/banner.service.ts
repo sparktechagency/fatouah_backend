@@ -30,7 +30,6 @@ const getAllBannersFromDB = async () => {
   return result;
 };
 
-
 const updateBannerToDB = async (id: string, payload: Partial<IBanner>) => {
   const result = await Banner.findByIdAndUpdate({ _id: id }, payload, {
     new: true,
