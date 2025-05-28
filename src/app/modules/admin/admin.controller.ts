@@ -24,9 +24,20 @@ const getAdmins = catchAsync(async (req, res) => {
   });
 });
 
+const getAllAdmins = catchAsync(async (req, res) => {
+  const result = await AdminServices.getAllAdminsFromDB();
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'All admins are retrieved successfully',
+    data: result,
+  });
+});
+
 const updateAdmin = catchAsync(async (req, res) => {
   const id = req.params.id;
   const updatedPayload = req.body;
+
   const result = await AdminServices.updateAdminToDB(id, updatedPayload);
 
   sendResponse(res, {
@@ -64,6 +75,7 @@ const deleteAdmin = catchAsync(async (req, res) => {
 export const AdminControllers = {
   createAdmin,
   getAdmins,
+  getAllAdmins,
   updateAdmin,
   updateAdminStatus,
   deleteAdmin,

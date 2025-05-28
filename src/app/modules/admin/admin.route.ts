@@ -15,10 +15,18 @@ router.post(
 );
 
 router.get(
+  '/get-all-admin',
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  AdminControllers.getAllAdmins,
+);
+
+router.get(
   '/get-admin',
   auth(USER_ROLES.SUPER_ADMIN),
   AdminControllers.getAdmins,
 );
+
+
 
 router.patch(
   '/update-admin/:id',

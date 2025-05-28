@@ -20,15 +20,24 @@ const createAdminToDB = async (payload: IUser) => {
   return createAdmin;
 };
 
-const getAdminFromDB = async (): Promise<IUser[]> => {
-  const admins = await User.find({ role: 'ADMIN' }).select(
+const getAdminFromDB = async () => {
+  const result = await User.find({ role: 'ADMIN',status:"active" }).select(
     'name email profile role status contact location',
   );
-  return admins;
+  return result;
 };
+
+const getAllAdminsFromDB=async()=>{
+  const result=await User.find({role:"ADMIN"}).select("name email profile role status contact location")
+  if(!result||result.length===0){
+    throw new ApiError(StatusCodes.BAD_REQUEST,"No admins are found in database")
+  };
+  return result;
+}
 
 const updateAdminToDB = async (id: string, payload: Partial<IUser>) => {
   const { name, email, password } = payload;
+
 
   // check if admin is exist
   const isExist = await User.findById(id);
@@ -75,7 +84,7 @@ const updateAdminStatusToDB = async (id: string, status: string) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to update status');
   }
   return result;
-};  
+};
 
 const deleteAdminFromDB = async (id: any): Promise<IUser | undefined> => {
   const isExistAdmin = await User.findByIdAndDelete(id);
@@ -88,6 +97,7 @@ const deleteAdminFromDB = async (id: any): Promise<IUser | undefined> => {
 export const AdminServices = {
   createAdminToDB,
   getAdminFromDB,
+  getAllAdminsFromDB,
   updateAdminToDB,
   updateAdminStatusToDB,
   deleteAdminFromDB,
