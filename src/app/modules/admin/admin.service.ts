@@ -21,23 +21,27 @@ const createAdminToDB = async (payload: IUser) => {
 };
 
 const getAdminFromDB = async () => {
-  const result = await User.find({ role: 'ADMIN',status:"active" }).select(
+  const result = await User.find({ role: 'ADMIN', status: 'active' }).select(
     'name email profile role status contact location',
   );
   return result;
 };
 
-const getAllAdminsFromDB=async()=>{
-  const result=await User.find({role:"ADMIN"}).select("name email profile role status contact location")
-  if(!result||result.length===0){
-    throw new ApiError(StatusCodes.BAD_REQUEST,"No admins are found in database")
-  };
+const getAllAdminsFromDB = async () => {
+  const result = await User.find({ role: 'ADMIN' }).select(
+    'name email profile role status contact location',
+  );
+  if (!result || result.length === 0) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'No admins are found in database',
+    );
+  }
   return result;
-}
+};
 
 const updateAdminToDB = async (id: string, payload: Partial<IUser>) => {
   const { name, email, password } = payload;
-
 
   // check if admin is exist
   const isExist = await User.findById(id);

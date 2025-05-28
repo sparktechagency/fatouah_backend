@@ -48,8 +48,8 @@ const deleteFaq = catchAsync(async (req, res) => {
 });
 
 const deleteMultipleFaqs = catchAsync(async (req, res) => {
-  const {ids} = req.body;
- 
+  const { ids } = req.body;
+
   const result = await FaqServices.deleteMultipleFaqsFromDB(ids);
   sendResponse(res, {
     success: true,

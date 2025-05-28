@@ -77,7 +77,7 @@ const orderSchema = new Schema<IOrder>(
     status: {
       type: String,
       enum: ['PENDING', 'ASSIGNED', 'ARRIVED', 'STARTED', 'DELIVERED'],
-      default: "PENDING"
+      default: 'PENDING',
     },
     assignedAt: {
       type: String,

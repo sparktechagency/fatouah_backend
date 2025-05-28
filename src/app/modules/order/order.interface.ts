@@ -1,7 +1,6 @@
 import { Schema } from 'mongoose';
 import { Parcel_Types, RIDES } from '../../../enums/order';
 
-
 export type IOrder = {
   pickupLocation: {
     address: string;

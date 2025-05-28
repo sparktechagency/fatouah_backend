@@ -13,7 +13,6 @@ const createContact = catchAsync(async (req, res) => {
   });
 });
 
-
-export const ContactControllers={
-    createContact,
-}
+export const ContactControllers = {
+  createContact,
+};

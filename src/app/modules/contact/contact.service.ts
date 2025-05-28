@@ -7,16 +7,16 @@ const createContactToDB = async (payload: IContact) => {
   if (existingContact) {
     const updatedData = { ...existingContact.toObject(), ...payload };
 
-    const result = await Contact.findByIdAndUpdate(existingContact._id,
+    const result = await Contact.findByIdAndUpdate(
+      existingContact._id,
       updatedData,
-      { new: true }
-    )
+      { new: true },
+    );
     return result;
   } else {
     const result = await Contact.create(payload);
     return result;
   }
-
 };
 
 export const ContactServices = {

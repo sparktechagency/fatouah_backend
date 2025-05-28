@@ -10,7 +10,6 @@ import { IUser } from './user.interface';
 import { User } from './user.model';
 
 const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
-
   const forbiddenRoles = ['ADMIN', 'SUPER_ADMIN'];
 
   if (payload.role && forbiddenRoles.includes(payload.role)) {
@@ -22,10 +21,19 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
 
   // validate for rider role extra fields
   if (payload.role === 'RIDER') {
-    const requiredRiderFields = ['nid', 'vehicleType', 'vehicleModel', 'registrationNumber', 'drivingLicense'];
+    const requiredRiderFields = [
+      'nid',
+      'vehicleType',
+      'vehicleModel',
+      'registrationNumber',
+      'drivingLicense',
+    ];
     for (const field of requiredRiderFields) {
       if (!payload[field as keyof IUser]) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, `${field} is required for rider role`);
+        throw new ApiError(
+          StatusCodes.BAD_REQUEST,
+          `${field} is required for rider role`,
+        );
       }
     }
   } else {
@@ -45,7 +53,7 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
 
   // filter out rider only fields from response if not rider
   let userData = createUser.toObject();
-  if (payload.role !== "RIDER") {
+  if (payload.role !== 'RIDER') {
     delete userData.nid;
     delete userData.vehicleType;
     delete userData.vehicleModel;

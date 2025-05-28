@@ -32,25 +32,24 @@ const deleteFaqFromDB = async (id: string) => {
 };
 
 const deleteMultipleFaqsFromDB = async (ids: string[]) => {
-  console.log(ids)
+  console.log(ids);
   if (!ids || !Array.isArray(ids) || ids.length === 0) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "No IDs provided for deletion")
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'No IDs provided for deletion');
   }
 
   const result = await Faq.deleteMany({ _id: { $in: ids } });
 
   if (!result) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "Failed to delete FAQs")
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to delete FAQs');
   }
 
   return result;
-
-}
+};
 
 export const FaqServices = {
   createFaqToDB,
   getFaqsFromDB,
   updateFaqToDB,
   deleteFaqFromDB,
-  deleteMultipleFaqsFromDB
+  deleteMultipleFaqsFromDB,
 };
