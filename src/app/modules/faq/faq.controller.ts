@@ -47,9 +47,21 @@ const deleteFaq = catchAsync(async (req, res) => {
   });
 });
 
+const deleteMultipleFaqs = catchAsync(async (req, res) => {
+  const ids = req.body;
+  const result = await FaqServices.deleteMultipleFaqsFromDB(ids);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Faqs are deleted successfully',
+    data: result,
+  });
+});
+
 export const FaqControllers = {
   createFaq,
   getFaqs,
   updateFaq,
   deleteFaq,
+  deleteMultipleFaqs,
 };

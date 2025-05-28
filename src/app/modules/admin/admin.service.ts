@@ -75,7 +75,7 @@ const updateAdminStatusToDB = async (id: string, status: string) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to update status');
   }
   return result;
-};
+};  
 
 const deleteAdminFromDB = async (id: any): Promise<IUser | undefined> => {
   const isExistAdmin = await User.findByIdAndDelete(id);
