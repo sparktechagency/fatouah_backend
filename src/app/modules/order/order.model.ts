@@ -11,8 +11,9 @@ const orderSchema = new Schema<IOrder>(
         trim: true,
       },
       coordinates: {
-        type: [Number, Number],
+        type: [Number],
         required: true,
+        index: '2dsphere',
       },
     },
     deliveryLocation: {
@@ -22,8 +23,9 @@ const orderSchema = new Schema<IOrder>(
         trim: true,
       },
       coordinates: {
-        type: [Number, Number],
+        type: [Number],
         required: true,
+        index: '2dsphere',
       },
     },
     receiversName: {
@@ -71,6 +73,11 @@ const orderSchema = new Schema<IOrder>(
     },
     transactionId: {
       type: String,
+    },
+    status: {
+      type: String,
+      enum: ['PENDING', 'ASSIGNED', 'ARRIVED', 'STARTED', 'DELIVERED'],
+      default: "PENDING"
     },
     assignedAt: {
       type: String,

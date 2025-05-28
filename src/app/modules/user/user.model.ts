@@ -72,7 +72,8 @@ const userSchema = new Schema<IUser, UserModal>(
       type: String,
     },
     vehicleType: {
-      type: Object.values(VEHICLE_TYPE),
+      type: String,
+      enum: Object.values(VEHICLE_TYPE),
     },
     vehicleModel: {
       type: String,

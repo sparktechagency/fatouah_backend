@@ -1,6 +1,7 @@
 import { Schema } from 'mongoose';
 import { Parcel_Types, RIDES } from '../../../enums/order';
 
+
 export type IOrder = {
   pickupLocation: {
     address: string;
@@ -22,6 +23,7 @@ export type IOrder = {
   customerId: Schema.Types.ObjectId;
   assignedRider: Schema.Types.ObjectId;
   transactionId: string;
+  status: 'PENDING' | 'ASSIGNED' | 'ARRIVED' | 'STARTED' | 'DELIVERED';
   assignedAt?: string;
   pickedAt?: string;
   startAt?: string;
