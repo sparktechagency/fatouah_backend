@@ -10,12 +10,31 @@ import { IUser } from './user.interface';
 import { User } from './user.model';
 
 const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
+
   const forbiddenRoles = ['ADMIN', 'SUPER_ADMIN'];
+
   if (payload.role && forbiddenRoles.includes(payload.role)) {
     throw new ApiError(
       StatusCodes.FORBIDDEN,
       'You are not allowed to register with this role',
     );
+  }
+
+  // validate for rider role extra fields
+  if (payload.role === 'RIDER') {
+    const requiredRiderFields = ['nid', 'vehicleType', 'vehicleModel', 'registrationNumber', 'drivingLicense'];
+    for (const field of requiredRiderFields) {
+      if (!payload[field as keyof IUser]) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, `${field} is required for rider role`);
+      }
+    }
+  } else {
+    // not rider, remove any rider-only fields if present to avoid saving unwanted data
+    delete payload.nid;
+    delete payload.vehicleType;
+    delete payload.vehicleModel;
+    delete payload.registrationNumber;
+    delete payload.drivingLicense;
   }
 
   const createUser = await User.create(payload);
@@ -24,12 +43,22 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user');
   }
 
+  // filter out rider only fields from response if not rider
+  let userData = createUser.toObject();
+  if (payload.role !== "RIDER") {
+    delete userData.nid;
+    delete userData.vehicleType;
+    delete userData.vehicleModel;
+    delete userData.registrationNumber;
+    delete userData.drivingLicense;
+  }
+
   //send email
   const otp = generateOTP();
   const values = {
-    name: createUser.name,
+    name: userData.name,
     otp: otp,
-    email: createUser.email!,
+    email: userData.email!,
   };
   const createAccountTemplate = emailTemplate.createAccount(values);
   emailHelper.sendEmail(createAccountTemplate);
@@ -40,11 +69,11 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
     expireAt: new Date(Date.now() + 3 * 60000),
   };
   await User.findOneAndUpdate(
-    { _id: createUser._id },
+    { _id: userData._id },
     { $set: { authentication } },
   );
 
-  return createUser;
+  return userData;
 };
 
 const getUserProfileFromDB = async (
