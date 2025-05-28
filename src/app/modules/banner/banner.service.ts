@@ -5,7 +5,12 @@ import { Banner } from './banner.model';
 import ApiError from '../../../errors/ApiError';
 
 const createBannerToDB = async (payload: IBanner): Promise<IBanner> => {
+  if (!payload.image) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Image is required');
+  }
+
   const result = await Banner.create(payload);
+
   if (!result) {
     unlinkFile(payload.image);
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to created banner');
