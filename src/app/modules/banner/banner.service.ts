@@ -22,6 +22,15 @@ const getBannersFromDB = async () => {
   return result;
 };
 
+const getAllBannersFromDB = async () => {
+  const result = await Banner.find();
+  if (!result || result.length === 0) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'No banners found in database');
+  }
+  return result;
+};
+
+
 const updateBannerToDB = async (id: string, payload: Partial<IBanner>) => {
   const result = await Banner.findByIdAndUpdate({ _id: id }, payload, {
     new: true,
@@ -61,6 +70,7 @@ const deleteBannerFromDB = async (id: string) => {
 export const BannerServices = {
   createBannerToDB,
   getBannersFromDB,
+  getAllBannersFromDB,
   updateBannerToDB,
   updateBannerStatusToDB,
   deleteBannerFromDB,

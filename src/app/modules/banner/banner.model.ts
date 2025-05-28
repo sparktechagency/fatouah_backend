@@ -15,6 +15,7 @@ const bannerSchema = new Schema<IBanner>(
     },
     image: {
       type: String,
+      required: true,
     },
     status: {
       type: Boolean,

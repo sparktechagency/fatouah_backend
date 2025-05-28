@@ -3,6 +3,8 @@ import auth from '../../middlewares/auth';
 import { USER_ROLES } from '../../../enums/user';
 import { BannerControllers } from './banner.controller';
 import fileUploadHandler from '../../middlewares/fileUploadHandler';
+import validateRequest from '../../middlewares/validateRequest';
+import { BannerValidation } from './banner.validation';
 
 const router = express.Router();
 
@@ -10,6 +12,7 @@ router
   .route('/')
   .post(
     fileUploadHandler(),
+    validateRequest(BannerValidation.createBannerZodSchema),
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
     BannerControllers.createBanner,
   )
@@ -20,6 +23,9 @@ router.patch(
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   BannerControllers.updateBannerStatus,
 );
+
+// get all banners regardless of status
+router.get("/admin", auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN), BannerControllers.getAllBanners)
 
 router
   .route('/:id')
