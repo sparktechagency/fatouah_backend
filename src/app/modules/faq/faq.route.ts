@@ -1,4 +1,4 @@
-import express, { json } from 'express';
+import express from 'express';
 import auth from '../../middlewares/auth';
 import { USER_ROLES } from '../../../enums/user';
 import { FaqControllers } from './faq.controller';
@@ -13,6 +13,12 @@ router
   )
   .get(FaqControllers.getFaqs);
 
+router.delete(
+  '/multiple',
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  FaqControllers.deleteMultipleFaqs,
+);
+
 router
   .route('/:id')
   .patch(
@@ -23,5 +29,7 @@ router
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
     FaqControllers.deleteFaq,
   );
+
+
 
 export const FaqRoutes = router;

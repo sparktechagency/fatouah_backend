@@ -32,6 +32,7 @@ const deleteFaqFromDB = async (id: string) => {
 };
 
 const deleteMultipleFaqsFromDB = async (ids: string[]) => {
+  console.log(ids)
   if (!ids || !Array.isArray(ids) || ids.length === 0) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "No IDs provided for deletion")
   }
