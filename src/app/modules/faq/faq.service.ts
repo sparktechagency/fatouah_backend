@@ -31,6 +31,8 @@ const deleteFaqFromDB = async (id: string) => {
   return result;
 };
 
+
+
 export const FaqServices = {
   createFaqToDB,
   getFaqsFromDB,
