@@ -3,4 +3,4 @@ node_modules
 
 /winston
 /uploads
-firebase/serviceAccountKey.json
+# serviceAccountKey.json

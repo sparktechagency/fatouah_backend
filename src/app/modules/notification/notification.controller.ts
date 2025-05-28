@@ -4,7 +4,7 @@ import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 import { sendToTopic } from '../services/fcmService';
 
- const sendNotificationController = catchAsync(async (req, res) => {
+const sendNotificationController = catchAsync(async (req, res) => {
   const { topic, title, body } = req.body;
 
   if (!topic || !title || !body) {
