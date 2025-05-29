@@ -13,7 +13,7 @@ router.post(
     USER_ROLES.USER,
     USER_ROLES.RIDER,
   ),
-  OrderControllers.createParcelOrder
+  OrderControllers.createParcelOrder,
 );
 
 export const OrderRoutes = router;

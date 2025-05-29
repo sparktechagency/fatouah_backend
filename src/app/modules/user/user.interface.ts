@@ -11,7 +11,7 @@ export type IUser = {
   location?: string;
   geoLocation?: {
     type: 'Point';
-    coordinates: [number, number]; 
+    coordinates: [number, number];
   };
   image?: string;
   status: 'active' | 'delete';
@@ -27,7 +27,7 @@ export type IUser = {
   vehicleModel?: string;
   registrationNumber?: string;
   drivingLicense?: string;
-  isOnline:boolean;
+  isOnline: boolean;
 };
 
 export type UserModal = {

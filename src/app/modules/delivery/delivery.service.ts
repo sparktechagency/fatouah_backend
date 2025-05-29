@@ -8,7 +8,6 @@ import { Delivery } from './delivery.model';
 const findNearestOnlineRiders = async (location: {
   coordinates: [number, number];
 }) => {
-
   return await User.find({
     role: 'RIDER',
     isOnline: true,

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const createOrderZodSchema = z.object({
   body: z.object({
-    user:z.string(),
+    user: z.string(),
     pickupLocation: z.object({
       address: z.string({ required_error: 'Pickup address is required' }),
       coordinates: z.array(

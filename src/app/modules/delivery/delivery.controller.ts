@@ -4,7 +4,7 @@ import { DeliveryServices } from './delivery.service';
 
 const findNearestOnlineRiders = catchAsync(async (req, res) => {
   const { location } = req.body;
-  console.log(location)
+  console.log(location);
   const result = await DeliveryServices.findNearestOnlineRiders(location);
   sendResponse(res, {
     success: true,

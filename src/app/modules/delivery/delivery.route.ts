@@ -7,10 +7,7 @@ const router = express.Router();
 
 router.post('/nearest-riders', DeliveryControllers.findNearestOnlineRiders);
 
-router.post(
-  '/:deliveryId/assign',
-  DeliveryControllers.assignRiderWithTimeout,
-);
+router.post('/:deliveryId/assign', DeliveryControllers.assignRiderWithTimeout);
 
 router.patch(
   '/:deliveryId/reject',

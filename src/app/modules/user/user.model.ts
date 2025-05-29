@@ -76,8 +76,8 @@ const userSchema = new Schema<IUser, UserModal>(
       },
       coordinates: {
         type: [Number],
-        default:[0,0],
-         index: '2dsphere',
+        default: [0, 0],
+        index: '2dsphere',
       },
     },
     nid: {
@@ -104,7 +104,6 @@ const userSchema = new Schema<IUser, UserModal>(
 );
 
 userSchema.index({ geoLocation: '2dsphere' });
-
 
 //exist user check
 userSchema.statics.isExistUserById = async (id: string) => {

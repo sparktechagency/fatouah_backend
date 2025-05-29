@@ -5,15 +5,15 @@ export interface DeliveryAttempt {
   attemptedAt?: Date;
 }
 
-export interface IRiderLocation {
-  type: 'Point';
-  coordinates: [number, number]; // [longitude, latitude]
-}
+// export interface IRiderLocation {
+//   type: 'Point';
+//   coordinates: [number, number]; // [longitude, latitude]
+// }
 
 export interface IDelivery {
   order: Types.ObjectId;
   rider?: Types.ObjectId;
-  riderCurrentLocation?: IRiderLocation;
+  // riderCurrentLocation?: IRiderLocation;
   status:
     | 'REQUESTED'
     | 'ASSIGNED'
