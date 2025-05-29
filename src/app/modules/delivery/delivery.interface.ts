@@ -1,20 +1,20 @@
 import { Types } from 'mongoose';
 
 export interface DeliveryAttempt {
-    rider: Types.ObjectId;
-    attemptedAt?: Date;
+  rider: Types.ObjectId;
+  attemptedAt?: Date;
 }
 
 export interface IRiderLocation {
-    type: 'Point';
-    coordinates: [number, number]; // [longitude, latitude]
+  type: 'Point';
+  coordinates: [number, number]; // [longitude, latitude]
 }
 
 export interface IDelivery {
-    order: Types.ObjectId;
-    rider?: Types.ObjectId;
-    riderCurrentLocation?: IRiderLocation;
-    status:
+  order: Types.ObjectId;
+  rider?: Types.ObjectId;
+  riderCurrentLocation?: IRiderLocation;
+  status:
     | 'REQUESTED'
     | 'ASSIGNED'
     | 'ACCEPTED'
@@ -24,14 +24,14 @@ export interface IDelivery {
     | 'DELIVERED'
     | 'REJECTED'
     | 'CANCELLED';
-    timestamps: {
-        assignedAt?: Date;
-        acceptedAt?: Date;
-        arrivedAt?: Date;
-        pickedAt?: Date;
-        startedAt?: Date;
-        cancelledAt?: Date;
-        deliveredAt?: Date;
-    };
-    attempts: DeliveryAttempt[];
+  timestamps: {
+    assignedAt?: Date;
+    acceptedAt?: Date;
+    arrivedAt?: Date;
+    pickedAt?: Date;
+    startedAt?: Date;
+    cancelledAt?: Date;
+    deliveredAt?: Date;
+  };
+  attempts: DeliveryAttempt[];
 }

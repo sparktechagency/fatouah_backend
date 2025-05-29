@@ -6,13 +6,13 @@ const orderSchema = new Schema<IOrder>(
   {
     user: {
       type: Types.ObjectId,
-      ref: "User"
+      ref: 'User',
     },
     pickupLocation: {
       type: {
         type: String,
         enum: ['Point'],
-        default: 'Point'
+        default: 'Point',
       },
       address: {
         type: String,
@@ -29,7 +29,7 @@ const orderSchema = new Schema<IOrder>(
       type: {
         type: String,
         enum: ['Point'],
-        default: 'Point'
+        default: 'Point',
       },
       address: {
         type: String,
@@ -76,7 +76,7 @@ const orderSchema = new Schema<IOrder>(
     },
     deliveryCharge: {
       type: Number,
-    }
+    },
   },
   {
     timestamps: true,
