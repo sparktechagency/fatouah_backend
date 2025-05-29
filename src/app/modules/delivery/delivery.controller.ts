@@ -80,6 +80,23 @@ const acceptDeliveryByRider = catchAsync(async (req, res) => {
   });
 });
 
+const updateRiderLocation = catchAsync(async (req, res) => {
+  const { coordinates } = req.body;
+  const deliveryId = req.params.deliveryId;
+  const riderId = req.user.id;
+  const result = await DeliveryServices.updateRiderLocation(
+    deliveryId,
+    riderId,
+    coordinates,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Successfully update rider location',
+    data: result,
+  });
+});
+
 export const DeliveryControllers = {
   findNearestOnlineRiders,
   assignRiderWithTimeout,
@@ -87,4 +104,5 @@ export const DeliveryControllers = {
   cancelDeliveryByUser,
   getDeliveryDetails,
   acceptDeliveryByRider,
+  updateRiderLocation,
 };
