@@ -14,6 +14,7 @@ const deliverySchema = new Schema<IDelivery>(
       coordinates: {
         type: [Number],
         default: [0, 0],
+        index: '2dsphere',
       },
     },
     status: {
@@ -31,7 +32,6 @@ const deliverySchema = new Schema<IDelivery>(
       ],
       default: 'REQUESTED',
     },
-
     timestamps: {
       assignedAt: Date,
       acceptedAt: Date,
@@ -41,7 +41,6 @@ const deliverySchema = new Schema<IDelivery>(
       cancelledAt: Date,
       deliveredAt: Date,
     },
-
     attempts: [
       {
         rider: { type: Schema.Types.ObjectId, ref: 'User' },

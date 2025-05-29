@@ -8,10 +8,11 @@ import { Delivery } from './delivery.model';
 const findNearestOnlineRiders = async (location: {
   coordinates: [number, number];
 }) => {
+
   return await User.find({
     role: 'RIDER',
     isOnline: true,
-    location: {
+    geoLocation: {
       $near: {
         $geometry: {
           type: 'Point',
@@ -21,6 +22,25 @@ const findNearestOnlineRiders = async (location: {
       },
     },
   });
+};
+
+const updateRiderLocation = async (
+  riderId: string,
+  { coordinates }: { coordinates: [number, number] },
+) => {
+  const result = await User.findByIdAndUpdate(
+    riderId,
+    {
+      geoLocation: {
+        type: 'Point',
+        coordinates: coordinates,
+      },
+      isOnline: true,
+    },
+    { new: true },
+  );
+
+  return result;
 };
 
 // assign rider logic with fallback
@@ -174,44 +194,44 @@ const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
   return delivery;
 };
 
-const updateRiderLocation = async (
-  deliveryId: string,
-  riderId: string,
-  coordinates: [number, number],
-) => {
-  const delivery = await Delivery.findById(deliveryId);
+// const updateRiderLocation = async (
+//   deliveryId: string,
+//   riderId: string,
+//   coordinates: [number, number],
+// ) => {
+//   const delivery = await Delivery.findById(deliveryId);
 
-  if (!delivery) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
-  }
+//   if (!delivery) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
+//   }
 
-  if (delivery.rider?.toString() !== riderId) {
-    throw new ApiError(
-      StatusCodes.FORBIDDEN,
-      'You are not assigned to this delivery',
-    );
-  }
+//   if (delivery.rider?.toString() !== riderId) {
+//     throw new ApiError(
+//       StatusCodes.FORBIDDEN,
+//       'You are not assigned to this delivery',
+//     );
+//   }
 
-  // update rider current location in delivery
-  delivery.riderCurrentLocation = {
-    type: 'Point',
-    coordinates,
-  };
+//   // update rider current location in delivery
+//   delivery.riderCurrentLocation = {
+//     type: 'Point',
+//     coordinates,
+//   };
 
-  await delivery.save();
+//   await delivery.save();
 
-  // emit live location update via socket
-  //@ts-ignore
-  const io = global.io;
-  if (io) {
-    io.emit(`location-update::${deliveryId}`, {
-      deliveryId,
-      coordinates,
-    });
-  }
+//   // emit live location update via socket
+//   //@ts-ignore
+//   const io = global.io;
+//   if (io) {
+//     io.emit(`location-update::${deliveryId}`, {
+//       deliveryId,
+//       coordinates,
+//     });
+//   }
 
-  return delivery;
-};
+//   return delivery;
+// };
 
 export const DeliveryServices = {
   findNearestOnlineRiders,

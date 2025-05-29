@@ -8,6 +8,7 @@ const createUserZodSchema = z.object({
     password: z.string({ required_error: 'Password is required' }),
     location: z.string().optional(),
     image: z.string().optional(),
+    isOnline:z.boolean().default(false)
   }),
 });
 

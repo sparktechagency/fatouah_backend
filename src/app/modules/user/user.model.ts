@@ -68,6 +68,18 @@ const userSchema = new Schema<IUser, UserModal>(
       select: 0,
     },
     // rider
+    geoLocation: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number],
+        default:[0,0],
+         index: '2dsphere',
+      },
+    },
     nid: {
       type: String,
     },
@@ -84,9 +96,15 @@ const userSchema = new Schema<IUser, UserModal>(
     drivingLicense: {
       type: String,
     },
+    isOnline: {
+      type: Boolean,
+    },
   },
   { timestamps: true },
 );
+
+userSchema.index({ geoLocation: '2dsphere' });
+
 
 //exist user check
 userSchema.statics.isExistUserById = async (id: string) => {

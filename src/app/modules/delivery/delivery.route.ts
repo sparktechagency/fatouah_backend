@@ -41,8 +41,13 @@ router.patch(
   DeliveryControllers.acceptDeliveryByRider,
 );
 
+// router.patch(
+//   '/:deliveryId/location',
+//   auth(USER_ROLES.RIDER),
+//   DeliveryControllers.updateRiderLocation,
+// );
 router.patch(
-  '/:deliveryId/location',
+  '/location',
   auth(USER_ROLES.RIDER),
   DeliveryControllers.updateRiderLocation,
 );

@@ -9,6 +9,10 @@ export type IUser = {
   email: string;
   password: string;
   location?: string;
+  geoLocation?: {
+    type: 'Point';
+    coordinates: [number, number]; 
+  };
   image?: string;
   status: 'active' | 'delete';
   verified: boolean;
@@ -23,6 +27,7 @@ export type IUser = {
   vehicleModel?: string;
   registrationNumber?: string;
   drivingLicense?: string;
+  isOnline:boolean;
 };
 
 export type UserModal = {

@@ -3,7 +3,8 @@ import sendResponse from '../../../shared/sendResponse';
 import { DeliveryServices } from './delivery.service';
 
 const findNearestOnlineRiders = catchAsync(async (req, res) => {
-  const location = req.body.location;
+  const { location } = req.body;
+  console.log(location)
   const result = await DeliveryServices.findNearestOnlineRiders(location);
   sendResponse(res, {
     success: true,
@@ -80,14 +81,30 @@ const acceptDeliveryByRider = catchAsync(async (req, res) => {
   });
 });
 
+// const updateRiderLocation = catchAsync(async (req, res) => {
+//   const { coordinates } = req.body;
+//   const deliveryId = req.params.deliveryId;
+//   const riderId = req.user.id;
+//   const result = await DeliveryServices.updateRiderLocation(
+//     deliveryId,
+//     riderId,
+//     coordinates,
+//   );
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: 200,
+//     message: 'Successfully update rider location',
+//     data: result,
+//   });
+// });
+
 const updateRiderLocation = catchAsync(async (req, res) => {
-  const { coordinates } = req.body;
-  const deliveryId = req.params.deliveryId;
+  const { geoLocation } = req.body;
+
   const riderId = req.user.id;
   const result = await DeliveryServices.updateRiderLocation(
-    deliveryId,
     riderId,
-    coordinates,
+    geoLocation,
   );
   sendResponse(res, {
     success: true,
