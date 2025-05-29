@@ -65,10 +65,26 @@ const getDeliveryDetails = catchAsync(async (req, res) => {
   });
 });
 
+const acceptDeliveryByRider = catchAsync(async (req, res) => {
+  const deliveryId = req.params.deliveryId;
+  const riderId = req.user.id;
+  const result = await DeliveryServices.acceptDeliveryByRider(
+    deliveryId,
+    riderId,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Successfully accept delivery by rider',
+    data: result,
+  });
+});
+
 export const DeliveryControllers = {
   findNearestOnlineRiders,
   assignRiderWithTimeout,
   rejectDeliveryByRider,
   cancelDeliveryByUser,
   getDeliveryDetails,
+  acceptDeliveryByRider,
 };
