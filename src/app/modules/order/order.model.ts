@@ -4,6 +4,10 @@ import { Parcel_Types, RIDES } from '../../../enums/order';
 
 const orderSchema = new Schema<IOrder>(
   {
+    user: {
+      type: Types.ObjectId,
+      ref: "User"
+    },
     pickupLocation: {
       address: {
         type: String,
@@ -16,7 +20,7 @@ const orderSchema = new Schema<IOrder>(
         index: '2dsphere',
       },
     },
-    deliveryLocation: {
+    destinationLocation: {
       address: {
         type: String,
         required: true,
@@ -62,35 +66,7 @@ const orderSchema = new Schema<IOrder>(
     },
     deliveryCharge: {
       type: Number,
-    },
-    customerId: {
-      type: Types.ObjectId,
-      ref: 'User',
-    },
-    assignedRider: {
-      type: Types.ObjectId,
-      ref: 'User',
-    },
-    transactionId: {
-      type: String,
-    },
-    status: {
-      type: String,
-      enum: ['PENDING', 'ASSIGNED', 'ARRIVED', 'STARTED', 'DELIVERED'],
-      default: 'PENDING',
-    },
-    assignedAt: {
-      type: String,
-    },
-    pickedAt: {
-      type: String,
-    },
-    startAt: {
-      type: String,
-    },
-    deliveredAt: {
-      type: String,
-    },
+    }
   },
   {
     timestamps: true,

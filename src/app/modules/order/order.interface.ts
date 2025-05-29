@@ -2,11 +2,12 @@ import { Schema } from 'mongoose';
 import { Parcel_Types, RIDES } from '../../../enums/order';
 
 export type IOrder = {
+  user: Schema.Types.ObjectId;
   pickupLocation: {
     address: string;
     coordinates: [number, number];
   };
-  deliveryLocation: {
+  destinationLocation: {
     address: string;
     coordinates: [number, number];
   };
@@ -19,12 +20,4 @@ export type IOrder = {
   ride: RIDES;
   distance: number;
   deliveryCharge: number;
-  customerId: Schema.Types.ObjectId;
-  assignedRider: Schema.Types.ObjectId;
-  transactionId: string;
-  status: 'PENDING' | 'ASSIGNED' | 'ARRIVED' | 'STARTED' | 'DELIVERED';
-  assignedAt?: string;
-  pickedAt?: string;
-  startAt?: string;
-  deliveredAt?: string;
 };
