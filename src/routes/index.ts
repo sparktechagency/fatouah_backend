@@ -7,7 +7,7 @@ import { FaqRoutes } from '../app/modules/faq/faq.route';
 import { BannerRoutes } from '../app/modules/banner/banner.route';
 import { AdminRoutes } from '../app/modules/admin/admin.route';
 import { ContactRoutes } from '../app/modules/contact/contact.route';
-import { NotificationRoutes } from '../app/modules/notification/notification.route';
+// import { NotificationRoutes } from '../app/modules/notification/notification.route';
 import { OrderRoutes } from '../app/modules/order/order.route';
 import { DeliveryRoutes } from '../app/modules/delivery/delivery.route';
 
@@ -46,18 +46,18 @@ const apiRoutes = [
     path: '/contact',
     route: ContactRoutes,
   },
-  {
-    path: '/notification',
-    route: NotificationRoutes,
-  },
+  // {
+  //   path: '/notification',
+  //   route: NotificationRoutes,
+  // },
   {
     path: '/order',
     route: OrderRoutes,
   },
   {
-    path:"/delivery",
-    route:DeliveryRoutes,
-  }
+    path: '/delivery',
+    route: DeliveryRoutes,
+  },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));

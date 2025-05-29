@@ -1,8 +1,8 @@
-import express from 'express';
-import { NotificationControllers } from './notification.controller';
+// import express from 'express';
+// import { NotificationControllers } from './notification.controller';
 
-const router = express.Router();
+// const router = express.Router();
 
-router.post('/send', NotificationControllers.sendNotificationController);
+// router.post('/send', NotificationControllers.sendNotificationController);
 
-export const NotificationRoutes = router;
+// export const NotificationRoutes = router;
