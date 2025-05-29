@@ -2,6 +2,7 @@ import { JwtPayload } from 'jsonwebtoken';
 import { IOrder } from './order.interface';
 import { Order } from './order.model';
 import { Delivery } from '../delivery/delivery.model';
+// import { getDistanceAndDurationFromGoogle } from './distanceCalculation';
 
 const CHARGE_PER_KM = 2;
 

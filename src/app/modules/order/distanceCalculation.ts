@@ -9,7 +9,7 @@ interface DistanceMatrixResponse {
   duration: number; // seconds
 }
 
-async function getDistanceAndDurationFromGoogle(
+export async function getDistanceAndDurationFromGoogle(
   origin: [number, number],
   destination: [number, number],
 ): Promise<DistanceMatrixResponse> {
