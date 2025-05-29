@@ -215,4 +215,10 @@ const updateRiderLocation = async (
 
 export const DeliveryServices = {
   findNearestOnlineRiders,
+  assignRiderWithTimeout,
+  rejectDeliveryByRider,
+  cancelDeliveryByUser,
+  getDeliveryDetails,
+  acceptDeliveryByRider,
+  updateRiderLocation,
 };
