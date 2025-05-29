@@ -54,11 +54,21 @@ const cancelDeliveryByUser = catchAsync(async (req, res) => {
   });
 });
 
-
+const getDeliveryDetails = catchAsync(async (req, res) => {
+  const id = req.params.id;
+  const result = await DeliveryServices.getDeliveryDetails(id);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Delivery details is retrieved successfully',
+    data: result,
+  });
+});
 
 export const DeliveryControllers = {
   findNearestOnlineRiders,
   assignRiderWithTimeout,
   rejectDeliveryByRider,
   cancelDeliveryByUser,
+  getDeliveryDetails,
 };
