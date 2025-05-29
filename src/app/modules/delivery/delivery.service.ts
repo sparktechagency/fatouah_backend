@@ -241,3 +241,8 @@ export const DeliveryServices = {
   acceptDeliveryByRider,
   updateRiderLocation,
 };
+
+// status update: DELIVERED, ARRIVED, PICKED_UP, STARTED
+// notification: notify every status
+// implement payment: stripe
+// order history: rider, user with inprogress, completed, return filtering
