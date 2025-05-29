@@ -4,10 +4,12 @@ import { Parcel_Types, RIDES } from '../../../enums/order';
 export type IOrder = {
   user: Schema.Types.ObjectId;
   pickupLocation: {
+    type: 'Point',
     address: string;
     coordinates: [number, number];
   };
   destinationLocation: {
+    type: 'Point',
     address: string;
     coordinates: [number, number];
   };

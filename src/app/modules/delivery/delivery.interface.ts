@@ -1,18 +1,37 @@
-import { Schema } from "mongoose"
+import { Types } from 'mongoose';
 
-export type IDelivery = {
-    order: Schema.Types.ObjectId;
-    rider: Schema.Types.ObjectId;
-    status: "REQUESTED" | "ASSIGNED" | "ARRIVED" | "PICKED" | "STARTED" | "DELIVERED";
+export interface DeliveryAttempt {
+    rider: Types.ObjectId;
+    attemptedAt?: Date;
+}
+
+export interface IRiderLocation {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+}
+
+export interface IDelivery {
+    order: Types.ObjectId;
+    rider?: Types.ObjectId;
+    riderCurrentLocation?: IRiderLocation;
+    status:
+    | 'REQUESTED'
+    | 'ASSIGNED'
+    | 'ACCEPTED'
+    | 'ARRIVED'
+    | 'PICKED_UP'
+    | 'ON_THE_WAY'
+    | 'DELIVERED'
+    | 'REJECTED'
+    | 'CANCELLED';
     timestamps: {
-        assignedAt: string;
-        arrivedAt: string;
-        pickedAt: string;
-        startedAt: string;
-        deliveredAt: string;
+        assignedAt?: Date;
+        acceptedAt?: Date;
+        arrivedAt?: Date;
+        pickedAt?: Date;
+        startedAt?: Date;
+        cancelledAt?: Date;
+        deliveredAt?: Date;
     };
-    attempts: [
-        rider: Schema.Types.ObjectId,
-        attemptedAt: string,
-    ];
+    attempts: DeliveryAttempt[];
 }

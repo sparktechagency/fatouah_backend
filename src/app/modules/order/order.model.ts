@@ -9,6 +9,11 @@ const orderSchema = new Schema<IOrder>(
       ref: "User"
     },
     pickupLocation: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point'
+      },
       address: {
         type: String,
         required: true,
@@ -21,6 +26,11 @@ const orderSchema = new Schema<IOrder>(
       },
     },
     destinationLocation: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point'
+      },
       address: {
         type: String,
         required: true,
