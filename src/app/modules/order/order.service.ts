@@ -48,6 +48,36 @@ export const createParcelOrderToDB = async (user: JwtPayload, payload: IOrder) =
     return { order, delivery };
 };
 
+// export const createParcelOrderToDB = async (user: JwtPayload, payload: IOrder) => {
+//     const origin = payload.pickupLocation.coordinates;       // [lng, lat]
+//     const destination = payload.destinationLocation.coordinates; // [lng, lat]
+
+//     // call Google Maps Distance Matrix API
+//     const { distance, duration } = await getDistanceAndDurationFromGoogle(origin, destination);
+
+//     // convert distance to km (Google returns meters)
+//     const distanceInKm = distance / 1000;
+
+//     // delivery charge calculation
+//     const deliveryCharge = distanceInKm * CHARGE_PER_KM;
+
+//     const order = await Order.create({
+//         ...payload,
+//         user: user.id,
+//         distance: distanceInKm,
+//         estimatedTime: duration,      // in seconds, save ETA if needed
+//         deliveryCharge,
+//     });
+
+//     const delivery = await Delivery.create({
+//         order: order._id,
+//         status: "REQUESTED",
+//     });
+
+//     return { order, delivery };
+// };
+
+
 export const OrderServices = {
     createParcelOrderToDB,
 }
