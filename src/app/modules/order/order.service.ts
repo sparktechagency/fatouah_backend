@@ -2,7 +2,10 @@ import { JwtPayload } from 'jsonwebtoken';
 import { IOrder } from './order.interface';
 import { Order } from './order.model';
 import { Delivery } from '../delivery/delivery.model';
+import Stripe from 'stripe';
+import stripe from '../../../config/stripe';
 // import { getDistanceAndDurationFromGoogle } from './distanceCalculation';
+
 
 const CHARGE_PER_KM = 2;
 
@@ -21,9 +24,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-    Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -54,7 +57,52 @@ export const createParcelOrderToDB = async (
     status: 'REQUESTED',
   });
 
-  return { order, delivery };
+  // 5. Create Stripe checkout session
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    mode: 'payment',
+    line_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `Parcel Delivery to ${payload.destinationLocation.address}`,
+            description: `Type: ${payload.parcelType}, Weight: ${payload.parcelWeight}kg`,
+            metadata: {
+              pickupAddress: payload.pickupLocation.address,
+              destinationAddress: payload.destinationLocation.address,
+              parcelType: payload.parcelType,
+              ride: payload.ride,
+            },
+          },
+          unit_amount: Math.round(deliveryCharge * 100), // in cents
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: `https://yourdomain.com/payment-success?orderId=${order._id}`,
+    cancel_url: `https://yourdomain.com/payment-cancel?orderId=${order._id}`,
+    metadata: {
+      orderId: order._id.toString(),
+      userId: user.id,
+      receiversName: payload.receiversName,
+      contact: payload.contact,
+      parcelType: payload.parcelType,
+      parcelWeight: payload.parcelWeight.toString(),
+      parcelValue: payload.parcelValue.toString(),
+      ride: payload.ride,
+    },
+    customer_email: user.email,
+  });
+
+  console.log(session)
+
+  // http://10.0.70.43:5000/api/v1/stripe/webhook
+
+
+  return { order, delivery, redirectUrl: session.url };
+
+  // return { order, delivery };
 };
 
 // export const createParcelOrderToDB = async (user: JwtPayload, payload: IOrder) => {
@@ -84,7 +132,7 @@ export const createParcelOrderToDB = async (
 //     });
 
 //     return { order, delivery };
-// };
+// // };
 
 export const OrderServices = {
   createParcelOrderToDB,

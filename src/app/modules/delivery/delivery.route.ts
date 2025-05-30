@@ -8,7 +8,6 @@ const router = express.Router();
 // this is just test route, i will delete this letter
 router.post('/nearest-riders', DeliveryControllers.findNearestOnlineRiders);
 
-
 router.post('/:deliveryId/assign', DeliveryControllers.assignRiderWithTimeout);
 
 router.post(
@@ -29,21 +28,35 @@ router.patch(
   DeliveryControllers.acceptDeliveryByRider,
 );
 
-
 router.post(
   '/:deliveryId/reject',
   auth(USER_ROLES.RIDER),
   DeliveryControllers.rejectDeliveryByRider,
 );
 
-router.post("/:deliveryId/mark-started", auth(USER_ROLES.RIDER), DeliveryControllers.markDeliveryStarted)
+router.post(
+  '/:deliveryId/mark-started',
+  auth(USER_ROLES.RIDER),
+  DeliveryControllers.markDeliveryStarted,
+);
 
-router.post("/:deliveryId/mark-arrived", auth(USER_ROLES.RIDER), DeliveryControllers.markDeliveryArrived)
+router.post(
+  '/:deliveryId/mark-arrived',
+  auth(USER_ROLES.RIDER),
+  DeliveryControllers.markDeliveryArrived,
+);
 
-router.post("/:deliveryId/mark-picked-up", auth(USER_ROLES.RIDER), DeliveryControllers.markDeliveryPickedUp)
+router.post(
+  '/:deliveryId/mark-picked-up',
+  auth(USER_ROLES.RIDER),
+  DeliveryControllers.markDeliveryPickedUp,
+);
 
-router.post("/:deliveryId/mark-completed", auth(USER_ROLES.RIDER), DeliveryControllers.markDeliveryCompleted)
-
+router.post(
+  '/:deliveryId/mark-completed',
+  auth(USER_ROLES.RIDER),
+  DeliveryControllers.markDeliveryCompleted,
+);
 
 router.get(
   '/:id',

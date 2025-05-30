@@ -9,7 +9,11 @@ const app = express();
 //morgan
 app.use(Morgan.successHandler);
 app.use(Morgan.errorHandler);
-
+app.post(
+  '/api/v1/payment/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  
+);
 //body parser
 app.use(cors());
 app.use(express.json());
@@ -20,6 +24,8 @@ app.use(express.static('uploads'));
 
 //router
 app.use('/api/v1', router);
+
+
 
 //live response
 app.get('/', (req: Request, res: Response) => {

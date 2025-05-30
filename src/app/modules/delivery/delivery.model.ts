@@ -37,7 +37,7 @@ const deliverySchema = new Schema<IDelivery>(
       assignedAt: Date,
       acceptedAt: Date,
       arrivedAt: Date,
-      pickedAt: Date,
+      pickedUpAt: Date,
       startedAt: Date,
       cancelledAt: Date,
       deliveredAt: Date,
