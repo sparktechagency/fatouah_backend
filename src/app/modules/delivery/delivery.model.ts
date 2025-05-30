@@ -23,6 +23,7 @@ const deliverySchema = new Schema<IDelivery>(
         'REQUESTED',
         'ASSIGNED',
         'ACCEPTED',
+        "STARTED",
         'ARRIVED',
         'PICKED_UP',
         'ON_THE_WAY',
