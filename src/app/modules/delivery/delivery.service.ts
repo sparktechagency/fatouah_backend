@@ -17,6 +17,7 @@ const findNearestOnlineRiders = async (location: {
   const result = await User.find({
     role: 'RIDER',
     isOnline: true,
+    'geoLocation.coordinates': { $ne: [0, 0] },
     geoLocation: {
       $near: {
         $geometry: {
@@ -174,6 +175,7 @@ const assignRiderWithTimeout = async (deliveryId: string) => {
   const nextRider = riders.find(r => !attemptedRiders.includes(r._id.toString()));
 
   if (!nextRider) {
+
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
       'No available rider found at this moment. Please try again shortly.'
