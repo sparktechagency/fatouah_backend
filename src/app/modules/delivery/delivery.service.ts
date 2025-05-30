@@ -5,6 +5,7 @@ import { User } from '../user/user.model';
 import { Delivery } from './delivery.model';
 import { statusTimestampsMap, UpdateStatusOptions } from './delivery.interface';
 import { Types } from 'mongoose';
+import { errorLogger } from '../../../shared/logger';
 
 // find nearest riders
 const findNearestOnlineRiders = async (location: {
@@ -127,36 +128,87 @@ const updateStatus = async ({
 };
 
 
+// const assignRiderWithTimeout = async (deliveryId: string) => {
+//   const delivery = await Delivery.findById(deliveryId).populate<{
+//     order: IOrder;
+//   }>('order');
+//   if (!delivery) throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
+
+//   const attemptedRiders = delivery.attempts.map(a => a.rider.toString());
+
+//   const riders = await findNearestOnlineRiders(delivery.order.pickupLocation);
+//   const nextRider = riders.find(r => !attemptedRiders.includes(r._id.toString()));
+
+//   if (!nextRider)
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'No available rider to assign');
+
+//   await updateStatus({ deliveryId, status: 'ASSIGNED', riderId: nextRider._id.toString() });
+
+//   delivery.attempts.push({ rider: nextRider._id, attemptedAt: new Date() });
+//   await delivery.save();
+
+//   // After 1 minute, if rider did not accept, revert to REQUESTED and try next rider
+//   setTimeout(async () => {
+//     const updatedDelivery = await Delivery.findById(deliveryId);
+//     if (updatedDelivery?.status === 'ASSIGNED') {
+//       await updateStatus({ deliveryId, status: 'REQUESTED' });
+//       await assignRiderWithTimeout(deliveryId);
+//     }
+//   }, 60000);
+
+//   return delivery;
+// };
+
 const assignRiderWithTimeout = async (deliveryId: string) => {
   const delivery = await Delivery.findById(deliveryId).populate<{
     order: IOrder;
   }>('order');
-  if (!delivery) throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
+
+  if (!delivery) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
+  }
 
   const attemptedRiders = delivery.attempts.map(a => a.rider.toString());
 
   const riders = await findNearestOnlineRiders(delivery.order.pickupLocation);
   const nextRider = riders.find(r => !attemptedRiders.includes(r._id.toString()));
 
-  if (!nextRider)
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'No available rider to assign');
+  if (!nextRider) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'No available rider found at this moment. Please try again shortly.'
+    );
+  }
 
+  // assign rider
   await updateStatus({ deliveryId, status: 'ASSIGNED', riderId: nextRider._id.toString() });
 
+  // save attempt
   delivery.attempts.push({ rider: nextRider._id, attemptedAt: new Date() });
   await delivery.save();
 
-  // After 1 minute, if rider did not accept, revert to REQUESTED and try next rider
-  setTimeout(async () => {
-    const updatedDelivery = await Delivery.findById(deliveryId);
-    if (updatedDelivery?.status === 'ASSIGNED') {
-      await updateStatus({ deliveryId, status: 'REQUESTED' });
-      await assignRiderWithTimeout(deliveryId);
-    }
-  }, 60000);
+  setTimeout(() => {
+    (async () => {
+      try {
+        const updatedDelivery = await Delivery.findById(deliveryId);
+
+        if (updatedDelivery?.status === 'ASSIGNED') {
+          // revert to REQUESTED
+          await updateStatus({ deliveryId, status: 'REQUESTED' });
+
+          // try assigning again
+          await assignRiderWithTimeout(deliveryId);
+        }
+      } catch (err) {
+        errorLogger.error('🚨 Error during rider reassignment:', err);
+
+      }
+    })();
+  }, 60000); // 1 minute
 
   return delivery;
 };
+
 
 const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
   return updateStatus({ deliveryId, status: 'ACCEPTED', riderId });
