@@ -37,9 +37,15 @@ router
   );
 
 router.get(
-  '/:role',
+  '/all-user',
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   UserController.getUsers,
+);
+
+router.get(
+  '/all-rider',
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  UserController.getRiders,
 );
 
 router

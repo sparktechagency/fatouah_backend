@@ -2,9 +2,10 @@ import Stripe from 'stripe';
 import { IPayment } from '../app/modules/payment/payment.interface';
 import { savePaymentInfo } from '../app/modules/payment/payment.service';
 import stripe from '../config/stripe';
+import config from '../config';
 
 
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
+const WEBHOOK_SECRET = config.stripe_webhook_secret!;
 
 export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
   let event: Stripe.Event;

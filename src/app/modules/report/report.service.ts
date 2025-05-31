@@ -1,4 +1,3 @@
-
 import { User } from '../user/user.model';
 
 const userReport = async () => {

@@ -143,37 +143,6 @@ const updateStatus = async ({
   return delivery;
 };
 
-// const assignRiderWithTimeout = async (deliveryId: string) => {
-//   const delivery = await Delivery.findById(deliveryId).populate<{
-//     order: IOrder;
-//   }>('order');
-//   if (!delivery) throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
-
-//   const attemptedRiders = delivery.attempts.map(a => a.rider.toString());
-
-//   const riders = await findNearestOnlineRiders(delivery.order.pickupLocation);
-//   const nextRider = riders.find(r => !attemptedRiders.includes(r._id.toString()));
-
-//   if (!nextRider)
-//     throw new ApiError(StatusCodes.BAD_REQUEST, 'No available rider to assign');
-
-//   await updateStatus({ deliveryId, status: 'ASSIGNED', riderId: nextRider._id.toString() });
-
-//   delivery.attempts.push({ rider: nextRider._id, attemptedAt: new Date() });
-//   await delivery.save();
-
-//   // After 1 minute, if rider did not accept, revert to REQUESTED and try next rider
-//   setTimeout(async () => {
-//     const updatedDelivery = await Delivery.findById(deliveryId);
-//     if (updatedDelivery?.status === 'ASSIGNED') {
-//       await updateStatus({ deliveryId, status: 'REQUESTED' });
-//       await assignRiderWithTimeout(deliveryId);
-//     }
-//   }, 60000);
-
-//   return delivery;
-// };
-
 const assignRiderWithTimeout = async (deliveryId: string) => {
   const delivery = await Delivery.findById(deliveryId).populate<{
     order: IOrder;

@@ -96,8 +96,8 @@ const getUserProfileFromDB = async (
   return isExistUser;
 };
 
-const getUsersFromDB = async (role: string) => {
-  const result = await User.find({ role: role });
+const getUsersFromDB = async () => {
+  const result = await User.find({ role: "USER" });
   if (result.length === 0) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -106,6 +106,14 @@ const getUsersFromDB = async (role: string) => {
   }
   return result;
 };
+
+const getRidersFromDB=async()=>{
+  const result=await User.find({role:"RIDER"});
+  if(result.length===0){
+    throw new ApiError(StatusCodes.BAD_REQUEST,"No rider found in the database")
+  }
+  return result;
+}
 
 const updateUserStatusToDB = async (id: string, status: string) => {
   const result = await User.findByIdAndUpdate(
@@ -152,6 +160,7 @@ const deleteUserFromDB = async (id: string) => {
 export const UserService = {
   createUserToDB,
   getUsersFromDB,
+  getRidersFromDB,
   getUserProfileFromDB,
   updateUserStatusToDB,
   updateProfileToDB,

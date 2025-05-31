@@ -32,13 +32,21 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getUsers = catchAsync(async (req, res) => {
-  const role = req.params.role;
-
-  const result = await UserService.getUsersFromDB(role);
+  const result = await UserService.getUsersFromDB();
   sendResponse(res, {
     success: true,
     statusCode: 200,
     message: 'Users are retrieved successfully',
+    data: result,
+  });
+});
+
+const getRiders = catchAsync(async (req, res) => {
+  const result = await UserService.getRidersFromDB();
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Rider are retrieved successfully',
     data: result,
   });
 });
@@ -92,6 +100,7 @@ export const UserController = {
   createUser,
   getUserProfile,
   getUsers,
+  getRiders,
   updateUserStatus,
   updateProfile,
   deleteUserFromDB,
