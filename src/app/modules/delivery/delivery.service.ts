@@ -7,7 +7,6 @@ import { statusTimestampsMap, UpdateStatusOptions } from './delivery.interface';
 import { Types } from 'mongoose';
 import { errorLogger } from '../../../shared/logger';
 
-
 // find nearest riders
 const findNearestOnlineRiders = async (location: {
   coordinates: [number, number];
@@ -68,8 +67,6 @@ const updateRiderLocation = async (
 
   return result;
 };
-
-
 
 const updateStatus = async ({
   deliveryId,

@@ -21,7 +21,6 @@ export const sendToTopic = async (topic: any, message: any) => {
       messageId,
       sentData: payload, // include full payload in response
     };
-   
   } catch (error) {
     console.error('❌ FCM Error:', error);
     throw error;

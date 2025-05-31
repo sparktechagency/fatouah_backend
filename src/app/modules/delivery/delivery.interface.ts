@@ -9,16 +9,16 @@ export interface IDelivery {
   order: Types.ObjectId;
   rider?: Types.ObjectId;
   status:
-  | 'REQUESTED'
-  | 'ASSIGNED'
-  | 'ACCEPTED'
-  | 'STARTED'
-  | 'ARRIVED'
-  | 'PICKED_UP'
-  | 'ON_THE_WAY'
-  | 'DELIVERED'
-  | 'REJECTED'
-  | 'CANCELLED';
+    | 'REQUESTED'
+    | 'ASSIGNED'
+    | 'ACCEPTED'
+    | 'STARTED'
+    | 'ARRIVED'
+    | 'PICKED_UP'
+    | 'ON_THE_WAY'
+    | 'DELIVERED'
+    | 'REJECTED'
+    | 'CANCELLED';
   timestamps: {
     requestedAt?: Date;
     assignedAt?: Date;
@@ -46,7 +46,10 @@ type DeliveryStatus =
   | 'REJECTED';
 
 // Timestamp keys per status for convenience
-export const statusTimestampsMap: Record<DeliveryStatus, keyof IDelivery['timestamps']> = {
+export const statusTimestampsMap: Record<
+  DeliveryStatus,
+  keyof IDelivery['timestamps']
+> = {
   REQUESTED: 'requestedAt',
   ASSIGNED: 'assignedAt',
   ACCEPTED: 'acceptedAt',

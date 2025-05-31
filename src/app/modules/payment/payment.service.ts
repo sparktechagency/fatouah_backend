@@ -13,17 +13,15 @@ export async function savePaymentInfo(paymentData: IPayment) {
   if (payment) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Already exists');
   } else {
-    const result = await Payment.create(paymentData)
+    const result = await Payment.create(paymentData);
     return result;
   }
-
 }
 
-
-
-
 // Create or get Stripe account
-export async function createOrGetStripeAccount(userId: string): Promise<string> {
+export async function createOrGetStripeAccount(
+  userId: string,
+): Promise<string> {
   const rider = await User.findById(userId);
   if (!rider) throw new Error('Rider not found');
 
@@ -36,15 +34,15 @@ export async function createOrGetStripeAccount(userId: string): Promise<string> 
     email: rider.email,
   });
 
-
   await User.findByIdAndUpdate(userId, { stripeAccountId: account.id });
 
   return account.id;
 }
 
-
 // Generate Stripe onboarding link
-export async function createStripeOnboardingLink(stripeAccountId: string): Promise<string> {
+export async function createStripeOnboardingLink(
+  stripeAccountId: string,
+): Promise<string> {
   const accountLink = await stripe.accountLinks.create({
     account: stripeAccountId,
     refresh_url: 'https://yourapp.com/reauth',
@@ -54,6 +52,3 @@ export async function createStripeOnboardingLink(stripeAccountId: string): Promi
 
   return accountLink.url;
 }
-
-
-

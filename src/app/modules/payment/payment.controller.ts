@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { handleStripeWebhook } from '../../../util/stripeWebHooksHandler';
-import { createOrGetStripeAccount, createStripeOnboardingLink } from './payment.service';
-
+import {
+  createOrGetStripeAccount,
+  createStripeOnboardingLink,
+} from './payment.service';
 
 export async function stripeWebhookController(req: Request, res: Response) {
   const signature = req.headers['stripe-signature'] as string;
@@ -16,7 +18,6 @@ export async function stripeWebhookController(req: Request, res: Response) {
   }
 }
 
-
 export const createConnectLink = async (req: Request, res: Response) => {
   try {
     const userId = req.user.id;
@@ -30,5 +31,3 @@ export const createConnectLink = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Stripe connect account creation failed' });
   }
 };
-
-

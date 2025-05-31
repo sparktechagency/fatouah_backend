@@ -4,7 +4,6 @@ import { savePaymentInfo } from '../app/modules/payment/payment.service';
 import stripe from '../config/stripe';
 import config from '../config';
 
-
 const WEBHOOK_SECRET = config.stripe_webhook_secret!;
 
 export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
@@ -26,7 +25,7 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
       transactionId: paymentIntent.id,
       amountPaid: paymentIntent.amount / 100, // Stripe amount is in cents
       paidAt: new Date(paymentIntent.created * 1000), // Unix timestamp to Date
-      deliveryId: paymentIntent.metadata.deliveryId || "unknown",
+      deliveryId: paymentIntent.metadata.deliveryId || 'unknown',
       userId: paymentIntent.metadata.userId || 'unknown',
       status: paymentIntent.status,
     };
@@ -45,4 +44,3 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
   // Ignore other event types
   return { ignored: true };
 }
-

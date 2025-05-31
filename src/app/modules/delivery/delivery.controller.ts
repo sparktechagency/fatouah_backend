@@ -28,14 +28,17 @@ const assignRiderWithTimeout = catchAsync(async (req, res) => {
 const acceptDeliveryByRider = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
   const riderId = req.user.id;
-  const result = await DeliveryServices.acceptDeliveryByRider(deliveryId, riderId);
+  const result = await DeliveryServices.acceptDeliveryByRider(
+    deliveryId,
+    riderId,
+  );
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Rider successfully accept the delivery request",
+    message: 'Rider successfully accept the delivery request',
     data: result,
-  })
-})
+  });
+});
 
 const rejectDeliveryByRider = catchAsync(async (req, res) => {
   const riderId = req.user.id;
@@ -70,51 +73,62 @@ const cancelDeliveryByUser = catchAsync(async (req, res) => {
 const markDeliveryStarted = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
   const riderId = req.user.id;
-  const result = await DeliveryServices.markDeliveryStarted(deliveryId, riderId)
+  const result = await DeliveryServices.markDeliveryStarted(
+    deliveryId,
+    riderId,
+  );
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Delivery marked as started",
+    message: 'Delivery marked as started',
     data: result,
-
-  })
-})
+  });
+});
 
 const markDeliveryArrived = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
   const riderId = req.user.id;
-  const result = await DeliveryServices.markDeliveryArrived(deliveryId, riderId);
+  const result = await DeliveryServices.markDeliveryArrived(
+    deliveryId,
+    riderId,
+  );
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Rider has arrived at the delivery location",
+    message: 'Rider has arrived at the delivery location',
     data: result,
-  })
-})
+  });
+});
 
 const markDeliveryPickedUp = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
   const riderId = req.user.id;
-  const result = await DeliveryServices.markDeliveryPickedUp(deliveryId, riderId);
+  const result = await DeliveryServices.markDeliveryPickedUp(
+    deliveryId,
+    riderId,
+  );
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Order picked up successfully",
+    message: 'Order picked up successfully',
     data: result,
-  })
-})
+  });
+});
 
 const markDeliveryCompleted = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
   const riderId = req.user.id;
-  const result = await DeliveryServices.markDeliveryCompleted(deliveryId, riderId);
+  const result = await DeliveryServices.markDeliveryCompleted(
+    deliveryId,
+    riderId,
+  );
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Delivery completed successfully",
+    message: 'Delivery completed successfully',
     data: result,
-  })
-})
+  });
+});
 
 const getDeliveryDetails = catchAsync(async (req, res) => {
   const id = req.params.id;

@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { IPayment } from './payment.interface';
 
-const paymentSchema = new Schema({
+const paymentSchema = new Schema<IPayment>({
   transactionId: { type: String, required: true, unique: true },
   deliveryId: { type: String, required: true },
   userId: { type: String, required: true },

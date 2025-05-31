@@ -60,9 +60,9 @@ const apiRoutes = [
     route: DeliveryRoutes,
   },
   {
-    path: "/report",
-    route: ReportRoutes
-  }
+    path: '/report',
+    route: ReportRoutes,
+  },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));

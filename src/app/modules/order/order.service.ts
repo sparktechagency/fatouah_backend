@@ -74,6 +74,8 @@ export const createParcelOrderToDB = async (
     riderAmount,
   });
 
+  console.log(order.commissionAmount, order.riderAmount);
+
   const delivery = await Delivery.create({
     order: order._id,
     status: 'REQUESTED',

@@ -10,7 +10,6 @@ export const createParcelOrder = catchAsync(async (req, res) => {
     parcelOrderData,
   );
 
- 
   sendResponse(res, {
     success: true,
     statusCode: 200,
