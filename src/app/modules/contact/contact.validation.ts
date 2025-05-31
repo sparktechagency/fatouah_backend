@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 const createContactZodSchema = z.object({
   body: z.object({
-    phone: z.string({ required_error: 'Phone number is required' }),
-    email: z.string({ required_error: 'Email is required' }),
-    location: z.string({ required_error: 'Location is required' }),
+    phone: z.string().optional(),
+    email: z.string().optional(),
+    location: z.string().optional(),
   }),
 });
 
