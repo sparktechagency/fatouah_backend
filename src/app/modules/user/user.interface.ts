@@ -28,6 +28,7 @@ export type IUser = {
   registrationNumber?: string;
   drivingLicense?: string;
   isOnline: boolean;
+  stripeAccountId:string;
 };
 
 export type UserModal = {

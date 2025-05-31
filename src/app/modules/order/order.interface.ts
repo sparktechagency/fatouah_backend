@@ -22,4 +22,6 @@ export type IOrder = {
   ride: RIDES;
   distance: number;
   deliveryCharge: number;
+  commissionAmount: number;
+  riderAmount: number;
 };

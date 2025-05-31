@@ -5,8 +5,16 @@ import { Delivery } from '../delivery/delivery.model';
 import stripe from '../../../config/stripe';
 // import { getDistanceAndDurationFromGoogle } from './distanceCalculation';
 
-
-const CHARGE_PER_KM = 2;
+const getRatePerKm = (ride: string) => {
+  switch (ride) {
+    case 'BIKE':
+      return 3;
+    case 'CAR':
+      return 2;
+    default:
+      return 2; // fallback
+  }
+};
 
 function getDistanceFromLatLonInKm(
   coord1: [number, number],
@@ -23,9 +31,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-    Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -35,13 +43,26 @@ export const createParcelOrderToDB = async (
   payload: IOrder,
 ) => {
   // calculate distance  using pickupLocation and destinationLocation coordinates
-  const distance = getDistanceFromLatLonInKm(
-    payload.pickupLocation.coordinates,
-    payload.destinationLocation.coordinates,
-  );
+  const distance =
+    Math.round(
+      getDistanceFromLatLonInKm(
+        payload.pickupLocation.coordinates,
+        payload.destinationLocation.coordinates,
+      ) * 100,
+    ) / 100;
 
-  // calculate delivery charge based on distance
-  const deliveryCharge = distance * CHARGE_PER_KM;
+  // get rate per km based on ride type
+  const ratePerKm = getRatePerKm(payload.ride);
+
+  // calculate delivery charge based on distance and ride type
+  const deliveryCharge = Math.round(distance * ratePerKm * 100) / 100;
+
+  // commission system
+  const commissionRate = 0.1; // 10%
+  const commissionAmount =
+    Math.round(deliveryCharge * commissionRate * 100) / 100;
+  const riderAmount =
+    Math.round((deliveryCharge - commissionAmount) * 100) / 100;
 
   // create order with calculated distance and deliveryCharge
   const order = await Order.create({
@@ -49,6 +70,8 @@ export const createParcelOrderToDB = async (
     user: user.id,
     distance,
     deliveryCharge,
+    commissionAmount,
+    riderAmount,
   });
 
   const delivery = await Delivery.create({
@@ -97,8 +120,7 @@ export const createParcelOrderToDB = async (
     customer_email: user.email,
   });
 
-  console.log(session)
-
+  console.log(session);
 
   return { order, delivery, redirectUrl: session.url };
 

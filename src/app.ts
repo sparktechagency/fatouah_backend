@@ -7,7 +7,9 @@ import { Morgan } from './shared/morgen';
 
 import stripe from './config/stripe';
 import config from './config';
-import { stripeWebhookController } from './app/modules/payment/payment.controller';
+import { createConnectLink, stripeWebhookController } from './app/modules/payment/payment.controller';
+import auth from './app/middlewares/auth';
+import { USER_ROLES } from './enums/user';
 const app = express();
 
 
@@ -55,6 +57,9 @@ app.use(express.static('uploads'));
 
 //router
 app.use('/api/v1', router);
+
+// connect stripe account
+app.post('/stripe/create-connect-link', auth(USER_ROLES.RIDER), createConnectLink);
 
 
 //live response

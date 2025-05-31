@@ -99,6 +99,9 @@ const userSchema = new Schema<IUser, UserModal>(
     isOnline: {
       type: Boolean,
     },
+    stripeAccountId: {
+      type: String,
+    },
   },
   { timestamps: true },
 );

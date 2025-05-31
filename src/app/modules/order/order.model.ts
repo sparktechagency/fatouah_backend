@@ -77,6 +77,12 @@ const orderSchema = new Schema<IOrder>(
     deliveryCharge: {
       type: Number,
     },
+    commissionAmount: {
+      type: Number,
+    },
+    riderAmount: {
+      type: Number,
+    },
   },
   {
     timestamps: true,
