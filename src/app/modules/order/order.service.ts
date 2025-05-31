@@ -99,8 +99,6 @@ export const createParcelOrderToDB = async (
 
   console.log(session)
 
-  // http://10.0.70.43:5000/api/v1/stripe/webhook
-
 
   return { order, delivery, redirectUrl: session.url };
 

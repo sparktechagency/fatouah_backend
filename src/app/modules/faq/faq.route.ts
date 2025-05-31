@@ -16,8 +16,9 @@ router
   )
   .get(FaqControllers.getFaqs);
 
-router.delete(
-  '/multiple',
+
+  router.delete(
+  '/multiple-delete',
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   FaqControllers.deleteMultipleFaqs,
 );
@@ -33,5 +34,6 @@ router
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
     FaqControllers.deleteFaq,
   );
+
 
 export const FaqRoutes = router;

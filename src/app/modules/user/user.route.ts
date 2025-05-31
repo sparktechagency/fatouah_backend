@@ -19,7 +19,12 @@ router
     UserController.getUserProfile,
   )
   .patch(
-    auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.USER),
+    auth(
+      USER_ROLES.SUPER_ADMIN,
+      USER_ROLES.ADMIN,
+      USER_ROLES.RIDER,
+      USER_ROLES.USER,
+    ),
     fileUploadHandler(),
     (req: Request, res: Response, next: NextFunction) => {
       if (req.body.data) {
@@ -58,7 +63,10 @@ router.get(
 
 router
   .route('/:id')
-  .get(auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN),UserController.getUserById)
+  .get(
+    auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+    UserController.getUserById,
+  )
   .delete(
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
     UserController.deleteUserFromDB,

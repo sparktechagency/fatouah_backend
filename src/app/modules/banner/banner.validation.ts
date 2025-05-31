@@ -5,7 +5,7 @@ const createBannerZodSchema = z.object({
     title: z.string({ required_error: 'Title is required' }),
     description: z.string({ required_error: 'Description is required' }),
     image: z.string().optional(),
-    status: z.enum(['active', 'inActive']).default('active'),
+    status: z.boolean().default(true),
   }),
 });
 
