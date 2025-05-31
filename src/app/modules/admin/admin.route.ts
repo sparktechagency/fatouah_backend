@@ -27,7 +27,7 @@ router.get(
 );
 
 router.patch(
-  '/update-admin/:id',
+  '/:id/update-admin',
   auth(USER_ROLES.SUPER_ADMIN),
   AdminControllers.updateAdmin,
 );
