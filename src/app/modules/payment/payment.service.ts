@@ -10,9 +10,11 @@ export async function savePaymentInfo(paymentData: IPayment) {
 
   if (payment) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Already exists');
-  }else{
-    const result=await Payment.create(paymentData)
+  } else {
+    const result = await Payment.create(paymentData)
     return result;
   }
 
 }
+
+

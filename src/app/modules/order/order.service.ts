@@ -2,7 +2,6 @@ import { JwtPayload } from 'jsonwebtoken';
 import { IOrder } from './order.interface';
 import { Order } from './order.model';
 import { Delivery } from '../delivery/delivery.model';
-import Stripe from 'stripe';
 import stripe from '../../../config/stripe';
 // import { getDistanceAndDurationFromGoogle } from './distanceCalculation';
 
@@ -24,9 +23,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -82,15 +81,18 @@ export const createParcelOrderToDB = async (
     ],
     success_url: `https://yourdomain.com/payment-success?orderId=${order._id}`,
     cancel_url: `https://yourdomain.com/payment-cancel?orderId=${order._id}`,
-    metadata: {
-      orderId: order._id.toString(),
-      userId: user.id,
-      receiversName: payload.receiversName,
-      contact: payload.contact,
-      parcelType: payload.parcelType,
-      parcelWeight: payload.parcelWeight.toString(),
-      parcelValue: payload.parcelValue.toString(),
-      ride: payload.ride,
+    payment_intent_data: {
+      metadata: {
+        orderId: order._id.toString(),
+        userId: user.id,
+        deliveryId: delivery.id,
+        receiversName: payload.receiversName,
+        contact: payload.contact,
+        parcelType: payload.parcelType,
+        parcelWeight: payload.parcelWeight.toString(),
+        parcelValue: payload.parcelValue.toString(),
+        ride: payload.ride,
+      },
     },
     customer_email: user.email,
   });
