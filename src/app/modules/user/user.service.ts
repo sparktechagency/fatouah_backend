@@ -97,7 +97,7 @@ const getUserProfileFromDB = async (
 };
 
 const getUsersFromDB = async () => {
-  const result = await User.find({ role: "USER" });
+  const result = await User.find({ role: 'USER' });
   if (result.length === 0) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -107,13 +107,24 @@ const getUsersFromDB = async () => {
   return result;
 };
 
-const getRidersFromDB=async()=>{
-  const result=await User.find({role:"RIDER"});
-  if(result.length===0){
-    throw new ApiError(StatusCodes.BAD_REQUEST,"No rider found in the database")
+const getRidersFromDB = async () => {
+  const result = await User.find({ role: 'RIDER' });
+  if (result.length === 0) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'No rider found in the database',
+    );
   }
   return result;
-}
+};
+
+const getUserByIdFromDB = async (id: string) => {
+  const result = await User.findById(id);
+  if (!result) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'No user found in this ID');
+  }
+  return result;
+};
 
 const updateUserStatusToDB = async (id: string, status: string) => {
   const result = await User.findByIdAndUpdate(
@@ -161,6 +172,7 @@ export const UserService = {
   createUserToDB,
   getUsersFromDB,
   getRidersFromDB,
+  getUserByIdFromDB,
   getUserProfileFromDB,
   updateUserStatusToDB,
   updateProfileToDB,
