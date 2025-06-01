@@ -2,6 +2,7 @@ import { Schema } from 'mongoose';
 import { Parcel_Types, RIDES } from '../../../enums/order';
 
 export type IOrder = {
+  _id: string;
   user: Schema.Types.ObjectId;
   pickupLocation: {
     type?: 'Point';

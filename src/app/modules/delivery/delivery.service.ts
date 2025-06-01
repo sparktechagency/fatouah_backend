@@ -6,6 +6,9 @@ import { Delivery } from './delivery.model';
 import { statusTimestampsMap, UpdateStatusOptions } from './delivery.interface';
 import { Types } from 'mongoose';
 import { errorLogger } from '../../../shared/logger';
+import { Payment } from '../payment/payment.model';
+import { Order } from '../order/order.model';
+import { transferToRider } from '../../../util/stripeWebHooksHandler';
 
 // find nearest riders
 const findNearestOnlineRiders = async (location: {
@@ -195,9 +198,38 @@ const assignRiderWithTimeout = async (deliveryId: string) => {
   return delivery;
 };
 
+// const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
+//   return updateStatus({ deliveryId, status: 'ACCEPTED', riderId });
+// };
+
 const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
-  return updateStatus({ deliveryId, status: 'ACCEPTED', riderId });
+  const delivery = await updateStatus({ deliveryId, status: 'ACCEPTED', riderId });
+
+  // payment info check
+  const payment = await Payment.findOne({ deliveryId: delivery._id }); // assuming `Payment` is your model
+
+  if (payment) {
+    const rider = await User.findById(riderId);
+    const order = await Order.findById(delivery.order); // or delivery.order if populated
+
+    if (rider?.stripeAccountId && order) {
+      const transfer = await transferToRider({
+        stripeAccountId: rider.stripeAccountId,
+        amount: order.riderAmount,
+        orderId: order._id.toString(),
+      });
+
+      console.log('✅ Transfer successful:', transfer.id);
+    } else {
+      console.warn('Rider Stripe info missing or order not found');
+    }
+  } else {
+    console.warn('⚠️ Payment info not found. Skipping transfer.');
+  }
+
+  return delivery;
 };
+
 
 const rejectDeliveryByRider = async (deliveryId: string, riderId: string) => {
   return updateStatus({ deliveryId, status: 'REJECTED', riderId });

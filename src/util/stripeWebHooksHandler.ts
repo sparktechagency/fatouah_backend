@@ -3,8 +3,36 @@ import { IPayment } from '../app/modules/payment/payment.interface';
 import { savePaymentInfo } from '../app/modules/payment/payment.service';
 import stripe from '../config/stripe';
 import config from '../config';
+import { Delivery } from '../app/modules/delivery/delivery.model';
+import { User } from '../app/modules/user/user.model';
+import { IOrder } from '../app/modules/order/order.interface';
+import ApiError from '../errors/ApiError';
+import { StatusCodes } from 'http-status-codes';
 
 const WEBHOOK_SECRET = config.stripe_webhook_secret!;
+
+
+export async function transferToRider({
+  stripeAccountId,
+  amount,
+  orderId,
+}: {
+  stripeAccountId: string;
+  amount: number; // in dollars
+  orderId: string;
+}) {
+  const transfer = await stripe.transfers.create({
+    amount: Math.round(amount * 100), // in cents
+    currency: 'usd',
+    destination: stripeAccountId,
+    metadata: {
+      orderId,
+    },
+  });
+
+  return transfer;
+}
+
 
 export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
   let event: Stripe.Event;
@@ -18,27 +46,80 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
   }
 
   // Handle only payment success event
+  // if (event.type === 'payment_intent.succeeded') {
+  //   const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+  //   const paymentData: IPayment = {
+  //     transactionId: paymentIntent.id,
+  //     amountPaid: paymentIntent.amount / 100, // Stripe amount is in cents
+  //     paidAt: new Date(paymentIntent.created * 1000), // Unix timestamp to Date
+  //     deliveryId: paymentIntent.metadata.deliveryId || 'unknown',
+  //     userId: paymentIntent.metadata.userId || 'unknown',
+  //     status: paymentIntent.status,
+  //   };
+
+  //   try {
+  //     const savedPayment = await savePaymentInfo(paymentData);
+  //     return { saved: savedPayment };
+  //   } catch (error: any) {
+  //     if (error.message.includes('Already exists')) {
+  //       return { alreadyExists: true };
+  //     }
+  //     throw error;
+  //   }
+  // }
+
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
+    // Save Payment
     const paymentData: IPayment = {
       transactionId: paymentIntent.id,
-      amountPaid: paymentIntent.amount / 100, // Stripe amount is in cents
-      paidAt: new Date(paymentIntent.created * 1000), // Unix timestamp to Date
-      deliveryId: paymentIntent.metadata.deliveryId || 'unknown',
-      userId: paymentIntent.metadata.userId || 'unknown',
+      amountPaid: paymentIntent.amount / 100,
+      paidAt: new Date(paymentIntent.created * 1000),
+      deliveryId: paymentIntent.metadata.deliveryId,
+      userId: paymentIntent.metadata.userId,
       status: paymentIntent.status,
     };
 
-    try {
-      const savedPayment = await savePaymentInfo(paymentData);
-      return { saved: savedPayment };
-    } catch (error: any) {
-      if (error.message.includes('Already exists')) {
-        return { alreadyExists: true };
-      }
-      throw error;
-    }
+    const savedPayment = await savePaymentInfo(paymentData);
+
+    // // Now, get Delivery & Order info
+    // const delivery = await Delivery.findById(paymentIntent.metadata.deliveryId)
+    //   .populate<{ order: IOrder }>('order');
+
+    // if (!delivery) {
+    //   throw new ApiError(StatusCodes.BAD_REQUEST, "No delivery data found")
+    // }
+
+    // // Step 2: Get rider
+    // const riderId = delivery?.rider;
+    // const order = delivery?.order;
+
+    // if (!riderId) {
+    //   console.warn('No rider assigned yet');
+    //   return { saved: savedPayment, riderTransferSkipped: true };
+    // }
+
+    // const rider = await User.findById(riderId);
+    // if (!rider?.stripeAccountId) {
+    //   console.warn('Rider has no Stripe account');
+    //   return { saved: savedPayment, riderTransferSkipped: true };
+    // }
+    // console.log(rider.stripeAccountId, "Stripe Account ID")
+    // // Log financial breakdown
+    // console.log('Delivery Charge:', order.deliveryCharge);
+    // console.log('Commission (Platform):', order.commissionAmount);
+    // console.log('Rider Amount:', order.riderAmount);
+
+    // // Transfer to rider
+    // const transfer = await transferToRider({
+    //   stripeAccountId: rider.stripeAccountId,
+    //   amount: order.riderAmount,
+    //   orderId: order._id.toString(),
+    // });
+
+    return { saved: savedPayment };
   }
 
   // Ignore other event types
