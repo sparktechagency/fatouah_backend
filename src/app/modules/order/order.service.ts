@@ -74,8 +74,6 @@ export const createParcelOrderToDB = async (
     riderAmount,
   });
 
-  console.log(order.commissionAmount, order.riderAmount);
-
   const delivery = await Delivery.create({
     order: order._id,
     status: 'REQUESTED',
@@ -107,6 +105,7 @@ export const createParcelOrderToDB = async (
     success_url: `https://yourdomain.com/payment-success?orderId=${order._id}`,
     cancel_url: `https://yourdomain.com/payment-cancel?orderId=${order._id}`,
     payment_intent_data: {
+      // capture_method: 'manual', // capture payment
       metadata: {
         orderId: order._id.toString(),
         userId: user.id,

@@ -27,51 +27,50 @@ const parcelReport = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Parcel report are retrieved successfully",
+    message: 'Parcel report are retrieved successfully',
     data: result,
-  })
-})
+  });
+});
 
 const totalDeliveryReport = catchAsync(async (req, res) => {
   const result = await ReportServices.totalDeliveryReport();
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Total delivery data are retrieved successfully",
+    message: 'Total delivery data are retrieved successfully',
     data: result,
-  })
-})
+  });
+});
 
 const totalUsers = catchAsync(async (req, res) => {
   const result = await ReportServices.totalUsers();
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Total users data are retrieved successfully",
+    message: 'Total users data are retrieved successfully',
     data: result,
-  })
-})
+  });
+});
 
 const totalRiders = catchAsync(async (req, res) => {
   const result = await ReportServices.totalRiders();
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Total riders data are retrieved successfully",
+    message: 'Total riders data are retrieved successfully',
     data: result,
-  })
-})
+  });
+});
 
 const totalBikeAndCars = catchAsync(async (req, res) => {
   const result = await ReportServices.totalBikeAndCars();
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Total bike and car data are retrieved successfully",
+    message: 'Total bike and car data are retrieved successfully',
     data: result,
-  })
-})
-
+  });
+});
 
 export const ReportControllers = {
   userReport,
@@ -80,5 +79,5 @@ export const ReportControllers = {
   totalDeliveryReport,
   totalUsers,
   totalRiders,
-  totalBikeAndCars
+  totalBikeAndCars,
 };
