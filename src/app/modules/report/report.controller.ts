@@ -22,6 +22,8 @@ const riderReport = catchAsync(async (req, res) => {
   });
 });
 
+
+
 export const ReportControllers = {
   userReport,
   riderReport,

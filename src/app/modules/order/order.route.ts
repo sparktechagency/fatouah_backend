@@ -8,10 +8,7 @@ const router = express.Router();
 router.post(
   '/',
   auth(
-    USER_ROLES.SUPER_ADMIN,
-    USER_ROLES.ADMIN,
-    USER_ROLES.USER,
-    USER_ROLES.RIDER,
+    USER_ROLES.USER
   ),
   OrderControllers.createParcelOrder,
 );
