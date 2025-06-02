@@ -52,3 +52,27 @@ export async function createStripeOnboardingLink(
 
   return accountLink.url;
 }
+
+export const refundIfNeeded = async (deliveryId: string) => {
+  const payment = await Payment.findOne({ deliveryId });
+
+  if (payment && payment.paymentIntentId && !payment.refunded) {
+    try {
+      const refund = await stripe.refunds.create({
+        payment_intent: payment.paymentIntentId,
+      });
+
+      payment.refunded = true;
+      payment.refundId = refund.id;
+
+      await payment.save();
+
+      console.log('✅ Auto-refund successful:', refund.id);
+    } catch (err: any) {
+      console.error('❌ Auto-refund failed:', err.message);
+    }
+  } else {
+    console.warn('⚠️ No refundable payment found or already refunded');
+  }
+};
+

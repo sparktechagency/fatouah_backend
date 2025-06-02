@@ -30,6 +30,7 @@ const deliverySchema = new Schema<IDelivery>(
         'DELIVERED',
         'REJECTED',
         'CANCELLED',
+        "FAILED",
       ],
       default: 'REQUESTED',
     },
@@ -41,6 +42,7 @@ const deliverySchema = new Schema<IDelivery>(
       startedAt: Date,
       cancelledAt: Date,
       deliveredAt: Date,
+      failedAt: Date,
     },
     attempts: [
       {

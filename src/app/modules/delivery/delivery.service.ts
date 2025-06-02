@@ -10,6 +10,7 @@ import { Payment } from '../payment/payment.model';
 import { Order } from '../order/order.model';
 import { transferToRider } from '../../../util/stripeWebHooksHandler';
 import stripe from '../../../config/stripe';
+import { refundIfNeeded } from '../payment/payment.service';
 
 // find nearest riders
 const findNearestOnlineRiders = async (location: {
@@ -161,9 +162,16 @@ const assignRiderWithTimeout = async (deliveryId: string) => {
   );
 
   if (!nextRider) {
+
+    // status update
+    await updateStatus({ deliveryId, status: "FAILED" })
+
+    // refund payment
+    await refundIfNeeded(deliveryId)
+
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'No available rider found at this moment. Please try again shortly.',
+      'No available rider found at this moment. Refund user payment.',
     );
   }
 
@@ -200,6 +208,14 @@ const assignRiderWithTimeout = async (deliveryId: string) => {
 };
 
 const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
+
+  const rider = await User.findById(riderId);
+
+  //  check stripe account before proceeding
+  if (!rider?.stripeAccountId) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Rider must have a connected Stripe account to accept delivery.');
+  }
+
   const delivery = await updateStatus({
     deliveryId,
     status: 'ACCEPTED',
@@ -231,64 +247,37 @@ const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
   return delivery;
 };
 
-// const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
-//   // 1. Update delivery status
-//   const delivery = await updateStatus({ deliveryId, status: 'ACCEPTED', riderId });
-
-//   // 2. Fetch payment info (paymentIntentId is needed here)
-//   const payment = await Payment.findOne({ deliveryId: delivery._id });
-
-//   if (!payment) {
-//     console.warn('⚠️ Payment info not found. Skipping capture and transfer.');
-//     return delivery;
-//   }
-
-//   // 3. Capture the payment (charge the authorized amount)
-//   try {
-//     const paymentIntentId = payment.transactionId; // Make sure you saved this when creating the checkout session
-
-//     // Capture payment
-//     const capturedPaymentIntent = await stripe.paymentIntents.capture(paymentIntentId);
-//     console.log('✅ Payment captured:', capturedPaymentIntent.id);
-
-//     // 4. Find rider and order
-//     const rider = await User.findById(riderId);
-//     const order = await Order.findById(delivery.order);
-
-//     if (!rider?.stripeAccountId || !order) {
-//       console.warn('Rider Stripe account ID or order not found.');
-//       return delivery;
-//     }
-
-//     // 5. Transfer rider's amount to their connected account
-//     const transfer = await stripe.transfers.create({
-//       amount: Math.round(order.riderAmount * 100), // in cents
-//       currency: 'usd',
-//       destination: rider.stripeAccountId,
-//       transfer_group: `order_${order._id.toString()}`,
-//       // Optional: you can add metadata for tracking
-//       metadata: {
-//         orderId: order._id.toString(),
-//         riderId: rider._id.toString(),
-//       },
-//     });
-
-//     console.log('✅ Transfer successful:', transfer.id);
-
-//   } catch (error) {
-//     console.error('Error capturing payment or transferring:', error);
-//     // Optionally handle rollback, notify admins, etc.
-//   }
-
-//   return delivery;
-// };
-
 const rejectDeliveryByRider = async (deliveryId: string, riderId: string) => {
   return updateStatus({ deliveryId, status: 'REJECTED', riderId });
 };
 
 const cancelDeliveryByUser = async (deliveryId: string, userId: string) => {
-  return updateStatus({ deliveryId, status: 'CANCELLED', userId });
+  const delivery = await updateStatus({ deliveryId, status: 'CANCELLED', userId });
+
+  // Step 2: Find associated payment
+  const payment = await Payment.findOne({ deliveryId: delivery._id });
+
+  if (payment && payment.paymentIntentId) {
+    try {
+      // Step 3: Process refund through Stripe
+      const refund = await stripe.refunds.create({
+        payment_intent: payment.paymentIntentId,
+      });
+
+      console.log('✅ Refund successful:', refund.id);
+
+      // (Optional) Step 4: Save refund status
+      payment.refunded = true;
+      payment.refundId = refund.id;
+      await payment.save();
+
+    } catch (err: any) {
+      console.error('❌ Refund failed:', err.message);
+    }
+  } else {
+    console.warn('⚠️ No valid payment found to refund.');
+  }
+
 };
 
 const markDeliveryStarted = async (deliveryId: string, riderId: string) => {

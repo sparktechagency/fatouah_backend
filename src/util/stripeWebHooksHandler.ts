@@ -49,11 +49,15 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
 
     const paymentData: IPayment = {
       transactionId: paymentIntent.id,
+      paymentIntentId:paymentIntent.id,
+      refunded:false,
+      refundId:"",
       amountPaid: paymentIntent.amount / 100, // Stripe amount is in cents
       paidAt: new Date(paymentIntent.created * 1000), // Unix timestamp to Date
       deliveryId: paymentIntent.metadata.deliveryId || 'unknown',
       userId: paymentIntent.metadata.userId || 'unknown',
       status: paymentIntent.status,
+    
     };
 
     try {

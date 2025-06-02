@@ -64,7 +64,7 @@ app.use('/api/v1', router);
 
 // connect stripe account
 app.post(
-  '/stripe/create-connect-link',
+  '/api/v1/stripe/create-connect-link',
   auth(USER_ROLES.RIDER),
   createConnectLink,
 );
