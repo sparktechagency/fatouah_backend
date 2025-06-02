@@ -145,6 +145,25 @@ const updateStatus = async ({
   return delivery;
 };
 
+export const detectOfflineRiders = async () => {
+  const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000); // 2 minutes ago
+
+  const result = await User.updateMany(
+    {
+      isOnline: true,
+      updatedAt: { $lt: offlineThreshold },
+    },
+    { isOnline: false }
+  );
+
+  console.log(`Offline detection: ${result.modifiedCount} riders marked offline`);
+};
+
+setInterval(() => {
+  detectOfflineRiders().catch(console.error);
+}, 2 * 60 * 1000); // every 2 minutes
+
+
 const assignRiderWithTimeout = async (deliveryId: string) => {
   const delivery = await Delivery.findById(deliveryId).populate<{
     order: IOrder;

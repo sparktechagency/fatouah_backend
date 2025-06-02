@@ -3,6 +3,7 @@ import { IOrder } from './order.interface';
 import { Order } from './order.model';
 import { Delivery } from '../delivery/delivery.model';
 import stripe from '../../../config/stripe';
+import { generateOrderId } from '../../../helpers/generateOrderId';
 // import { getDistanceAndDurationFromGoogle } from './distanceCalculation';
 
 const getRatePerKm = (ride: string) => {
@@ -31,9 +32,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -64,9 +65,13 @@ export const createParcelOrderToDB = async (
   const riderAmount =
     Math.round((deliveryCharge - commissionAmount) * 100) / 100;
 
+  // generate orderID
+  const orderId = await generateOrderId()
+
   // create order with calculated distance and deliveryCharge
   const order = await Order.create({
     ...payload,
+    orderId,
     user: user.id,
     distance,
     deliveryCharge,
