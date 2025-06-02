@@ -121,6 +121,8 @@ export const createParcelOrderToDB = async (
         parcelWeight: payload.parcelWeight.toString(),
         parcelValue: payload.parcelValue.toString(),
         ride: payload.ride,
+        commissionAmount: commissionAmount.toString(),
+        riderAmount: riderAmount.toString()
       },
     },
     customer_email: user.email,

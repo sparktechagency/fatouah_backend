@@ -16,6 +16,12 @@ const paymentSchema = new Schema<IPayment>({
   },
   refundId: {
     type: String,
+  },
+  commissionAmount: {
+    type: Number,
+  },
+  riderAmount: {
+    type: Number,
   }
 });
 

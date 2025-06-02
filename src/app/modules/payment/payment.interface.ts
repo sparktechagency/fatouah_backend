@@ -8,4 +8,6 @@ export type IPayment = {
   status: string;
   refunded?: boolean;
   refundId?: string;
+  commissionAmount: number;
+  riderAmount: number;
 };

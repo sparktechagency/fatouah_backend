@@ -96,6 +96,36 @@ const updateProfile = catchAsync(
   },
 );
 
+
+const adminUpdateUserProfile = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const profileData = req.body;
+    const userId = req.params.userId;
+
+    let image = '';
+    if (req.files && 'image' in req.files && req.files.image[0]) {
+      image = `/images/${req.files.image[0].filename}`;
+    }
+
+    const data = {
+      ...profileData,
+      image,
+    };
+
+
+    const result = await UserService.adminUpdateUserProfileToDB(userId, data);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Profile updated successfully by admin',
+      data: result,
+    });
+  },
+);
+
+
+
 const deleteUserFromDB = catchAsync(async (req, res) => {
   const id = req.params.id;
   const result = await UserService.deleteUserFromDB(id);
@@ -115,5 +145,6 @@ export const UserController = {
   getUserById,
   updateUserStatus,
   updateProfile,
+  adminUpdateUserProfile,
   deleteUserFromDB,
 };

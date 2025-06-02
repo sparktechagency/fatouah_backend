@@ -36,6 +36,8 @@ router
     },
   );
 
+router.patch("/profile/:userId/admin", fileUploadHandler(), auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),UserController.adminUpdateUserProfile)
+
 router.patch(
   '/:id/status',
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
@@ -60,6 +62,8 @@ router.get(
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   UserController.getRiders,
 );
+
+
 
 router
   .route('/:id')

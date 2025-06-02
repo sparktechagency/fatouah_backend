@@ -160,6 +160,30 @@ const updateProfileToDB = async (
   return updateDoc;
 };
 
+const adminUpdateUserProfileToDB = async (
+  userId: string,
+  payload: Partial<IUser>,
+): Promise<Partial<IUser | null>> => {
+  const isExistUser = await User.isExistUserById(userId);
+  if (!isExistUser) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+  }
+
+  // Unlink old image if new image is uploaded
+  if (payload.image && isExistUser.image) {
+    unlinkFile(isExistUser.image);
+  }
+
+  const result = await User.findOneAndUpdate(
+    { _id: userId },
+    payload,
+    { new: true }
+  );
+
+  return result;
+};
+
+
 const deleteUserFromDB = async (id: string) => {
   const result = await User.findByIdAndDelete(id);
   if (!result) {
@@ -175,6 +199,7 @@ export const UserService = {
   getUserByIdFromDB,
   getUserProfileFromDB,
   updateUserStatusToDB,
+  adminUpdateUserProfileToDB,
   updateProfileToDB,
   deleteUserFromDB,
 };
