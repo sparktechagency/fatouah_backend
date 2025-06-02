@@ -72,6 +72,17 @@ const totalBikeAndCars = catchAsync(async (req, res) => {
   });
 });
 
+const getUserOrderHistory = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const result = await ReportServices.getUserOrderHistory(userId);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Order history are retrieved successfully",
+    data: result,
+  })
+})
+
 export const ReportControllers = {
   userReport,
   riderReport,
@@ -80,4 +91,5 @@ export const ReportControllers = {
   totalUsers,
   totalRiders,
   totalBikeAndCars,
+  getUserOrderHistory
 };

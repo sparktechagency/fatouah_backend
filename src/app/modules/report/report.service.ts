@@ -245,7 +245,7 @@ const totalDeliveryReport = async (): Promise<number> => {
   return Delivery.countDocuments(filter).exec();
 };
 
-export const totalUsers = async (): Promise<number> => {
+const totalUsers = async (): Promise<number> => {
   return await User.countDocuments({
     verified: true,
     role: 'USER',
@@ -253,7 +253,7 @@ export const totalUsers = async (): Promise<number> => {
   });
 };
 
-export const totalRiders = async (): Promise<number> => {
+const totalRiders = async (): Promise<number> => {
   return await User.countDocuments({
     verified: true,
     role: 'RIDER',
@@ -261,7 +261,7 @@ export const totalRiders = async (): Promise<number> => {
   });
 };
 
-export const totalBikeAndCars = async () => {
+const totalBikeAndCars = async () => {
   const [bikeCount, carCount] = await Promise.all([
     User.countDocuments({
       vehicleType: 'BIKE',
@@ -283,6 +283,24 @@ export const totalBikeAndCars = async () => {
   };
 };
 
+
+const getUserOrderHistory = async (userId: string) => {
+
+  // const payments = await Payment.find({ userId }).populate("deliveryId")
+
+  const payments = await Payment.find({ userId }).populate({
+    path: "deliveryId",
+    populate: {
+      path: "order", // this should match the field name in Delivery schema
+      model: "Order", // ensure this matches what you used in mongoose.model("Order", ...)
+    },
+  });
+
+  return payments;
+
+}
+
+
 export const ReportServices = {
   userReport,
   riderReport,
@@ -291,4 +309,5 @@ export const ReportServices = {
   totalUsers,
   totalRiders,
   totalBikeAndCars,
+  getUserOrderHistory,
 };
