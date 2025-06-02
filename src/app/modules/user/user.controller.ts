@@ -96,7 +96,6 @@ const updateProfile = catchAsync(
   },
 );
 
-
 const adminUpdateUserProfile = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const profileData = req.body;
@@ -112,7 +111,6 @@ const adminUpdateUserProfile = catchAsync(
       image,
     };
 
-
     const result = await UserService.adminUpdateUserProfileToDB(userId, data);
 
     sendResponse(res, {
@@ -123,8 +121,6 @@ const adminUpdateUserProfile = catchAsync(
     });
   },
 );
-
-
 
 const deleteUserFromDB = catchAsync(async (req, res) => {
   const id = req.params.id;

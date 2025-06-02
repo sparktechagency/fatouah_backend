@@ -4,9 +4,10 @@ import { IPayment } from './payment.interface';
 const paymentSchema = new Schema<IPayment>({
   transactionId: { type: String, required: true, unique: true },
   paymentIntentId: {
-    type: String, required: true
+    type: String,
+    required: true,
   },
-  deliveryId: { type: String, required: true, ref: "Delivery" },
+  deliveryId: { type: String, required: true, ref: 'Delivery' },
   userId: { type: String, required: true },
   amountPaid: { type: Number, required: true },
   paidAt: { type: Date, required: true },
@@ -22,7 +23,7 @@ const paymentSchema = new Schema<IPayment>({
   },
   riderAmount: {
     type: Number,
-  }
+  },
 });
 
 export const Payment = model<IPayment>('Payment', paymentSchema);

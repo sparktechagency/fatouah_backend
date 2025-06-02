@@ -19,6 +19,10 @@ router.get('/total-rider', ReportControllers.totalRiders);
 
 router.get('/total-vehicle', ReportControllers.totalBikeAndCars);
 
-router.get("/order-history", auth(USER_ROLES.USER, USER_ROLES.RIDER), ReportControllers.getUserOrderHistory)
+router.get(
+  '/order-history',
+  auth(USER_ROLES.USER, USER_ROLES.RIDER),
+  ReportControllers.getUserOrderHistory,
+);
 
 export const ReportRoutes = router;

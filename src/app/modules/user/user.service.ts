@@ -174,15 +174,12 @@ const adminUpdateUserProfileToDB = async (
     unlinkFile(isExistUser.image);
   }
 
-  const result = await User.findOneAndUpdate(
-    { _id: userId },
-    payload,
-    { new: true }
-  );
+  const result = await User.findOneAndUpdate({ _id: userId }, payload, {
+    new: true,
+  });
 
   return result;
 };
-
 
 const deleteUserFromDB = async (id: string) => {
   const result = await User.findByIdAndDelete(id);

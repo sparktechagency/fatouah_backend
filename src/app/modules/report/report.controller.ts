@@ -78,10 +78,10 @@ const getUserOrderHistory = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Order history are retrieved successfully",
+    message: 'Order history are retrieved successfully',
     data: result,
-  })
-})
+  });
+});
 
 export const ReportControllers = {
   userReport,
@@ -91,5 +91,5 @@ export const ReportControllers = {
   totalUsers,
   totalRiders,
   totalBikeAndCars,
-  getUserOrderHistory
+  getUserOrderHistory,
 };

@@ -1,5 +1,4 @@
-import { Order } from "../app/modules/order/order.model";
-
+import { Order } from '../app/modules/order/order.model';
 
 export const generateOrderId = async (): Promise<string> => {
   const now = new Date();
@@ -7,9 +6,8 @@ export const generateOrderId = async (): Promise<string> => {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const dateString = `${year}${month}${day}`; 
+  const dateString = `${year}${month}${day}`;
 
- 
   const startOfDay = new Date(now.setHours(0, 0, 0, 0));
   const endOfDay = new Date(now.setHours(23, 59, 59, 999));
 

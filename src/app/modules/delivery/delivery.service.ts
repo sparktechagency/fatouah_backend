@@ -153,16 +153,20 @@ export const detectOfflineRiders = async () => {
       isOnline: true,
       updatedAt: { $lt: offlineThreshold },
     },
-    { isOnline: false }
+    { isOnline: false },
   );
 
-  console.log(`Offline detection: ${result.modifiedCount} riders marked offline`);
+  console.log(
+    `Offline detection: ${result.modifiedCount} riders marked offline`,
+  );
 };
 
-setInterval(() => {
-  detectOfflineRiders().catch(console.error);
-}, 2 * 60 * 1000); // every 2 minutes
-
+setInterval(
+  () => {
+    detectOfflineRiders().catch(console.error);
+  },
+  2 * 60 * 1000,
+); // every 2 minutes
 
 const assignRiderWithTimeout = async (deliveryId: string) => {
   const delivery = await Delivery.findById(deliveryId).populate<{
@@ -181,12 +185,11 @@ const assignRiderWithTimeout = async (deliveryId: string) => {
   );
 
   if (!nextRider) {
-
     // status update
-    await updateStatus({ deliveryId, status: "FAILED" })
+    await updateStatus({ deliveryId, status: 'FAILED' });
 
     // refund payment
-    await refundIfNeeded(deliveryId)
+    await refundIfNeeded(deliveryId);
 
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -227,12 +230,14 @@ const assignRiderWithTimeout = async (deliveryId: string) => {
 };
 
 const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
-
   const rider = await User.findById(riderId);
 
   //  check stripe account before proceeding
   if (!rider?.stripeAccountId) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Rider must have a connected Stripe account to accept delivery.');
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Rider must have a connected Stripe account to accept delivery.',
+    );
   }
 
   const delivery = await updateStatus({
@@ -271,7 +276,11 @@ const rejectDeliveryByRider = async (deliveryId: string, riderId: string) => {
 };
 
 const cancelDeliveryByUser = async (deliveryId: string, userId: string) => {
-  const delivery = await updateStatus({ deliveryId, status: 'CANCELLED', userId });
+  const delivery = await updateStatus({
+    deliveryId,
+    status: 'CANCELLED',
+    userId,
+  });
 
   // Step 2: Find associated payment
   const payment = await Payment.findOne({ deliveryId: delivery._id });
@@ -289,14 +298,12 @@ const cancelDeliveryByUser = async (deliveryId: string, userId: string) => {
       payment.refunded = true;
       payment.refundId = refund.id;
       await payment.save();
-
     } catch (err: any) {
       console.error('❌ Refund failed:', err.message);
     }
   } else {
     console.warn('⚠️ No valid payment found to refund.');
   }
-
 };
 
 const markDeliveryStarted = async (deliveryId: string, riderId: string) => {

@@ -4,7 +4,6 @@ import { StatusCodes } from 'http-status-codes';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import router from './routes';
 import { Morgan } from './shared/morgen';
-
 import stripe from './config/stripe';
 import config from './config';
 import {
@@ -81,7 +80,7 @@ app.get('/check-balance', async (req, res) => {
       available: balance.available,
       pending: balance.pending,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('🔴 Error retrieving balance:', error);
 
     return res.status(500).json({

@@ -30,7 +30,7 @@ const deliverySchema = new Schema<IDelivery>(
         'DELIVERED',
         'REJECTED',
         'CANCELLED',
-        "FAILED",
+        'FAILED',
       ],
       default: 'REQUESTED',
     },

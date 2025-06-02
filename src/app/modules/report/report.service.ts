@@ -283,23 +283,19 @@ const totalBikeAndCars = async () => {
   };
 };
 
-
 const getUserOrderHistory = async (userId: string) => {
-
   // const payments = await Payment.find({ userId }).populate("deliveryId")
 
   const payments = await Payment.find({ userId }).populate({
-    path: "deliveryId",
+    path: 'deliveryId',
     populate: {
-      path: "order", // this should match the field name in Delivery schema
-      model: "Order", // ensure this matches what you used in mongoose.model("Order", ...)
+      path: 'order', // this should match the field name in Delivery schema
+      model: 'Order', // ensure this matches what you used in mongoose.model("Order", ...)
     },
   });
 
   return payments;
-
-}
-
+};
 
 export const ReportServices = {
   userReport,

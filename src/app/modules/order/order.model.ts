@@ -6,7 +6,6 @@ const orderSchema = new Schema<IOrder>(
   {
     orderId: {
       type: String,
-
     },
     user: {
       type: Types.ObjectId,

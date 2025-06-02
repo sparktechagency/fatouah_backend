@@ -32,9 +32,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-    Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -66,7 +66,7 @@ export const createParcelOrderToDB = async (
     Math.round((deliveryCharge - commissionAmount) * 100) / 100;
 
   // generate orderID
-  const orderId = await generateOrderId()
+  const orderId = await generateOrderId();
 
   // create order with calculated distance and deliveryCharge
   const order = await Order.create({
@@ -122,7 +122,7 @@ export const createParcelOrderToDB = async (
         parcelValue: payload.parcelValue.toString(),
         ride: payload.ride,
         commissionAmount: commissionAmount.toString(),
-        riderAmount: riderAmount.toString()
+        riderAmount: riderAmount.toString(),
       },
     },
     customer_email: user.email,
