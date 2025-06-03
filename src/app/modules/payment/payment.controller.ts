@@ -33,4 +33,3 @@ export const createConnectLink = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Stripe connect account creation failed' });
   }
 };
-

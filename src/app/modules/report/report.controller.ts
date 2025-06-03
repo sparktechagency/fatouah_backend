@@ -77,10 +77,10 @@ const totalAdminEarnings = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Total admin earnings data are retrieved successfully",
+    message: 'Total admin earnings data are retrieved successfully',
     data: result,
-  })
-})
+  });
+});
 
 const totalMonthlyDeliveryReport = catchAsync(async (req, res) => {
   const year = req.query.year;
@@ -88,11 +88,10 @@ const totalMonthlyDeliveryReport = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Retrieved monthly delivery report",
+    message: 'Retrieved monthly delivery report',
     data: result,
-  })
-})
-
+  });
+});
 
 const revenueAnalyticsReport = catchAsync(async (req, res) => {
   const year = req.query.year;
@@ -100,10 +99,10 @@ const revenueAnalyticsReport = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Retrieved revenue analytics report",
+    message: 'Retrieved revenue analytics report',
     data: result,
-  })
-})
+  });
+});
 
 const getUserOrderHistory = catchAsync(async (req, res) => {
   const userId = req.user.id;
@@ -121,10 +120,10 @@ const getBalanceTransactions = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Successfully retrieved are balance transactions data",
+    message: 'Successfully retrieved are balance transactions data',
     data: result,
-  })
-})
+  });
+});
 
 export const ReportControllers = {
   userReport,

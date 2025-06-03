@@ -468,7 +468,7 @@ const totalMonthlyDeliveryReport = async (year: any) => {
   // Fill missing months with zero count
   const monthlyData = [];
   for (let m = 1; m <= 12; m++) {
-    const monthData = result.find((r) => r.month === m);
+    const monthData = result.find(r => r.month === m);
     monthlyData.push({
       month: m,
       totalDeliveries: monthData ? monthData.totalDeliveries : 0,
@@ -533,7 +533,7 @@ const revenueAnalyticsReport = async (year: any) => {
   // Missing month gula 0 diye fill korbo
   const monthlyData = [];
   for (let m = 1; m <= 12; m++) {
-    const monthData = result.find((r) => r.month === m);
+    const monthData = result.find(r => r.month === m);
     monthlyData.push({
       month: m,
       totalCommission: monthData ? monthData.totalCommission : 0,
@@ -543,23 +543,19 @@ const revenueAnalyticsReport = async (year: any) => {
   return monthlyData;
 };
 
-const getBalanceTransactions=async()=>{
-
-}
-
+const getBalanceTransactions = async () => {};
 
 const getUserOrderHistory = async (userId: string) => {
   const payments = await Payment.find({ userId }).populate({
     path: 'deliveryId',
     populate: {
-      path: 'order', 
-      model: 'Order', 
+      path: 'order',
+      model: 'Order',
     },
   });
 
   return payments;
 };
-
 
 export const ReportServices = {
   userReport,
