@@ -3,6 +3,8 @@ import { Payment } from '../payment/payment.model';
 import { User } from '../user/user.model';
 import { IDelivery } from '../delivery/delivery.interface';
 import { Delivery } from '../delivery/delivery.model';
+import { startOfDay, endOfDay, subDays } from 'date-fns';
+const { startOfYear, endOfYear } = require('date-fns');
 
 const userReport = async () => {
   const result = await User.aggregate([
@@ -239,11 +241,6 @@ const parcelReport = async () => {
   return result;
 };
 
-const totalDeliveryReport = async (): Promise<number> => {
-  const filter: FilterQuery<IDelivery> = { status: 'DELIVERED' };
-
-  return Delivery.countDocuments(filter).exec();
-};
 
 const totalUsers = async (): Promise<number> => {
   return await User.countDocuments({
@@ -283,6 +280,209 @@ const totalBikeAndCars = async () => {
   };
 };
 
+const totalDeliveryReport = async () => {
+  const result = await Payment.aggregate([
+    {
+      $match: {
+        status: 'succeeded',
+        refunded: { $ne: true },
+      },
+    },
+    {
+      $addFields: {
+        deliveryObjectId: { $toObjectId: '$deliveryId' },
+      },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: 'deliveryObjectId',
+        foreignField: '_id',
+        as: 'delivery',
+      },
+    },
+    { $unwind: '$delivery' },
+    {
+      $match: {
+        'delivery.status': 'DELIVERED',
+      },
+    },
+    {
+      $count: 'totalDelivered',
+    },
+  ]);
+
+  const totalDelivered = result[0]?.totalDelivered || 0;
+  return totalDelivered;
+};
+
+const totalAdminEarnings = async () => {
+  const todayStart = startOfDay(new Date());
+  const todayEnd = endOfDay(new Date());
+  const yesterdayStart = startOfDay(subDays(new Date(), 1));
+  const yesterdayEnd = endOfDay(subDays(new Date(), 1));
+
+  const result = await Payment.aggregate([
+    {
+      $match: {
+        status: 'succeeded',
+        refunded: { $ne: true },
+      },
+    },
+    {
+      $addFields: {
+        deliveryObjectId: { $toObjectId: '$deliveryId' },
+      },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: 'deliveryObjectId',
+        foreignField: '_id',
+        as: 'delivery',
+      },
+    },
+    { $unwind: '$delivery' },
+    {
+      $match: {
+        'delivery.status': 'DELIVERED',
+      },
+    },
+    {
+      $facet: {
+        today: [
+          {
+            $match: {
+              paidAt: { $gte: todayStart, $lte: todayEnd },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalCommission: { $sum: '$commissionAmount' },
+            },
+          },
+        ],
+        yesterday: [
+          {
+            $match: {
+              paidAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalCommission: { $sum: '$commissionAmount' },
+            },
+          },
+        ],
+        allTime: [
+          {
+            $group: {
+              _id: null,
+              totalCommission: { $sum: '$commissionAmount' },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  const todayTotal = result[0].today[0]?.totalCommission || 0;
+  const yesterdayTotal = result[0].yesterday[0]?.totalCommission || 0;
+  const allTimeTotal = result[0].allTime[0]?.totalCommission || 0;
+
+  let percentageChange = 0;
+  let isGrowth = false;
+
+  if (yesterdayTotal === 0) {
+    if (todayTotal > 0) {
+      percentageChange = 100; // or any large number you want to show for big growth
+      isGrowth = true;
+    }
+  } else {
+    percentageChange = ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100;
+    isGrowth = percentageChange > 0;
+  }
+
+  // Optional: Cap percentageChange to 100% for better UX
+  percentageChange = Math.min(Math.abs(percentageChange), 100);
+
+  return {
+    today: todayTotal,
+    yesterday: yesterdayTotal,
+    percentageChange: Number(percentageChange.toFixed(2)),
+    isGrowth,
+    allTimeTotal,
+  };
+};
+
+const totalMonthlyDeliveryReport = async (year:any) => {
+  const currentYear = new Date().getFullYear();
+  const selectedYear = year || currentYear;
+
+  const yearStart = startOfYear(new Date(selectedYear, 0, 1));
+  const yearEnd = endOfYear(new Date(selectedYear, 0, 1));
+
+  const result = await Payment.aggregate([
+    {
+      $match: {
+        status: 'succeeded',
+        refunded: { $ne: true },
+        paidAt: { $gte: yearStart, $lte: yearEnd },
+      },
+    },
+    {
+      $addFields: {
+        deliveryObjectId: { $toObjectId: '$deliveryId' },
+      },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: 'deliveryObjectId',
+        foreignField: '_id',
+        as: 'delivery',
+      },
+    },
+    { $unwind: '$delivery' },
+    {
+      $match: {
+        'delivery.status': 'DELIVERED',
+      },
+    },
+    {
+      $group: {
+        _id: { month: { $month: '$paidAt' } },
+        totalDeliveries: { $sum: 1 },
+      },
+    },
+    {
+      $sort: { '_id.month': 1 },
+    },
+    {
+      $project: {
+        _id: 0,
+        month: '$_id.month',
+        totalDeliveries: 1,
+      },
+    },
+  ]);
+
+  // Fill missing months with zero count
+  const monthlyData = [];
+  for (let m = 1; m <= 12; m++) {
+    const monthData = result.find((r) => r.month === m);
+    monthlyData.push({
+      month: m,
+      totalDeliveries: monthData ? monthData.totalDeliveries : 0,
+    });
+  }
+
+  return monthlyData;
+};
+
+
 const getUserOrderHistory = async (userId: string) => {
   // const payments = await Payment.find({ userId }).populate("deliveryId")
 
@@ -297,6 +497,7 @@ const getUserOrderHistory = async (userId: string) => {
   return payments;
 };
 
+
 export const ReportServices = {
   userReport,
   riderReport,
@@ -305,5 +506,7 @@ export const ReportServices = {
   totalUsers,
   totalRiders,
   totalBikeAndCars,
+  totalAdminEarnings,
+  totalMonthlyDeliveryReport,
   getUserOrderHistory,
 };

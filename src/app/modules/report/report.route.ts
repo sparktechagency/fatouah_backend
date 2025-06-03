@@ -19,6 +19,10 @@ router.get('/total-rider', ReportControllers.totalRiders);
 
 router.get('/total-vehicle', ReportControllers.totalBikeAndCars);
 
+router.get("/total-admin-earning",ReportControllers.totalAdminEarnings);
+
+router.get("/total-monthly-delivery-report",ReportControllers.totalMonthlyDeliveryReport);
+
 router.get(
   '/order-history',
   auth(USER_ROLES.USER, USER_ROLES.RIDER),

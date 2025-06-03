@@ -72,6 +72,27 @@ const totalBikeAndCars = catchAsync(async (req, res) => {
   });
 });
 
+const totalAdminEarnings = catchAsync(async (req, res) => {
+  const result = await ReportServices.totalAdminEarnings();
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Total admin earnings data are retrieved successfully",
+    data: result,
+  })
+})
+
+const totalMonthlyDeliveryReport = catchAsync(async (req, res) => {
+  const year = req.query.year;
+  const result = await ReportServices.totalMonthlyDeliveryReport(year);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Retrieved monthly delivery report",
+    data: result,
+  })
+})
+
 const getUserOrderHistory = catchAsync(async (req, res) => {
   const userId = req.user.id;
   const result = await ReportServices.getUserOrderHistory(userId);
@@ -91,5 +112,7 @@ export const ReportControllers = {
   totalUsers,
   totalRiders,
   totalBikeAndCars,
+  totalAdminEarnings,
+  totalMonthlyDeliveryReport,
   getUserOrderHistory,
 };
