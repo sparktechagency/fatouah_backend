@@ -11,5 +11,4 @@ export type IPayment = {
   commissionAmount: number;
   riderAmount: number;
   isTransferred: Boolean;
-
 };

@@ -271,7 +271,6 @@ const updateStatus = async ({
   return delivery;
 };
 
-
 export const detectOfflineRiders = async () => {
   const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000); // 2 minutes ago
 
@@ -292,7 +291,7 @@ setInterval(
   () => {
     detectOfflineRiders().catch(console.error);
   },
-  2 * 60 * 1000,
+  10 * 60 * 1000,
 ); // every 2 minutes
 
 const assignRiderWithTimeout = async (deliveryId: string) => {
@@ -351,7 +350,7 @@ const assignRiderWithTimeout = async (deliveryId: string) => {
         errorLogger.error('🚨 Error during rider reassignment:', err);
       }
     })();
-  }, 60000); // 1 minute
+  }, 600000); // 1 minute  60000
 
   return delivery;
 };
@@ -399,7 +398,11 @@ const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
 };
 
 const rejectDeliveryByRider = async (deliveryId: string, riderId: string) => {
-  return updateStatus({ deliveryId, status: 'REJECTED', riderId });
+  await updateStatus({ deliveryId, status: 'REJECTED', riderId });
+
+  await updateStatus({ deliveryId, status: 'REQUESTED' });
+
+  return await assignRiderWithTimeout(deliveryId);
 };
 
 const cancelDeliveryByUser = async (deliveryId: string, userId: string) => {
@@ -433,24 +436,37 @@ const cancelDeliveryByUser = async (deliveryId: string, userId: string) => {
   }
 };
 
-const markDeliveryArrivedPickedUp = async (deliveryId: string, riderId: string) => {
+const markDeliveryArrivedPickedUp = async (
+  deliveryId: string,
+  riderId: string,
+) => {
   if (!riderId)
     throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
-  return updateStatus({ deliveryId, status: 'ARRIVED_PICKED_UP', riderId });
+  return await updateStatus({
+    deliveryId,
+    status: 'ARRIVED_PICKED_UP',
+    riderId,
+  });
 };
 
 const markDeliveryStarted = async (deliveryId: string, riderId: string) => {
   if (!riderId)
     throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
-  return updateStatus({ deliveryId, status: 'STARTED', riderId });
+  return await updateStatus({ deliveryId, status: 'STARTED', riderId });
 };
 
-const markDeliveryArrivedDestination = async (deliveryId: string, riderId: string) => {
+const markDeliveryArrivedDestination = async (
+  deliveryId: string,
+  riderId: string,
+) => {
   if (!riderId)
     throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
-  return updateStatus({ deliveryId, status: 'ARRIVED_DESTINATION', riderId });
+  return await updateStatus({
+    deliveryId,
+    status: 'ARRIVED_DESTINATION',
+    riderId,
+  });
 };
-
 
 // use transaction roll back
 // const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
@@ -545,7 +561,6 @@ const markDeliveryArrivedDestination = async (deliveryId: string, riderId: strin
 //   }
 // };
 
-
 // const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
 //   const session = await mongoose.startSession();
 //   session.startTransaction();
@@ -559,7 +574,7 @@ const markDeliveryArrivedDestination = async (deliveryId: string, riderId: strin
 //       deliveryId,
 //       status: 'DELIVERED',
 //       riderId,
-//       session, 
+//       session,
 //     });
 
 //     const payment = await Payment.findOne({ deliveryId }).session(session);
@@ -594,12 +609,11 @@ const markDeliveryArrivedDestination = async (deliveryId: string, riderId: strin
 //     payment.isTransferred = true;
 //     await payment.save({ session });
 
-   
 //     await session.commitTransaction();
 //     return await Delivery.findById(deliveryId);
 
 //   } catch (error) {
-  
+
 //     await session.abortTransaction();
 //     console.error('❌ Transaction failed, rollback initiated:', error);
 //     throw error;
@@ -622,7 +636,10 @@ const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
 
     const payment = await Payment.findOne({ deliveryId });
     if (!payment) {
-      throw new ApiError(StatusCodes.NOT_FOUND, 'No payment found for this delivery');
+      throw new ApiError(
+        StatusCodes.NOT_FOUND,
+        'No payment found for this delivery',
+      );
     }
 
     if (payment.isTransferred) {
@@ -633,7 +650,10 @@ const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
     const order = await Order.findById(delivery.order);
 
     if (!rider?.stripeAccountId) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, 'Rider Stripe account not found');
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Rider Stripe account not found',
+      );
     }
 
     if (!order) {
@@ -653,13 +673,11 @@ const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
     await payment.save();
 
     return await Delivery.findById(deliveryId);
-
   } catch (error) {
     console.error('❌ markDeliveryCompleted failed:', error);
     throw error;
   }
 };
-
 
 const getDeliveryDetails = async (deliveryId: string) => {
   const delivery = await Delivery.findById(deliveryId).populate('order');

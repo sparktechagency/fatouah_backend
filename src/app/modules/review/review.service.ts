@@ -6,48 +6,11 @@ import { Review } from './review.model';
 import { JwtPayload } from 'jsonwebtoken';
 import { Order } from '../order/order.model';
 
-// const createReviewToDB = async (payload: IReview, user: JwtPayload) => {
-//   const { rider, rating } = payload;
-
-//   payload.customer = user.id;
-//   const customer = user.id;
-
-//   // validate rating
-//   if (rating < 1 || rating > 5) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Rating must be between 1 and 5',
-//     );
-//   }
-
-//   // check if customer exists
-//   const isCustomerExist = await User.findById(customer);
-//   if (!isCustomerExist) {
-//     throw new ApiError(StatusCodes.NOT_FOUND, 'Customer not found in database');
-//   }
-
-//   // check if rider exists
-//   const isRiderExist = await User.findById(rider);
-//   if (!isRiderExist) {
-//     throw new ApiError(StatusCodes.NOT_FOUND, 'Rider not found in database');
-//   }
-
-//   // check if user is already review this rider
-//   const existingReview = await Review.findOne({ customer, rider });
-//   if (existingReview) {
-//     throw new ApiError(
-//       StatusCodes.CONFLICT,
-//       'You have already reviewed this rider',
-//     );
-//   }
-
-//   const result = await Review.create(payload);
-
-//   return result;
-// };
-
-
-const createReviewToDB = async (payload: IReview, user: JwtPayload, orderId: string) => {
+const createReviewToDB = async (
+  payload: IReview,
+  user: JwtPayload,
+  orderId: string,
+) => {
   const { rider, rating } = payload;
 
   payload.customer = user.id;
@@ -76,7 +39,10 @@ const createReviewToDB = async (payload: IReview, user: JwtPayload, orderId: str
   // check if order exists
   const isOrderExist = await Order.findById(orderId);
   if (!isOrderExist) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Order is nout found in database")
+    throw new ApiError(
+      StatusCodes.NOT_FOUND,
+      'Order is nout found in database',
+    );
   }
 
   // check if orderId is provided
@@ -85,7 +51,11 @@ const createReviewToDB = async (payload: IReview, user: JwtPayload, orderId: str
   }
 
   // check if user already reviewed this rider for this order
-  const existingReview = await Review.findOne({ customer, rider, order: orderId });
+  const existingReview = await Review.findOne({
+    customer,
+    rider,
+    order: orderId,
+  });
   if (existingReview) {
     throw new ApiError(
       StatusCodes.CONFLICT,
@@ -101,20 +71,22 @@ const createReviewToDB = async (payload: IReview, user: JwtPayload, orderId: str
   return result;
 };
 
-
 export const getRiderReviewsFromDB = async (id: string) => {
-  const reviews = await Review.find({ rider: id }).populate('customer', 'name').populate("rider","name vehicleType").sort({ createdAt: -1 });;
+  const reviews = await Review.find({ rider: id })
+    .populate('customer', 'name')
+    .populate('rider', 'name vehicleType')
+    .sort({ createdAt: -1 });
 
   const totalReviews = reviews.length;
   const averageRating =
     totalReviews === 0
       ? 0
       : parseFloat(
-        (
-          reviews.reduce((sum, review) => sum + review.rating, 0) /
-          totalReviews
-        ).toFixed(1),
-      );
+          (
+            reviews.reduce((sum, review) => sum + review.rating, 0) /
+            totalReviews
+          ).toFixed(1),
+        );
 
   return {
     totalReviews,

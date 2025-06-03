@@ -27,8 +27,7 @@ const paymentSchema = new Schema<IPayment>({
   isTransferred: {
     type: Boolean,
     default: false,
-  }
-
+  },
 });
 
 export const Payment = model<IPayment>('Payment', paymentSchema);

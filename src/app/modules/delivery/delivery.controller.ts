@@ -100,8 +100,6 @@ const markDeliveryStarted = catchAsync(async (req, res) => {
   });
 });
 
-
-
 const markDeliveryArrivedDestination = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
   const riderId = req.user.id;
@@ -116,8 +114,6 @@ const markDeliveryArrivedDestination = catchAsync(async (req, res) => {
     data: result,
   });
 });
-
-
 
 const markDeliveryCompleted = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;

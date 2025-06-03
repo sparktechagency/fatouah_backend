@@ -52,8 +52,6 @@ router.post(
   DeliveryControllers.markDeliveryArrivedDestination,
 );
 
-
-
 router.post(
   '/:deliveryId/completed',
   auth(USER_ROLES.RIDER),
