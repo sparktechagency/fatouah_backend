@@ -4,7 +4,7 @@ import { IOrder } from '../order/order.interface';
 import { User } from '../user/user.model';
 import { Delivery } from './delivery.model';
 import { statusTimestampsMap, UpdateStatusOptions } from './delivery.interface';
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { errorLogger } from '../../../shared/logger';
 import { Payment } from '../payment/payment.model';
 import { Order } from '../order/order.model';
@@ -73,77 +73,204 @@ const updateRiderLocation = async (
   return result;
 };
 
+// const updateStatus = async ({
+//   deliveryId,
+//   status,
+//   riderId,
+//   userId,
+// }: UpdateStatusOptions) => {
+//   const delivery = await Delivery.findById(deliveryId).populate<{
+//     order: IOrder;
+//   }>('order');
+//   if (!delivery)
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
+
+//   // Validate status transitions and permissions
+
+//   if (status === 'ACCEPTED') {
+//     if (delivery.status !== 'ASSIGNED')
+//       throw new ApiError(
+//         StatusCodes.BAD_REQUEST,
+//         'Delivery not in ASSIGNED state',
+//       );
+//     if (!riderId || delivery.rider?.toString() !== riderId)
+//       throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
+//   }
+
+//   if (status === 'REJECTED') {
+//     if (!riderId || delivery.rider?.toString() !== riderId)
+//       throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
+//   }
+
+//   if (status === 'CANCELLED') {
+//     if (!userId || delivery.order?.user.toString() !== userId)
+//       throw new ApiError(StatusCodes.FORBIDDEN, 'Not authorized to cancel');
+//     if (['DELIVERED', 'CANCELLED'].includes(delivery.status))
+//       throw new ApiError(
+//         StatusCodes.BAD_REQUEST,
+//         'Cannot cancel delivered or cancelled delivery',
+//       );
+//   }
+
+//   if (status === 'ASSIGNED') {
+//     if (!riderId)
+//       throw new ApiError(
+//         StatusCodes.BAD_REQUEST,
+//         'RiderId required for assignment',
+//       );
+//     delivery.rider = new Types.ObjectId(riderId);
+//   }
+
+//   // Remove rider for some statuses
+//   if (['REQUESTED', 'REJECTED', 'CANCELLED'].includes(status)) {
+//     delivery.rider = undefined;
+//   }
+
+//   delivery.status = status;
+
+//   // Set timestamp if available
+//   const tsKey = statusTimestampsMap[status];
+//   if (tsKey) delivery.timestamps[tsKey] = new Date();
+
+//   await delivery.save();
+
+//   // @ts-ignore
+//   const io = global.io;
+//   if (io) {
+//     io.emit(`delivery-status::${deliveryId}`, {
+//       delivery,
+//     });
+//   }
+
+//   return delivery;
+// };
+
+const finalStatuses = ['DELIVERED', 'CANCELLED', 'FAILED'];
+
 const updateStatus = async ({
   deliveryId,
   status,
   riderId,
   userId,
+  session,
 }: UpdateStatusOptions) => {
-  const delivery = await Delivery.findById(deliveryId).populate<{
-    order: IOrder;
-  }>('order');
-  if (!delivery)
+  const delivery = await Delivery.findById(deliveryId)
+    .populate<{ order: IOrder }>('order')
+    .session(session || null);
+
+  if (!delivery) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
+  }
 
-  // Validate status transitions and permissions
+  // prevent updates if delivery already in a final state (excluding REJECTED)
+  if (finalStatuses.includes(delivery.status)) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      `Cannot change status once delivery is ${delivery.status}`,
+    );
+  }
 
+  // restrict assigned before requested
+  if (status === 'ASSIGNED' && delivery.status !== 'REQUESTED') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Cannot assign delivery before it is requested',
+    );
+  }
+
+  // accept only if current status is ASSIGNED
+  if (status === 'ACCEPTED' && delivery.status !== 'ASSIGNED') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Can only accept delivery if status is ASSIGNED',
+    );
+  }
+
+  // ARRIVED_PICKED_UP only allowed after ACCEPTED
+  if (status === 'ARRIVED_PICKED_UP' && delivery.status !== 'ACCEPTED') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Cannot mark ARRIVED_PICKED_UP before ACCEPTED',
+    );
+  }
+
+  // started only allowed after ARRIVED_PICKED_UP
+  if (status === 'STARTED' && delivery.status !== 'ARRIVED_PICKED_UP') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Cannot start delivery before ARRIVED_PICKED_UP',
+    );
+  }
+
+  // ARRIVED_DESTINATION only allowed after STARTED
+  if (status === 'ARRIVED_DESTINATION' && delivery.status !== 'STARTED') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Cannot mark ARRIVED_DESTINATION before STARTED',
+    );
+  }
+
+  // delivered only allowed after ARRIVED_DESTINATION
+  if (status === 'DELIVERED' && delivery.status !== 'ARRIVED_DESTINATION') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Cannot mark DELIVERED before ARRIVED_DESTINATION',
+    );
+  }
+
+  // validate permissions based on status
   if (status === 'ACCEPTED') {
-    if (delivery.status !== 'ASSIGNED')
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        'Delivery not in ASSIGNED state',
-      );
-    if (!riderId || delivery.rider?.toString() !== riderId)
+    if (!riderId || delivery.rider?.toString() !== riderId) {
       throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
+    }
   }
 
   if (status === 'REJECTED') {
-    if (!riderId || delivery.rider?.toString() !== riderId)
+    if (!riderId || delivery.rider?.toString() !== riderId) {
       throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
+    }
   }
 
   if (status === 'CANCELLED') {
-    if (!userId || delivery.order?.user.toString() !== userId)
+    if (!userId || delivery.order?.user.toString() !== userId) {
       throw new ApiError(StatusCodes.FORBIDDEN, 'Not authorized to cancel');
-    if (['DELIVERED', 'CANCELLED'].includes(delivery.status))
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        'Cannot cancel delivered or cancelled delivery',
-      );
+    }
   }
 
   if (status === 'ASSIGNED') {
-    if (!riderId)
+    if (!riderId) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
         'RiderId required for assignment',
       );
+    }
     delivery.rider = new Types.ObjectId(riderId);
   }
 
-  // Remove rider for some statuses
+  // Remove rider on these statuses
   if (['REQUESTED', 'REJECTED', 'CANCELLED'].includes(status)) {
     delivery.rider = undefined;
   }
 
   delivery.status = status;
 
-  // Set timestamp if available
   const tsKey = statusTimestampsMap[status];
-  if (tsKey) delivery.timestamps[tsKey] = new Date();
+  if (tsKey) {
+    delivery.timestamps = delivery.timestamps || {};
+    delivery.timestamps[tsKey] = new Date();
+  }
 
-  await delivery.save();
+  await delivery.save({ session });
 
   // @ts-ignore
   const io = global.io;
   if (io) {
-    io.emit(`delivery-status::${deliveryId}`, {
-      delivery,
-    });
+    io.emit(`delivery-status::${deliveryId}`, { delivery });
   }
 
   return delivery;
 };
+
 
 export const detectOfflineRiders = async () => {
   const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000); // 2 minutes ago
@@ -246,27 +373,27 @@ const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
     riderId,
   });
 
-  // payment info check
-  const payment = await Payment.findOne({ deliveryId: delivery._id }); // assuming `Payment` is your model
+  // // payment info check
+  // const payment = await Payment.findOne({ deliveryId: delivery._id }); // assuming `Payment` is your model
 
-  if (payment) {
-    const rider = await User.findById(riderId);
-    const order = await Order.findById(delivery.order); // or delivery.order if populated
+  // if (payment) {
+  //   const rider = await User.findById(riderId);
+  //   const order = await Order.findById(delivery.order); // or delivery.order if populated
 
-    if (rider?.stripeAccountId && order) {
-      const transfer = await transferToRider({
-        stripeAccountId: rider.stripeAccountId,
-        amount: order.riderAmount,
-        orderId: order._id.toString(),
-      });
+  //   if (rider?.stripeAccountId && order) {
+  //     const transfer = await transferToRider({
+  //       stripeAccountId: rider.stripeAccountId,
+  //       amount: order.riderAmount,
+  //       orderId: order._id.toString(),
+  //     });
 
-      console.log('✅ Transfer successful:', transfer.id);
-    } else {
-      console.warn('Rider Stripe info missing or order not found');
-    }
-  } else {
-    console.warn('⚠️ Payment info not found. Skipping transfer.');
-  }
+  //     console.log('✅ Transfer successful:', transfer.id);
+  //   } else {
+  //     console.warn('Rider Stripe info missing or order not found');
+  //   }
+  // } else {
+  //   console.warn('⚠️ Payment info not found. Skipping transfer.');
+  // }
 
   return delivery;
 };
@@ -306,28 +433,116 @@ const cancelDeliveryByUser = async (deliveryId: string, userId: string) => {
   }
 };
 
+const markDeliveryArrivedPickedUp = async (deliveryId: string, riderId: string) => {
+  if (!riderId)
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
+  return updateStatus({ deliveryId, status: 'ARRIVED_PICKED_UP', riderId });
+};
+
 const markDeliveryStarted = async (deliveryId: string, riderId: string) => {
   if (!riderId)
     throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
   return updateStatus({ deliveryId, status: 'STARTED', riderId });
 };
 
-const markDeliveryArrived = async (deliveryId: string, riderId: string) => {
+const markDeliveryArrivedDestination = async (deliveryId: string, riderId: string) => {
   if (!riderId)
     throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
-  return updateStatus({ deliveryId, status: 'ARRIVED', riderId });
+  return updateStatus({ deliveryId, status: 'ARRIVED_DESTINATION', riderId });
 };
 
-const markDeliveryPickedUp = async (deliveryId: string, riderId: string) => {
-  if (!riderId)
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
-  return updateStatus({ deliveryId, status: 'PICKED_UP', riderId });
-};
+
+
+// const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
+//   if (!riderId)
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
+//   return updateStatus({ deliveryId, status: 'DELIVERED', riderId });
+// };
+
+// const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
+//   if (!riderId)
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
+
+//   const delivery = await updateStatus({
+//     deliveryId,
+//     status: 'DELIVERED',
+//     riderId,
+//   });
+
+//   // payment transfer to rider
+//   const rider = await User.findById(riderId);
+//   const payment = await Payment.findOne({ deliveryId: delivery._id });
+//   const order = await Order.findById(delivery.order);
+
+//   if (rider?.stripeAccountId && payment && order) {
+//     const transfer = await transferToRider({
+//       stripeAccountId: rider.stripeAccountId,
+//       amount: order.riderAmount,
+//       orderId: order._id.toString(),
+//     });
+
+//     console.log('✅ Transfer successful:', transfer.id);
+//   } else {
+//     console.warn('⚠️ Transfer failed: Rider/Payment/Order doest not exist.');
+//   }
+
+//   return delivery;
+// };
 
 const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
-  if (!riderId)
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
-  return updateStatus({ deliveryId, status: 'DELIVERED', riderId });
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      if (!riderId) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
+      }
+
+      const delivery = await updateStatus(
+        { deliveryId, status: 'DELIVERED', riderId, session },
+
+      );
+
+      const payment = await Payment.findOne({ deliveryId }).session(session);
+      if (!payment) {
+        throw new ApiError(StatusCodes.NOT_FOUND, 'No payment found for this delivery');
+      }
+
+      if (payment.isTransferred) {
+        throw new ApiError(StatusCodes.CONFLICT, 'Payment already transferred');
+      }
+
+      const rider = await User.findById(riderId).session(session);
+      const order = await Order.findById(delivery.order).session(session);
+
+      if (!rider?.stripeAccountId) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, 'Rider Stripe account not found');
+      }
+
+      if (!order) {
+        throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found');
+      }
+
+      //  transfer payment to rider
+      const transfer = await transferToRider({
+        stripeAccountId: rider.stripeAccountId,
+        amount: order.riderAmount,
+        orderId: order._id.toString(),
+      });
+
+      console.log('✅ Transfer successful:', transfer.id);
+
+      payment.isTransferred = true;
+      await payment.save({ session });
+    });
+
+    return await Delivery.findById(deliveryId);
+
+  } catch (error) {
+    console.error('❌ Transaction failed:', error);
+    throw error;
+  } finally {
+    session.endSession();
+  }
 };
 
 const getDeliveryDetails = async (deliveryId: string) => {
@@ -349,7 +564,7 @@ export const DeliveryServices = {
   acceptDeliveryByRider,
   updateRiderLocation,
   markDeliveryStarted,
-  markDeliveryArrived,
-  markDeliveryPickedUp,
+  markDeliveryArrivedPickedUp,
+  markDeliveryArrivedDestination,
   markDeliveryCompleted,
 };

@@ -10,4 +10,6 @@ export type IPayment = {
   refundId?: string;
   commissionAmount: number;
   riderAmount: number;
+  isTransferred: Boolean;
+
 };

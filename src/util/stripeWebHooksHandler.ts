@@ -60,6 +60,7 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
       commissionAmount:
         parseFloat(paymentIntent.metadata.commissionAmount) || 0,
       riderAmount: parseFloat(paymentIntent.metadata.riderAmount) || 0,
+      isTransferred: false,
     };
 
     try {

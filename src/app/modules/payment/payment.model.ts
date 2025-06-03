@@ -24,6 +24,11 @@ const paymentSchema = new Schema<IPayment>({
   riderAmount: {
     type: Number,
   },
+  isTransferred: {
+    type: Boolean,
+    default: false,
+  }
+
 });
 
 export const Payment = model<IPayment>('Payment', paymentSchema);

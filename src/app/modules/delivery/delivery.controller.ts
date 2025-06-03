@@ -70,6 +70,21 @@ const cancelDeliveryByUser = catchAsync(async (req, res) => {
   });
 });
 
+const markDeliveryArrivedPickedUp = catchAsync(async (req, res) => {
+  const deliveryId = req.params.deliveryId;
+  const riderId = req.user.id;
+  const result = await DeliveryServices.markDeliveryArrivedPickedUp(
+    deliveryId,
+    riderId,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Rider has arrived at pick up location',
+    data: result,
+  });
+});
+
 const markDeliveryStarted = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
   const riderId = req.user.id;
@@ -85,10 +100,12 @@ const markDeliveryStarted = catchAsync(async (req, res) => {
   });
 });
 
-const markDeliveryArrived = catchAsync(async (req, res) => {
+
+
+const markDeliveryArrivedDestination = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
   const riderId = req.user.id;
-  const result = await DeliveryServices.markDeliveryArrived(
+  const result = await DeliveryServices.markDeliveryArrivedDestination(
     deliveryId,
     riderId,
   );
@@ -100,20 +117,7 @@ const markDeliveryArrived = catchAsync(async (req, res) => {
   });
 });
 
-const markDeliveryPickedUp = catchAsync(async (req, res) => {
-  const deliveryId = req.params.deliveryId;
-  const riderId = req.user.id;
-  const result = await DeliveryServices.markDeliveryPickedUp(
-    deliveryId,
-    riderId,
-  );
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Order picked up successfully',
-    data: result,
-  });
-});
+
 
 const markDeliveryCompleted = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
@@ -166,7 +170,7 @@ export const DeliveryControllers = {
   acceptDeliveryByRider,
   updateRiderLocation,
   markDeliveryStarted,
-  markDeliveryArrived,
-  markDeliveryPickedUp,
+  markDeliveryArrivedDestination,
+  markDeliveryArrivedPickedUp,
   markDeliveryCompleted,
 };

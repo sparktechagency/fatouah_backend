@@ -41,15 +41,15 @@ router.post(
 );
 
 router.post(
-  '/:deliveryId/mark-arrived',
+  '/:deliveryId/arrived-destination',
   auth(USER_ROLES.RIDER),
-  DeliveryControllers.markDeliveryArrived,
+  DeliveryControllers.markDeliveryArrivedDestination,
 );
 
 router.post(
-  '/:deliveryId/mark-picked-up',
+  '/:deliveryId/arrived-picked-up',
   auth(USER_ROLES.RIDER),
-  DeliveryControllers.markDeliveryPickedUp,
+  DeliveryControllers.markDeliveryArrivedPickedUp,
 );
 
 router.post(
