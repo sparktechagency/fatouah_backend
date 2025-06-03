@@ -116,6 +116,16 @@ const getUserOrderHistory = catchAsync(async (req, res) => {
   });
 });
 
+const getBalanceTransactions = catchAsync(async (req, res) => {
+  const result = await ReportServices.getBalanceTransactions();
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Successfully retrieved are balance transactions data",
+    data: result,
+  })
+})
+
 export const ReportControllers = {
   userReport,
   riderReport,
@@ -127,5 +137,6 @@ export const ReportControllers = {
   totalAdminEarnings,
   totalMonthlyDeliveryReport,
   revenueAnalyticsReport,
+  getBalanceTransactions,
   getUserOrderHistory,
 };

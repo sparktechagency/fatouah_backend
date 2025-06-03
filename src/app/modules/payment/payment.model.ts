@@ -28,6 +28,11 @@ const paymentSchema = new Schema<IPayment>({
     type: Boolean,
     default: false,
   },
-});
+},
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
 
 export const Payment = model<IPayment>('Payment', paymentSchema);

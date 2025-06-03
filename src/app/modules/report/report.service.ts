@@ -1,8 +1,5 @@
-import { FilterQuery } from 'mongoose';
 import { Payment } from '../payment/payment.model';
 import { User } from '../user/user.model';
-import { IDelivery } from '../delivery/delivery.interface';
-import { Delivery } from '../delivery/delivery.model';
 import { startOfDay, endOfDay, subDays } from 'date-fns';
 const { startOfYear, endOfYear } = require('date-fns');
 
@@ -241,7 +238,6 @@ const parcelReport = async () => {
   return result;
 };
 
-
 const totalUsers = async (): Promise<number> => {
   return await User.countDocuments({
     verified: true,
@@ -417,7 +413,7 @@ const totalAdminEarnings = async () => {
   };
 };
 
-const totalMonthlyDeliveryReport = async (year:any) => {
+const totalMonthlyDeliveryReport = async (year: any) => {
   const currentYear = new Date().getFullYear();
   const selectedYear = year || currentYear;
 
@@ -482,7 +478,7 @@ const totalMonthlyDeliveryReport = async (year:any) => {
   return monthlyData;
 };
 
-const revenueAnalyticsReport = async (year:any) => {
+const revenueAnalyticsReport = async (year: any) => {
   const currentYear = new Date().getFullYear();
   const selectedYear = year || currentYear;
 
@@ -547,15 +543,17 @@ const revenueAnalyticsReport = async (year:any) => {
   return monthlyData;
 };
 
+const getBalanceTransactions=async()=>{
+
+}
+
 
 const getUserOrderHistory = async (userId: string) => {
-  // const payments = await Payment.find({ userId }).populate("deliveryId")
-
   const payments = await Payment.find({ userId }).populate({
     path: 'deliveryId',
     populate: {
-      path: 'order', // this should match the field name in Delivery schema
-      model: 'Order', // ensure this matches what you used in mongoose.model("Order", ...)
+      path: 'order', 
+      model: 'Order', 
     },
   });
 
@@ -574,5 +572,6 @@ export const ReportServices = {
   totalAdminEarnings,
   totalMonthlyDeliveryReport,
   revenueAnalyticsReport,
+  getBalanceTransactions,
   getUserOrderHistory,
 };

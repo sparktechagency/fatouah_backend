@@ -25,6 +25,8 @@ router.get("/total-monthly-delivery-report", auth(USER_ROLES.SUPER_ADMIN,USER_RO
 
 router.get("/revenue-analytics-report", auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.revenueAnalyticsReport)
 
+router.get("/balance-transaction",ReportControllers.getBalanceTransactions)
+
 router.get(
   '/order-history',
   auth(USER_ROLES.USER, USER_ROLES.RIDER),
