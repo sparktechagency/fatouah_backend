@@ -93,6 +93,18 @@ const totalMonthlyDeliveryReport = catchAsync(async (req, res) => {
   })
 })
 
+
+const revenueAnalyticsReport = catchAsync(async (req, res) => {
+  const year = req.query.year;
+  const result = await ReportServices.revenueAnalyticsReport(year);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Retrieved revenue analytics report",
+    data: result,
+  })
+})
+
 const getUserOrderHistory = catchAsync(async (req, res) => {
   const userId = req.user.id;
   const result = await ReportServices.getUserOrderHistory(userId);
@@ -114,5 +126,6 @@ export const ReportControllers = {
   totalBikeAndCars,
   totalAdminEarnings,
   totalMonthlyDeliveryReport,
+  revenueAnalyticsReport,
   getUserOrderHistory,
 };

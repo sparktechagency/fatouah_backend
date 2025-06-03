@@ -5,23 +5,25 @@ import { USER_ROLES } from '../../../enums/user';
 
 const router = express.Router();
 
-router.get('/user-report', ReportControllers.userReport);
+router.get('/user-report',auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.userReport);
 
-router.get('/rider-report', ReportControllers.riderReport);
+router.get('/rider-report',auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.riderReport);
 
-router.get('/parcel-report', ReportControllers.parcelReport);
+router.get('/parcel-report',auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.parcelReport);
 
-router.get('/total-delivery-report', ReportControllers.totalDeliveryReport);
+router.get('/total-delivery-report',auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.totalDeliveryReport);
 
-router.get('/total-user', ReportControllers.totalUsers);
+router.get('/total-user',auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.totalUsers);
 
-router.get('/total-rider', ReportControllers.totalRiders);
+router.get('/total-rider',auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.totalRiders);
 
-router.get('/total-vehicle', ReportControllers.totalBikeAndCars);
+router.get('/total-vehicle',auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.totalBikeAndCars);
 
-router.get("/total-admin-earning",ReportControllers.totalAdminEarnings);
+router.get("/total-admin-earning", auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.totalAdminEarnings);
 
-router.get("/total-monthly-delivery-report",ReportControllers.totalMonthlyDeliveryReport);
+router.get("/total-monthly-delivery-report", auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.totalMonthlyDeliveryReport);
+
+router.get("/revenue-analytics-report", auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.revenueAnalyticsReport)
 
 router.get(
   '/order-history',

@@ -482,6 +482,71 @@ const totalMonthlyDeliveryReport = async (year:any) => {
   return monthlyData;
 };
 
+const revenueAnalyticsReport = async (year:any) => {
+  const currentYear = new Date().getFullYear();
+  const selectedYear = year || currentYear;
+
+  const yearStart = startOfYear(new Date(selectedYear, 0, 1));
+  const yearEnd = endOfYear(new Date(selectedYear, 0, 1));
+
+  const result = await Payment.aggregate([
+    {
+      $match: {
+        status: 'succeeded',
+        refunded: { $ne: true },
+        paidAt: { $gte: yearStart, $lte: yearEnd },
+      },
+    },
+    {
+      $addFields: {
+        deliveryObjectId: { $toObjectId: '$deliveryId' },
+      },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: 'deliveryObjectId',
+        foreignField: '_id',
+        as: 'delivery',
+      },
+    },
+    { $unwind: '$delivery' },
+    {
+      $match: {
+        'delivery.status': 'DELIVERED',
+      },
+    },
+    {
+      $group: {
+        _id: { month: { $month: '$paidAt' } },
+        totalCommission: { $sum: '$commissionAmount' },
+      },
+    },
+    {
+      $sort: { '_id.month': 1 },
+    },
+    {
+      $project: {
+        _id: 0,
+        month: '$_id.month',
+        totalCommission: 1,
+      },
+    },
+  ]);
+
+  // Missing month gula 0 diye fill korbo
+  const monthlyData = [];
+  for (let m = 1; m <= 12; m++) {
+    const monthData = result.find((r) => r.month === m);
+    monthlyData.push({
+      month: m,
+      totalCommission: monthData ? monthData.totalCommission : 0,
+    });
+  }
+
+  return monthlyData;
+};
+
 
 const getUserOrderHistory = async (userId: string) => {
   // const payments = await Payment.find({ userId }).populate("deliveryId")
@@ -508,5 +573,6 @@ export const ReportServices = {
   totalBikeAndCars,
   totalAdminEarnings,
   totalMonthlyDeliveryReport,
+  revenueAnalyticsReport,
   getUserOrderHistory,
 };
