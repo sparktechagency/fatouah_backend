@@ -452,7 +452,7 @@ const markDeliveryArrivedDestination = async (deliveryId: string, riderId: strin
 };
 
 
-
+// use transaction roll back
 // const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
 //   if (!riderId)
 //     throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
@@ -489,61 +489,177 @@ const markDeliveryArrivedDestination = async (deliveryId: string, riderId: strin
 //   return delivery;
 // };
 
+// const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
+//   const session = await mongoose.startSession();
+//   try {
+//     await session.withTransaction(async () => {
+//       if (!riderId) {
+//         throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
+//       }
+
+//       const delivery = await updateStatus(
+//         { deliveryId, status: 'DELIVERED', riderId, session },
+
+//       );
+
+//       const payment = await Payment.findOne({ deliveryId }).session(session);
+//       if (!payment) {
+//         throw new ApiError(StatusCodes.NOT_FOUND, 'No payment found for this delivery');
+//       }
+
+//       if (payment.isTransferred) {
+//         throw new ApiError(StatusCodes.CONFLICT, 'Payment already transferred');
+//       }
+
+//       const rider = await User.findById(riderId).session(session);
+//       const order = await Order.findById(delivery.order).session(session);
+
+//       if (!rider?.stripeAccountId) {
+//         throw new ApiError(StatusCodes.BAD_REQUEST, 'Rider Stripe account not found');
+//       }
+
+//       if (!order) {
+//         throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found');
+//       }
+
+//       //  transfer payment to rider
+//       const transfer = await transferToRider({
+//         stripeAccountId: rider.stripeAccountId,
+//         amount: order.riderAmount,
+//         orderId: order._id.toString(),
+//       });
+
+//       console.log('✅ Transfer successful:', transfer.id);
+
+//       payment.isTransferred = true;
+//       await payment.save({ session });
+//     });
+
+//     return await Delivery.findById(deliveryId);
+
+//   } catch (error) {
+//     console.error('❌ Transaction failed:', error);
+//     throw error;
+//   } finally {
+//     session.endSession();
+//   }
+// };
+
+
+// const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
+//   const session = await mongoose.startSession();
+//   session.startTransaction();
+
+//   try {
+//     if (!riderId) {
+//       throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
+//     }
+
+//     const delivery = await updateStatus({
+//       deliveryId,
+//       status: 'DELIVERED',
+//       riderId,
+//       session, 
+//     });
+
+//     const payment = await Payment.findOne({ deliveryId }).session(session);
+//     if (!payment) {
+//       throw new ApiError(StatusCodes.NOT_FOUND, 'No payment found for this delivery');
+//     }
+
+//     if (payment.isTransferred) {
+//       throw new ApiError(StatusCodes.CONFLICT, 'Payment already transferred');
+//     }
+
+//     const rider = await User.findById(riderId).session(session);
+//     const order = await Order.findById(delivery.order).session(session);
+
+//     if (!rider?.stripeAccountId) {
+//       throw new ApiError(StatusCodes.BAD_REQUEST, 'Rider Stripe account not found');
+//     }
+
+//     if (!order) {
+//       throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found');
+//     }
+
+//     // transfer payment to rider
+//     const transfer = await transferToRider({
+//       stripeAccountId: rider.stripeAccountId,
+//       amount: order.riderAmount,
+//       orderId: order._id.toString(),
+//     });
+
+//     console.log('✅ Transfer successful:', transfer.id);
+
+//     payment.isTransferred = true;
+//     await payment.save({ session });
+
+   
+//     await session.commitTransaction();
+//     return await Delivery.findById(deliveryId);
+
+//   } catch (error) {
+  
+//     await session.abortTransaction();
+//     console.error('❌ Transaction failed, rollback initiated:', error);
+//     throw error;
+//   } finally {
+//     session.endSession();
+//   }
+// };
+
 const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
-  const session = await mongoose.startSession();
   try {
-    await session.withTransaction(async () => {
-      if (!riderId) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
-      }
+    if (!riderId) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'RiderId is required');
+    }
 
-      const delivery = await updateStatus(
-        { deliveryId, status: 'DELIVERED', riderId, session },
-
-      );
-
-      const payment = await Payment.findOne({ deliveryId }).session(session);
-      if (!payment) {
-        throw new ApiError(StatusCodes.NOT_FOUND, 'No payment found for this delivery');
-      }
-
-      if (payment.isTransferred) {
-        throw new ApiError(StatusCodes.CONFLICT, 'Payment already transferred');
-      }
-
-      const rider = await User.findById(riderId).session(session);
-      const order = await Order.findById(delivery.order).session(session);
-
-      if (!rider?.stripeAccountId) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, 'Rider Stripe account not found');
-      }
-
-      if (!order) {
-        throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found');
-      }
-
-      //  transfer payment to rider
-      const transfer = await transferToRider({
-        stripeAccountId: rider.stripeAccountId,
-        amount: order.riderAmount,
-        orderId: order._id.toString(),
-      });
-
-      console.log('✅ Transfer successful:', transfer.id);
-
-      payment.isTransferred = true;
-      await payment.save({ session });
+    const delivery = await updateStatus({
+      deliveryId,
+      status: 'DELIVERED',
+      riderId,
     });
+
+    const payment = await Payment.findOne({ deliveryId });
+    if (!payment) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'No payment found for this delivery');
+    }
+
+    if (payment.isTransferred) {
+      throw new ApiError(StatusCodes.CONFLICT, 'Payment already transferred');
+    }
+
+    const rider = await User.findById(riderId);
+    const order = await Order.findById(delivery.order);
+
+    if (!rider?.stripeAccountId) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Rider Stripe account not found');
+    }
+
+    if (!order) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found');
+    }
+
+    // transfer payment to rider
+    const transfer = await transferToRider({
+      stripeAccountId: rider.stripeAccountId,
+      amount: order.riderAmount,
+      orderId: order._id.toString(),
+    });
+
+    console.log('✅ Transfer successful:', transfer.id);
+
+    payment.isTransferred = true;
+    await payment.save();
 
     return await Delivery.findById(deliveryId);
 
   } catch (error) {
-    console.error('❌ Transaction failed:', error);
+    console.error('❌ markDeliveryCompleted failed:', error);
     throw error;
-  } finally {
-    session.endSession();
   }
 };
+
 
 const getDeliveryDetails = async (deliveryId: string) => {
   const delivery = await Delivery.findById(deliveryId).populate('order');

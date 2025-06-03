@@ -4,6 +4,7 @@ import { User } from '../user/user.model';
 import { IReview } from './review.interface';
 import { Review } from './review.model';
 import { JwtPayload } from 'jsonwebtoken';
+import { Order } from '../order/order.model';
 
 // const createReviewToDB = async (payload: IReview, user: JwtPayload) => {
 //   const { rider, rating } = payload;
@@ -72,6 +73,12 @@ const createReviewToDB = async (payload: IReview, user: JwtPayload, orderId: str
     throw new ApiError(StatusCodes.NOT_FOUND, 'Rider not found in database');
   }
 
+  // check if order exists
+  const isOrderExist = await Order.findById(orderId);
+  if (!isOrderExist) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Order is nout found in database")
+  }
+
   // check if orderId is provided
   if (!orderId) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Order ID must be provided');
@@ -96,7 +103,7 @@ const createReviewToDB = async (payload: IReview, user: JwtPayload, orderId: str
 
 
 export const getRiderReviewsFromDB = async (id: string) => {
-  const reviews = await Review.find({ rider: id }).populate('customer', 'name').sort({ createdAt: -1 });;
+  const reviews = await Review.find({ rider: id }).populate('customer', 'name').populate("rider","name vehicleType").sort({ createdAt: -1 });;
 
   const totalReviews = reviews.length;
   const averageRating =

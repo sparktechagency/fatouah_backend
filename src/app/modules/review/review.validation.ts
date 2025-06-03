@@ -6,6 +6,7 @@ const createReviewZodSchema = z.object({
     rider: z.string({ required_error: 'Rider ID is required' }),
     rating: z.number({ required_error: 'Rating is required' }),
     comment: z.string({ required_error: 'Comment is required' }),
+    order: z.string().optional(),
   }),
 });
 

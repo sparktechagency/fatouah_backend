@@ -5,7 +5,7 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
 });
 
-export const sendToTopic = async (topic: any, message: any) => {
+export const sendToTopic = async (topic: any, message: any) => { 
   const payload = {
     notification: {
       title: message.title,

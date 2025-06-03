@@ -35,7 +35,13 @@ router.post(
 );
 
 router.post(
-  '/:deliveryId/mark-started',
+  '/:deliveryId/arrived-picked-up',
+  auth(USER_ROLES.RIDER),
+  DeliveryControllers.markDeliveryArrivedPickedUp,
+);
+
+router.post(
+  '/:deliveryId/started',
   auth(USER_ROLES.RIDER),
   DeliveryControllers.markDeliveryStarted,
 );
@@ -46,14 +52,10 @@ router.post(
   DeliveryControllers.markDeliveryArrivedDestination,
 );
 
-router.post(
-  '/:deliveryId/arrived-picked-up',
-  auth(USER_ROLES.RIDER),
-  DeliveryControllers.markDeliveryArrivedPickedUp,
-);
+
 
 router.post(
-  '/:deliveryId/mark-completed',
+  '/:deliveryId/completed',
   auth(USER_ROLES.RIDER),
   DeliveryControllers.markDeliveryCompleted,
 );
