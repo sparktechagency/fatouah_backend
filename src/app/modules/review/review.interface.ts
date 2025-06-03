@@ -5,4 +5,5 @@ export type IReview = {
   rider: Schema.Types.ObjectId;
   rating: number;
   comment: string;
+  order?: string;
 };

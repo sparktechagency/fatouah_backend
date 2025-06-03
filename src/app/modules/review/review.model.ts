@@ -23,6 +23,11 @@ const reviewSchema = new Schema<IReview>(
       required: true,
       trim: true,
     },
+    order: {
+      type: Types.ObjectId,
+      ref: 'Order',
+      required: true,
+    },
   },
   {
     timestamps: true,
