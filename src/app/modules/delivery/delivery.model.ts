@@ -5,18 +5,6 @@ const deliverySchema = new Schema<IDelivery>(
   {
     order: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
     rider: { type: Schema.Types.ObjectId, ref: 'User' },
-    // riderCurrentLocation: {
-    //   type: {
-    //     type: String,
-    //     enum: ['Point'],
-    //     default: 'Point',
-    //   },
-    //   coordinates: {
-    //     type: [Number],
-    //     default: [0, 0],
-    //     index: '2dsphere',
-    //   },
-    // },
     status: {
       type: String,
       enum: [

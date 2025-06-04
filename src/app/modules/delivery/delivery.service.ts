@@ -4,7 +4,7 @@ import { IOrder } from '../order/order.interface';
 import { User } from '../user/user.model';
 import { Delivery } from './delivery.model';
 import { statusTimestampsMap, UpdateStatusOptions } from './delivery.interface';
-import mongoose, { Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { errorLogger } from '../../../shared/logger';
 import { Payment } from '../payment/payment.model';
 import { Order } from '../order/order.model';
@@ -72,78 +72,6 @@ const updateRiderLocation = async (
 
   return result;
 };
-
-// const updateStatus = async ({
-//   deliveryId,
-//   status,
-//   riderId,
-//   userId,
-// }: UpdateStatusOptions) => {
-//   const delivery = await Delivery.findById(deliveryId).populate<{
-//     order: IOrder;
-//   }>('order');
-//   if (!delivery)
-//     throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
-
-//   // Validate status transitions and permissions
-
-//   if (status === 'ACCEPTED') {
-//     if (delivery.status !== 'ASSIGNED')
-//       throw new ApiError(
-//         StatusCodes.BAD_REQUEST,
-//         'Delivery not in ASSIGNED state',
-//       );
-//     if (!riderId || delivery.rider?.toString() !== riderId)
-//       throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
-//   }
-
-//   if (status === 'REJECTED') {
-//     if (!riderId || delivery.rider?.toString() !== riderId)
-//       throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
-//   }
-
-//   if (status === 'CANCELLED') {
-//     if (!userId || delivery.order?.user.toString() !== userId)
-//       throw new ApiError(StatusCodes.FORBIDDEN, 'Not authorized to cancel');
-//     if (['DELIVERED', 'CANCELLED'].includes(delivery.status))
-//       throw new ApiError(
-//         StatusCodes.BAD_REQUEST,
-//         'Cannot cancel delivered or cancelled delivery',
-//       );
-//   }
-
-//   if (status === 'ASSIGNED') {
-//     if (!riderId)
-//       throw new ApiError(
-//         StatusCodes.BAD_REQUEST,
-//         'RiderId required for assignment',
-//       );
-//     delivery.rider = new Types.ObjectId(riderId);
-//   }
-
-//   // Remove rider for some statuses
-//   if (['REQUESTED', 'REJECTED', 'CANCELLED'].includes(status)) {
-//     delivery.rider = undefined;
-//   }
-
-//   delivery.status = status;
-
-//   // Set timestamp if available
-//   const tsKey = statusTimestampsMap[status];
-//   if (tsKey) delivery.timestamps[tsKey] = new Date();
-
-//   await delivery.save();
-
-//   // @ts-ignore
-//   const io = global.io;
-//   if (io) {
-//     io.emit(`delivery-status::${deliveryId}`, {
-//       delivery,
-//     });
-//   }
-
-//   return delivery;
-// };
 
 const finalStatuses = ['DELIVERED', 'CANCELLED', 'FAILED'];
 
@@ -262,13 +190,34 @@ const updateStatus = async ({
 
   await delivery.save({ session });
 
+  await delivery.save({ session });
+
+  const updatedDelivery = await Delivery.findById(delivery._id)
+    .populate('rider')
+    .populate('order');
+
+    // console.log(delivery.order.user,"Delivery Order User")
+    // console.log(delivery?.rider?._id,"Delivery Rider Id")
+
   // @ts-ignore
   const io = global.io;
+
   if (io) {
-    io.emit(`delivery-status::${deliveryId}`, { delivery });
+    const roomsToNotify = [
+      `user::${delivery.order?.user}`,  // Notify the user
+      `rider::${delivery.rider?._id}`, // Notify the assigned rider
+    ];
+
+    roomsToNotify.forEach(room => {
+      io.to(room).emit("delivery-updated", {
+        delivery: updatedDelivery,
+        message: `Delivery status changed to ${status}`,
+      });
+    });
   }
 
-  return delivery;
+
+  return updatedDelivery;
 };
 
 export const detectOfflineRiders = async () => {
@@ -390,7 +339,7 @@ const cancelDeliveryByUser = async (deliveryId: string, userId: string) => {
   });
 
   // Step 2: Find associated payment
-  const payment = await Payment.findOne({ deliveryId: delivery._id });
+  const payment = await Payment.findOne({ deliveryId: delivery?._id });
 
   if (payment && payment.paymentIntentId) {
     try {
@@ -458,8 +407,8 @@ const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
 
   // payment transfer to rider
   const rider = await User.findById(riderId);
-  const payment = await Payment.findOne({ deliveryId: delivery._id });
-  const order = await Order.findById(delivery.order);
+  const payment = await Payment.findOne({ deliveryId: delivery?._id });
+  const order = await Order.findById(delivery?.order);
 
   if (rider?.stripeAccountId && payment && order) {
     const transfer = await transferToRider({
