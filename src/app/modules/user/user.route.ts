@@ -61,6 +61,7 @@ router.patch(
 router
   .route('/')
   .post(
+    fileUploadHandler(),
     validateRequest(UserValidation.createUserZodSchema),
     UserController.createUser,
   );

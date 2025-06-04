@@ -543,7 +543,48 @@ const revenueAnalyticsReport = async (year: any) => {
   return monthlyData;
 };
 
-const getBalanceTransactions = async () => {};
+const getBalanceTransactions = async () => {
+  const result = await Payment.aggregate([
+    {
+      $addFields: {
+        deliveryObjectId: { $toObjectId: '$deliveryId' },
+      },
+    },
+     {
+      $lookup: {
+        from: 'deliveries',
+        localField: 'deliveryObjectId',
+        foreignField: '_id',
+        as: 'delivery',
+      },
+    },
+    {
+      $unwind: '$delivery'
+    },
+    {
+      $match: {
+        'delivery.status': 'DELIVERED'
+      }
+    },
+    {
+      $project: {
+        transactionId: 1,
+        deliveryId: 1,
+        userId: 1,
+        amountPaid: 1,
+        paidAt: 1,
+        status: 1,
+        refunded: 1,
+        refundId: 1,
+        commissionAmount: 1,
+        riderAmount: 1,
+        isTransferred: 1
+      }
+    }
+  ]);
+  return result;
+
+};
 
 const getUserOrderHistory = async (userId: string) => {
   const payments = await Payment.find({ userId }).populate({
