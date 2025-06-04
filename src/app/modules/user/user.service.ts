@@ -160,31 +160,33 @@ const updateProfileToDB = async (
   return updateDoc;
 };
 
-const updateVehicleToDB = async (user: JwtPayload, payload: Partial<IVehicle>) => {
+const updateVehicleToDB = async (
+  user: JwtPayload,
+  payload: Partial<IVehicle>,
+) => {
   const { id } = user;
   const isExistUser = await User.isExistUserById(id);
   if (!isExistUser) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!")
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
   // unlink file here
   if (payload.drivingLicense) {
-    unlinkFile(payload.drivingLicense)
+    unlinkFile(payload.drivingLicense);
   }
 
-  const result = await User.findOneAndUpdate({ _id: id }, payload, { new: true })
+  const result = await User.findOneAndUpdate({ _id: id }, payload, {
+    new: true,
+  });
 
   return result;
+};
 
-}
-
-const getVehicleFromDB = async (
-  user: JwtPayload,
-): Promise<Partial<IUser>> => {
+const getVehicleFromDB = async (user: JwtPayload): Promise<Partial<IUser>> => {
   const { id } = user;
 
   const isExistUser = await User.findById(id).select(
-    "vehicleType vehicleModel registrationNumber drivingLicense"
+    'vehicleType vehicleModel registrationNumber drivingLicense',
   );
 
   if (!isExistUser) {
@@ -193,7 +195,6 @@ const getVehicleFromDB = async (
 
   return isExistUser;
 };
-
 
 const adminUpdateUserProfileToDB = async (
   userId: string,

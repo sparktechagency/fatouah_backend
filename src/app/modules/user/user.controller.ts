@@ -31,7 +31,6 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
 const getVehicle = catchAsync(async (req: Request, res: Response) => {
   const user = req.user;
   const result = await UserService.getVehicleFromDB(user);
@@ -111,28 +110,31 @@ const updateProfile = catchAsync(
 
 const updateVehicle = catchAsync(async (req, res) => {
   const user = req.user;
-  const updatedData=req.body;
+  const updatedData = req.body;
   let drivingLicense = '';
 
-  if (req.files && 'drivingLicense' in req.files && req.files.drivingLicense[0]) {
-  drivingLicense = `/images/${req.files.drivingLicense[0].filename}`;
-}
+  if (
+    req.files &&
+    'drivingLicense' in req.files &&
+    req.files.drivingLicense[0]
+  ) {
+    drivingLicense = `/images/${req.files.drivingLicense[0].filename}`;
+  }
 
   const data = {
     ...updatedData,
     drivingLicense,
-  }
+  };
 
   const result = await UserService.updateVehicleToDB(user, data);
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: "Vehicle updated successfully",
+    message: 'Vehicle updated successfully',
     data: result,
-  })
-
-})
+  });
+});
 
 const adminUpdateUserProfile = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {

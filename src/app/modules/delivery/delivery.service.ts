@@ -40,11 +40,18 @@ const findNearestOnlineRiders = async (location: {
   return result;
 };
 
-
 const getOrderIdForRider = async (riderId: string) => {
   const delivery = await Delivery.findOne({
     rider: riderId,
-    status: { $in: ['ASSIGNED', 'ACCEPTED', "ARRIVED_PICKED_UP", 'STARTED', "ARRIVED_DESTINATION"] }, // active delivery status
+    status: {
+      $in: [
+        'ASSIGNED',
+        'ACCEPTED',
+        'ARRIVED_PICKED_UP',
+        'STARTED',
+        'ARRIVED_DESTINATION',
+      ],
+    }, // active delivery status
   }).populate('order');
 
   if (!delivery) return null;
@@ -87,13 +94,23 @@ const updateRiderLocation = async (
       if (orderId) {
         const delivery = await Delivery.findOne({
           rider: riderId,
-          status: { $in: ['ASSIGNED', 'ACCEPTED', "ARRIVED_PICKED_UP", 'STARTED', "ARRIVED_DESTINATION"] },
+          status: {
+            $in: [
+              'ASSIGNED',
+              'ACCEPTED',
+              'ARRIVED_PICKED_UP',
+              'STARTED',
+              'ARRIVED_DESTINATION',
+            ],
+          },
         }).populate({
           path: 'order',
-          populate: { path: 'user' }
+          populate: { path: 'user' },
         });
 
-        const user = (delivery?.order as any)?.user as { _id: Types.ObjectId | string };
+        const user = (delivery?.order as any)?.user as {
+          _id: Types.ObjectId | string;
+        };
 
         if (user) {
           io.to(`user::${user._id.toString()}`).emit('rider-location-updated', {
@@ -106,11 +123,154 @@ const updateRiderLocation = async (
     }
   }
 
-
   return result;
 };
 
+// const finalStatuses = ['DELIVERED', 'CANCELLED', 'FAILED'];
 
+// const updateStatus = async ({
+//   deliveryId,
+//   status,
+//   riderId,
+//   userId,
+//   session,
+// }: UpdateStatusOptions) => {
+//   const delivery = await Delivery.findById(deliveryId)
+//     .populate<{ order: IOrder }>('order')
+//     .session(session || null);
+
+//   if (!delivery) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
+//   }
+
+//   // prevent updates if delivery already in a final state (excluding REJECTED)
+//   if (finalStatuses.includes(delivery.status)) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       `Cannot change status once delivery is ${delivery.status}`,
+//     );
+//   }
+
+//   // restrict assigned before requested
+//   if (status === 'ASSIGNED' && delivery.status !== 'REQUESTED') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Cannot assign delivery before it is requested',
+//     );
+//   }
+
+//   // accept only if current status is ASSIGNED
+//   if (status === 'ACCEPTED' && delivery.status !== 'ASSIGNED') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Can only accept delivery if status is ASSIGNED',
+//     );
+//   }
+
+//   // ARRIVED_PICKED_UP only allowed after ACCEPTED
+//   if (status === 'ARRIVED_PICKED_UP' && delivery.status !== 'ACCEPTED') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Cannot mark ARRIVED_PICKED_UP before ACCEPTED',
+//     );
+//   }
+
+//   // started only allowed after ARRIVED_PICKED_UP
+//   if (status === 'STARTED' && delivery.status !== 'ARRIVED_PICKED_UP') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Cannot start delivery before ARRIVED_PICKED_UP',
+//     );
+//   }
+
+//   // ARRIVED_DESTINATION only allowed after STARTED
+//   if (status === 'ARRIVED_DESTINATION' && delivery.status !== 'STARTED') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Cannot mark ARRIVED_DESTINATION before STARTED',
+//     );
+//   }
+
+//   // delivered only allowed after ARRIVED_DESTINATION
+//   if (status === 'DELIVERED' && delivery.status !== 'ARRIVED_DESTINATION') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Cannot mark DELIVERED before ARRIVED_DESTINATION',
+//     );
+//   }
+
+//   // validate permissions based on status
+//   if (status === 'ACCEPTED') {
+//     if (!riderId || delivery.rider?.toString() !== riderId) {
+//       throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
+//     }
+//   }
+
+//   if (status === 'REJECTED') {
+//     if (!riderId || delivery.rider?.toString() !== riderId) {
+//       throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
+//     }
+//   }
+
+//   if (status === 'CANCELLED') {
+//     if (!userId || delivery.order?.user.toString() !== userId) {
+//       throw new ApiError(StatusCodes.FORBIDDEN, 'Not authorized to cancel');
+//     }
+//   }
+
+//   if (status === 'ASSIGNED') {
+//     if (!riderId) {
+//       throw new ApiError(
+//         StatusCodes.BAD_REQUEST,
+//         'RiderId required for assignment',
+//       );
+//     }
+//     delivery.rider = new Types.ObjectId(riderId);
+//   }
+
+//   // Remove rider on these statuses
+//   if (['REQUESTED', 'REJECTED', 'CANCELLED'].includes(status)) {
+//     delivery.rider = undefined;
+//   }
+
+//   delivery.status = status;
+
+//   const tsKey = statusTimestampsMap[status];
+//   if (tsKey) {
+//     delivery.timestamps = delivery.timestamps || {};
+//     delivery.timestamps[tsKey] = new Date();
+//   }
+
+//   await delivery.save({ session });
+
+//   await delivery.save({ session });
+
+//   const updatedDelivery = await Delivery.findById(delivery._id)
+//     .populate('rider')
+//     .populate('order');
+
+//   // console.log(delivery.order.user,"Delivery Order User")
+//   // console.log(delivery?.rider?._id,"Delivery Rider Id")
+
+//   // @ts-ignore
+//   const io = global.io;
+
+//   if (io) {
+//     const roomsToNotify = [
+//       `user::${delivery.order?.user}`,  // Notify the user
+//       `rider::${delivery.rider?._id}`, // Notify the assigned rider
+//     ];
+
+//     roomsToNotify.forEach(room => {
+//       io.to(room).emit("delivery-updated", {
+//         delivery: updatedDelivery,
+//         message: `Delivery status changed to ${status}`,
+//       });
+//     });
+//   }
+
+//   return updatedDelivery;
+// };
 
 const finalStatuses = ['DELIVERED', 'CANCELLED', 'FAILED'];
 
@@ -129,7 +289,7 @@ const updateStatus = async ({
     throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
   }
 
-  // prevent updates if delivery already in a final state (excluding REJECTED)
+  // Prevent updates if delivery already in a final state (excluding REJECTED)
   if (finalStatuses.includes(delivery.status)) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -137,7 +297,7 @@ const updateStatus = async ({
     );
   }
 
-  // restrict assigned before requested
+  // Restrict assigned before requested
   if (status === 'ASSIGNED' && delivery.status !== 'REQUESTED') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -145,7 +305,7 @@ const updateStatus = async ({
     );
   }
 
-  // accept only if current status is ASSIGNED
+  // Only accept if current status is ASSIGNED
   if (status === 'ACCEPTED' && delivery.status !== 'ASSIGNED') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -161,7 +321,7 @@ const updateStatus = async ({
     );
   }
 
-  // started only allowed after ARRIVED_PICKED_UP
+  // STARTED only allowed after ARRIVED_PICKED_UP
   if (status === 'STARTED' && delivery.status !== 'ARRIVED_PICKED_UP') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -177,7 +337,7 @@ const updateStatus = async ({
     );
   }
 
-  // delivered only allowed after ARRIVED_DESTINATION
+  // DELIVERED only allowed after ARRIVED_DESTINATION
   if (status === 'DELIVERED' && delivery.status !== 'ARRIVED_DESTINATION') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -185,16 +345,16 @@ const updateStatus = async ({
     );
   }
 
-  // validate permissions based on status
-  if (status === 'ACCEPTED') {
+  // Validate permissions and extra constraints
+  if (status === 'ACCEPTED' || status === 'REJECTED') {
     if (!riderId || delivery.rider?.toString() !== riderId) {
       throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
     }
-  }
-
-  if (status === 'REJECTED') {
-    if (!riderId || delivery.rider?.toString() !== riderId) {
-      throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
+    if (finalStatuses.includes(delivery.status)) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        `Cannot change status once delivery is ${delivery.status}`,
+      );
     }
   }
 
@@ -202,8 +362,15 @@ const updateStatus = async ({
     if (!userId || delivery.order?.user.toString() !== userId) {
       throw new ApiError(StatusCodes.FORBIDDEN, 'Not authorized to cancel');
     }
+    if (finalStatuses.includes(delivery.status)) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        `Cannot cancel delivery once it is ${delivery.status}`,
+      );
+    }
   }
 
+  // Set rider during assignment
   if (status === 'ASSIGNED') {
     if (!riderId) {
       throw new ApiError(
@@ -214,11 +381,12 @@ const updateStatus = async ({
     delivery.rider = new Types.ObjectId(riderId);
   }
 
-  // Remove rider on these statuses
+  // Remove rider on certain statuses
   if (['REQUESTED', 'REJECTED', 'CANCELLED'].includes(status)) {
     delivery.rider = undefined;
   }
 
+  // Set the new status
   delivery.status = status;
 
   const tsKey = statusTimestampsMap[status];
@@ -229,32 +397,25 @@ const updateStatus = async ({
 
   await delivery.save({ session });
 
-  await delivery.save({ session });
-
   const updatedDelivery = await Delivery.findById(delivery._id)
     .populate('rider')
     .populate('order');
 
-  // console.log(delivery.order.user,"Delivery Order User")
-  // console.log(delivery?.rider?._id,"Delivery Rider Id")
-
   // @ts-ignore
   const io = global.io;
-
   if (io) {
     const roomsToNotify = [
-      `user::${delivery.order?.user}`,  // Notify the user
-      `rider::${delivery.rider?._id}`, // Notify the assigned rider
+      `user::${delivery.order?.user}`,
+      `rider::${delivery.rider?._id}`,
     ];
 
     roomsToNotify.forEach(room => {
-      io.to(room).emit("delivery-updated", {
+      io.to(room).emit('delivery-updated', {
         delivery: updatedDelivery,
         message: `Delivery status changed to ${status}`,
       });
     });
   }
-
 
   return updatedDelivery;
 };

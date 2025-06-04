@@ -18,10 +18,10 @@ const getContact = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Contact is retrieved successfully",
-    data: result
-  })
-})
+    message: 'Contact is retrieved successfully',
+    data: result,
+  });
+});
 
 export const ContactControllers = {
   createContact,
