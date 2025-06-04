@@ -13,6 +13,17 @@ const createContact = catchAsync(async (req, res) => {
   });
 });
 
+const getContact = catchAsync(async (req, res) => {
+  const result = await ContactServices.getContactFromDB();
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Contact is retrieved successfully",
+    data: result
+  })
+})
+
 export const ContactControllers = {
   createContact,
+  getContact,
 };

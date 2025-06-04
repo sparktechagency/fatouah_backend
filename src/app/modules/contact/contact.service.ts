@@ -27,6 +27,15 @@ const createContactToDB = async (payload: IContact) => {
   }
 };
 
+const getContactFromDB = async () => {
+  const result = await Contact.find();
+  if (!result || result.length === 0) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "No contact data found")
+  }
+  return result;
+}
+
 export const ContactServices = {
   createContactToDB,
+  getContactFromDB,
 };

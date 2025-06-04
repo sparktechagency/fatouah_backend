@@ -371,29 +371,6 @@ const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
     status: 'ACCEPTED',
     riderId,
   });
-
-  // // payment info check
-  // const payment = await Payment.findOne({ deliveryId: delivery._id }); // assuming `Payment` is your model
-
-  // if (payment) {
-  //   const rider = await User.findById(riderId);
-  //   const order = await Order.findById(delivery.order); // or delivery.order if populated
-
-  //   if (rider?.stripeAccountId && order) {
-  //     const transfer = await transferToRider({
-  //       stripeAccountId: rider.stripeAccountId,
-  //       amount: order.riderAmount,
-  //       orderId: order._id.toString(),
-  //     });
-
-  //     console.log('✅ Transfer successful:', transfer.id);
-  //   } else {
-  //     console.warn('Rider Stripe info missing or order not found');
-  //   }
-  // } else {
-  //   console.warn('⚠️ Payment info not found. Skipping transfer.');
-  // }
-
   return delivery;
 };
 

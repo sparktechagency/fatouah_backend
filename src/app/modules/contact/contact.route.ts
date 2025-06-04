@@ -13,6 +13,7 @@ router
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
     validateRequest(ContactValidation.createContactZodSchema),
     ContactControllers.createContact,
-  );
+  )
+  .get(ContactControllers.getContact);
 
 export const ContactRoutes = router;
