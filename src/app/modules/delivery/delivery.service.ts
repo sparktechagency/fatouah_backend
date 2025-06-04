@@ -40,6 +40,18 @@ const findNearestOnlineRiders = async (location: {
   return result;
 };
 
+
+const getOrderIdForRider = async (riderId: string) => {
+  const delivery = await Delivery.findOne({
+    rider: riderId,
+    status: { $in: ['ASSIGNED', 'ACCEPTED', "ARRIVED_PICKED_UP", 'STARTED', "ARRIVED_DESTINATION"] }, // active delivery status
+  }).populate('order');
+
+  if (!delivery) return null;
+
+  return delivery.order._id.toString();
+};
+
 const updateRiderLocation = async (
   riderId: string,
   { coordinates }: { coordinates: [number, number] },
@@ -48,6 +60,7 @@ const updateRiderLocation = async (
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid coordinates');
   }
 
+  // Update rider geoLocation & online status
   const result = await User.findByIdAndUpdate(
     riderId,
     {
@@ -61,17 +74,43 @@ const updateRiderLocation = async (
   );
 
   if (result) {
+    const orderId = await getOrderIdForRider(riderId);
+
     // @ts-ignore
     const io = global.io;
     if (io) {
-      io.emit('rider-location-updated', riderId, {
+      io.to(`rider::${riderId}`).emit('rider-location-updated', {
+        riderId,
         coordinates: result.geoLocation?.coordinates,
       });
+
+      if (orderId) {
+        const delivery = await Delivery.findOne({
+          rider: riderId,
+          status: { $in: ['ASSIGNED', 'ACCEPTED', "ARRIVED_PICKED_UP", 'STARTED', "ARRIVED_DESTINATION"] },
+        }).populate({
+          path: 'order',
+          populate: { path: 'user' }
+        });
+
+        const user = (delivery?.order as any)?.user as { _id: Types.ObjectId | string };
+
+        if (user) {
+          io.to(`user::${user._id.toString()}`).emit('rider-location-updated', {
+            riderId,
+            coordinates: result.geoLocation?.coordinates,
+            orderId,
+          });
+        }
+      }
     }
   }
 
+
   return result;
 };
+
+
 
 const finalStatuses = ['DELIVERED', 'CANCELLED', 'FAILED'];
 
@@ -196,8 +235,8 @@ const updateStatus = async ({
     .populate('rider')
     .populate('order');
 
-    // console.log(delivery.order.user,"Delivery Order User")
-    // console.log(delivery?.rider?._id,"Delivery Rider Id")
+  // console.log(delivery.order.user,"Delivery Order User")
+  // console.log(delivery?.rider?._id,"Delivery Rider Id")
 
   // @ts-ignore
   const io = global.io;
