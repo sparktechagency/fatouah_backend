@@ -36,12 +36,15 @@ router
     },
   );
 
+router.route("/vehicle").patch(fileUploadHandler(),auth(USER_ROLES.RIDER), UserController.updateVehicle)
+
 router.patch(
   '/profile/:userId/admin',
   fileUploadHandler(),
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   UserController.adminUpdateUserProfile,
 );
+
 
 router.patch(
   '/:id/status',

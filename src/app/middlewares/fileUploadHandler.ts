@@ -27,6 +27,9 @@ const fileUploadHandler = () => {
         case 'image':
           uploadDir = path.join(baseUploadDir, 'image');
           break;
+        case "drivingLicense":
+          uploadDir = path.join(baseUploadDir, "drivingLicense")
+          break;
         case 'media':
           uploadDir = path.join(baseUploadDir, 'media');
           break;
@@ -55,7 +58,7 @@ const fileUploadHandler = () => {
 
   //file filter
   const filterFilter = (req: Request, file: any, cb: FileFilterCallback) => {
-    if (file.fieldname === 'image') {
+    if (file.fieldname === 'image' || file.fieldname === 'drivingLicense') {
       if (
         file.mimetype === 'image/jpeg' ||
         file.mimetype === 'image/png' ||
@@ -99,6 +102,7 @@ const fileUploadHandler = () => {
     { name: 'image', maxCount: 3 },
     { name: 'media', maxCount: 3 },
     { name: 'doc', maxCount: 3 },
+    { name: "drivingLicense", maxCount: 3 }
   ]);
   return upload;
 };

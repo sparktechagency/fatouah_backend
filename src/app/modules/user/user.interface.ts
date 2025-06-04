@@ -31,6 +31,13 @@ export type IUser = {
   stripeAccountId: string;
 };
 
+export type IVehicle={
+  vehicleType?: VEHICLE_TYPE;
+  vehicleModel?: string;
+  registrationNumber?: string;
+  drivingLicense?: string;
+}
+
 export type UserModal = {
   isExistUserById(id: string): any;
   isExistUserByEmail(email: string): any;

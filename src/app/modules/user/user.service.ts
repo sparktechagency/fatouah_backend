@@ -6,7 +6,7 @@ import { emailHelper } from '../../../helpers/emailHelper';
 import { emailTemplate } from '../../../shared/emailTemplate';
 import unlinkFile from '../../../shared/unlinkFile';
 import generateOTP from '../../../util/generateOTP';
-import { IUser } from './user.interface';
+import { IUser, IVehicle } from './user.interface';
 import { User } from './user.model';
 
 const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
@@ -150,7 +150,7 @@ const updateProfileToDB = async (
 
   //unlink file here
   if (payload.image) {
-    unlinkFile(isExistUser.image);
+    unlinkFile(payload.image);
   }
 
   const updateDoc = await User.findOneAndUpdate({ _id: id }, payload, {
@@ -159,6 +159,24 @@ const updateProfileToDB = async (
 
   return updateDoc;
 };
+
+const updateVehicleToDB = async (user: JwtPayload, payload: Partial<IVehicle>) => {
+  const { id } = user;
+  const isExistUser = await User.isExistUserById(id);
+  if (!isExistUser) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!")
+  }
+
+  // unlink file here
+  if (payload.drivingLicense) {
+    unlinkFile(payload.drivingLicense)
+  }
+
+  const result = await User.findOneAndUpdate({ _id: id }, payload, { new: true })
+
+  return result;
+
+}
 
 const adminUpdateUserProfileToDB = async (
   userId: string,
@@ -197,6 +215,7 @@ export const UserService = {
   getUserProfileFromDB,
   updateUserStatusToDB,
   adminUpdateUserProfileToDB,
+  updateVehicleToDB,
   updateProfileToDB,
   deleteUserFromDB,
 };
