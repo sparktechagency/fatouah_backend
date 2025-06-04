@@ -6,68 +6,105 @@ import { Review } from './review.model';
 import { JwtPayload } from 'jsonwebtoken';
 import { Order } from '../order/order.model';
 
-const createReviewToDB = async (
+const createCustomerReviewToRider = async (
   payload: IReview,
   user: JwtPayload,
   orderId: string,
 ) => {
   const { rider, rating } = payload;
-
-  payload.customer = user.id;
   const customer = user.id;
 
-  // validate rating
-  if (rating < 1 || rating > 5) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Rating must be between 1 and 5',
-    );
-  }
-
-  // check if customer exists
-  const isCustomerExist = await User.findById(customer);
-  if (!isCustomerExist) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Customer not found in database');
-  }
-
-  // check if rider exists
-  const isRiderExist = await User.findById(rider);
-  if (!isRiderExist) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Rider not found in database');
-  }
-
-  // check if order exists
-  const isOrderExist = await Order.findById(orderId);
-  if (!isOrderExist) {
-    throw new ApiError(
-      StatusCodes.NOT_FOUND,
-      'Order is nout found in database',
-    );
-  }
-
-  // check if orderId is provided
   if (!orderId) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Order ID must be provided');
   }
 
-  // check if user already reviewed this rider for this order
-  const existingReview = await Review.findOne({
-    customer,
-    rider,
-    order: orderId,
-  });
-  if (existingReview) {
-    throw new ApiError(
-      StatusCodes.CONFLICT,
-      'You have already reviewed this rider for this order',
-    );
+  if (rating < 1 || rating > 5) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Rating must be between 1 and 5');
   }
 
-  // add orderId to the payload before creating review
-  payload.order = orderId;
+  // check existence
+  const [isCustomerExist, isRiderExist, isOrderExist] = await Promise.all([
+    User.findById(customer),
+    User.findById(rider),
+    Order.findById(orderId),
+  ]);
 
-  const result = await Review.create(payload);
+  if (!isCustomerExist) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Customer not found');
+  }
 
+  if (!isRiderExist) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Rider not found');
+  }
+
+  if (!isOrderExist) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found');
+  }
+
+  // check if already reviewed
+  const existingReview = await Review.findOne({ customer, rider, order: orderId });
+  if (existingReview) {
+    throw new ApiError(StatusCodes.CONFLICT, 'Already reviewed this rider for this order');
+  }
+
+  const reviewPayload = {
+    ...payload,
+    customer,
+    order: orderId,
+  };
+
+  const result = await Review.create(reviewPayload);
+  return result;
+};
+
+const createRiderReviewToCustomer = async (
+  payload: IReview,
+  user: JwtPayload,
+  orderId: string,
+) => {
+  const { customer, rating } = payload;
+  const rider = user.id;
+
+  if (!orderId) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Order ID must be provided');
+  }
+
+  if (rating < 1 || rating > 5) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Rating must be between 1 and 5');
+  }
+
+  // check existence
+  const [isCustomerExist, isRiderExist, isOrderExist] = await Promise.all([
+    User.findById(customer),
+    User.findById(rider),
+    Order.findById(orderId),
+  ]);
+
+  if (!isCustomerExist) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Customer not found');
+  }
+
+  if (!isRiderExist) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Rider not found');
+  }
+
+  if (!isOrderExist) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found');
+  }
+
+  // check if already reviewed
+  const existingReview = await Review.findOne({ customer, rider, order: orderId });
+  if (existingReview) {
+    throw new ApiError(StatusCodes.CONFLICT, 'Already reviewed this customer for this order');
+  }
+
+  const reviewPayload = {
+    ...payload,
+    rider,
+    order: orderId,
+  };
+
+  const result = await Review.create(reviewPayload);
   return result;
 };
 
@@ -82,11 +119,11 @@ export const getRiderReviewsFromDB = async (id: string) => {
     totalReviews === 0
       ? 0
       : parseFloat(
-          (
-            reviews.reduce((sum, review) => sum + review.rating, 0) /
-            totalReviews
-          ).toFixed(1),
-        );
+        (
+          reviews.reduce((sum, review) => sum + review.rating, 0) /
+          totalReviews
+        ).toFixed(1),
+      );
 
   return {
     totalReviews,
@@ -96,6 +133,8 @@ export const getRiderReviewsFromDB = async (id: string) => {
 };
 
 export const ReviewServices = {
-  createReviewToDB,
+
   getRiderReviewsFromDB,
+  createCustomerReviewToRider,
+  createRiderReviewToCustomer,
 };

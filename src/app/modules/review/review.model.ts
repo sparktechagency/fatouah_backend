@@ -9,7 +9,6 @@ const reviewSchema = new Schema<IReview>(
     },
     rider: {
       type: Types.ObjectId,
-      required: true,
       ref: 'User',
     },
     rating: {
