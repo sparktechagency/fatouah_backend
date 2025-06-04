@@ -36,7 +36,9 @@ router
     },
   );
 
-router.route("/vehicle").patch(fileUploadHandler(),auth(USER_ROLES.RIDER), UserController.updateVehicle)
+router.route("/vehicle")
+  .patch(fileUploadHandler(), auth(USER_ROLES.RIDER), UserController.updateVehicle)
+  .get(auth(USER_ROLES.RIDER), UserController.getVehicle)
 
 router.patch(
   '/profile/:userId/admin',

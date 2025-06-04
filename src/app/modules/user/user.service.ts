@@ -178,6 +178,23 @@ const updateVehicleToDB = async (user: JwtPayload, payload: Partial<IVehicle>) =
 
 }
 
+const getVehicleFromDB = async (
+  user: JwtPayload,
+): Promise<Partial<IUser>> => {
+  const { id } = user;
+
+  const isExistUser = await User.findById(id).select(
+    "vehicleType vehicleModel registrationNumber drivingLicense"
+  );
+
+  if (!isExistUser) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+  }
+
+  return isExistUser;
+};
+
+
 const adminUpdateUserProfileToDB = async (
   userId: string,
   payload: Partial<IUser>,
@@ -211,6 +228,7 @@ export const UserService = {
   createUserToDB,
   getUsersFromDB,
   getRidersFromDB,
+  getVehicleFromDB,
   getUserByIdFromDB,
   getUserProfileFromDB,
   updateUserStatusToDB,

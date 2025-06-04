@@ -31,6 +31,19 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const getVehicle = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user;
+  const result = await UserService.getVehicleFromDB(user);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Vehicle data retrieved successfully',
+    data: result,
+  });
+});
+
 const getUsers = catchAsync(async (req, res) => {
   const result = await UserService.getUsersFromDB();
   sendResponse(res, {
@@ -161,6 +174,7 @@ const deleteUserFromDB = catchAsync(async (req, res) => {
 export const UserController = {
   createUser,
   getUserProfile,
+  getVehicle,
   getUsers,
   getRiders,
   getUserById,
