@@ -19,7 +19,10 @@ const createCustomerReviewToRider = async (
   }
 
   if (rating < 1 || rating > 5) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Rating must be between 1 and 5');
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Rating must be between 1 and 5',
+    );
   }
 
   // check existence
@@ -42,9 +45,16 @@ const createCustomerReviewToRider = async (
   }
 
   // check if already reviewed
-  const existingReview = await Review.findOne({ customer, rider, order: orderId });
+  const existingReview = await Review.findOne({
+    customer,
+    rider,
+    order: orderId,
+  });
   if (existingReview) {
-    throw new ApiError(StatusCodes.CONFLICT, 'Already reviewed this rider for this order');
+    throw new ApiError(
+      StatusCodes.CONFLICT,
+      'Already reviewed this rider for this order',
+    );
   }
 
   const reviewPayload = {
@@ -70,7 +80,10 @@ const createRiderReviewToCustomer = async (
   }
 
   if (rating < 1 || rating > 5) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Rating must be between 1 and 5');
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Rating must be between 1 and 5',
+    );
   }
 
   // check existence
@@ -93,9 +106,16 @@ const createRiderReviewToCustomer = async (
   }
 
   // check if already reviewed
-  const existingReview = await Review.findOne({ customer, rider, order: orderId });
+  const existingReview = await Review.findOne({
+    customer,
+    rider,
+    order: orderId,
+  });
   if (existingReview) {
-    throw new ApiError(StatusCodes.CONFLICT, 'Already reviewed this customer for this order');
+    throw new ApiError(
+      StatusCodes.CONFLICT,
+      'Already reviewed this customer for this order',
+    );
   }
 
   const reviewPayload = {
@@ -108,7 +128,7 @@ const createRiderReviewToCustomer = async (
   return result;
 };
 
-export const getRiderReviewsFromDB = async (id: string) => {
+const getRiderReviewsFromDB = async (id: string) => {
   const reviews = await Review.find({ rider: id })
     .populate('customer', 'name')
     .populate('rider', 'name vehicleType')
@@ -119,11 +139,11 @@ export const getRiderReviewsFromDB = async (id: string) => {
     totalReviews === 0
       ? 0
       : parseFloat(
-        (
-          reviews.reduce((sum, review) => sum + review.rating, 0) /
-          totalReviews
-        ).toFixed(1),
-      );
+          (
+            reviews.reduce((sum, review) => sum + review.rating, 0) /
+            totalReviews
+          ).toFixed(1),
+        );
 
   return {
     totalReviews,
@@ -133,7 +153,6 @@ export const getRiderReviewsFromDB = async (id: string) => {
 };
 
 export const ReviewServices = {
-
   getRiderReviewsFromDB,
   createCustomerReviewToRider,
   createRiderReviewToCustomer,

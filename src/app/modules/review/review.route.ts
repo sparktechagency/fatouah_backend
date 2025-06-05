@@ -19,5 +19,4 @@ router.post(
   ReviewControllers.createCustomerReviewToRider,
 );
 
-
 export const ReviewRoutes = router;

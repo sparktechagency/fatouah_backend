@@ -1,3 +1,5 @@
+import { StatusCodes } from 'http-status-codes';
+import ApiError from '../../../errors/ApiError';
 import { Payment } from '../payment/payment.model';
 import { User } from '../user/user.model';
 import { startOfDay, endOfDay, subDays } from 'date-fns';
@@ -550,7 +552,7 @@ const getBalanceTransactions = async () => {
         deliveryObjectId: { $toObjectId: '$deliveryId' },
       },
     },
-     {
+    {
       $lookup: {
         from: 'deliveries',
         localField: 'deliveryObjectId',
@@ -559,12 +561,12 @@ const getBalanceTransactions = async () => {
       },
     },
     {
-      $unwind: '$delivery'
+      $unwind: '$delivery',
     },
     {
       $match: {
-        'delivery.status': 'DELIVERED'
-      }
+        'delivery.status': 'DELIVERED',
+      },
     },
     {
       $project: {
@@ -578,25 +580,29 @@ const getBalanceTransactions = async () => {
         refundId: 1,
         commissionAmount: 1,
         riderAmount: 1,
-        isTransferred: 1
-      }
-    }
+        isTransferred: 1,
+      },
+    },
   ]);
   return result;
-
 };
 
 const getUserOrderHistory = async (userId: string) => {
-  const payments = await Payment.find({ userId }).populate({
+  const result = await Payment.find({ userId }).populate({
     path: 'deliveryId',
     populate: {
       path: 'order',
       model: 'Order',
     },
-  });
+  }).sort({ createdAt: -1});
 
-  return payments;
+  if(!result||result.length===0){
+    throw new ApiError(StatusCodes.NOT_FOUND,"No order history found in database")
+  }
+
+  return result;
 };
+
 
 export const ReportServices = {
   userReport,

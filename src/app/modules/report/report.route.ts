@@ -65,11 +65,15 @@ router.get(
   ReportControllers.revenueAnalyticsReport,
 );
 
-router.get('/balance-transaction',auth(USER_ROLES.SUPER_ADMIN,USER_ROLES.ADMIN), ReportControllers.getBalanceTransactions);
+router.get(
+  '/balance-transaction',
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  ReportControllers.getBalanceTransactions,
+);
 
 router.get(
   '/order-history',
-  auth(USER_ROLES.USER, USER_ROLES.RIDER),
+  auth(USER_ROLES.USER),
   ReportControllers.getUserOrderHistory,
 );
 

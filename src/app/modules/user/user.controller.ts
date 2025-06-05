@@ -21,7 +21,7 @@ import { UserService } from './user.service';
 
 const createUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userData=req.body;
+    const userData = req.body;
     const image = getSingleFilePath(req.files, 'image');
     const drivingLicense = getSingleFilePath(req.files, 'drivingLicense');
 
@@ -39,9 +39,8 @@ const createUser = catchAsync(
       message: 'User registered successfully',
       data: result,
     });
-  }
+  },
 );
-
 
 const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   const user = req.user;
