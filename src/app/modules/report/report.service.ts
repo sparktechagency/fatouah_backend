@@ -3,9 +3,11 @@ import ApiError from '../../../errors/ApiError';
 import { Payment } from '../payment/payment.model';
 import { User } from '../user/user.model';
 import { startOfDay, endOfDay, subDays } from 'date-fns';
+import { Order } from '../order/order.model';
+import QueryBuilder from '../../builder/QueryBuilder';
 const { startOfYear, endOfYear } = require('date-fns');
 
-const userReport = async () => {
+const userReports = async () => {
   const result = await User.aggregate([
     {
       $match: { role: 'USER' },
@@ -27,8 +29,47 @@ const userReport = async () => {
       },
     },
     {
-      $match: {
-        'payments.0': { $exists: true },
+      $project: {
+        name: 1,
+        status: 1,
+        joiningDate: '$createdAt',
+        parcelSent: {
+          $cond: {
+            if: { $isArray: '$payments' },
+            then: { $size: '$payments' },
+            else: 0,
+          },
+        },
+      },
+    },
+  ]);
+
+  return result;
+};
+
+
+
+const searchableFields = ['name'];
+
+const userReport = async (query: any) => {
+  const users = await User.aggregate([
+    {
+      $match: { role: 'USER' },
+    },
+    {
+      $lookup: {
+        from: 'payments',
+        let: { userIdStr: { $toString: '$_id' } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$userId', '$$userIdStr'],
+              },
+            },
+          },
+        ],
+        as: 'payments',
       },
     },
     {
@@ -36,13 +77,31 @@ const userReport = async () => {
         name: 1,
         status: 1,
         joiningDate: '$createdAt',
-        parcelSent: { $size: '$payments' },
+        parcelSent: {
+          $cond: {
+            if: { $isArray: '$payments' },
+            then: { $size: '$payments' },
+            else: 0,
+          },
+        },
       },
     },
   ]);
 
-  return result;
+  const userQuery = new QueryBuilder(users, query)
+    .search(searchableFields)
+    .filter()
+    .paginate();
+
+  const result = userQuery.modelQuery;
+  const meta = await userQuery.getPaginationInfo();
+
+  return {
+    data: result,
+    meta,
+  };
 };
+
 
 const riderReport = async () => {
   const result = await Payment.aggregate([
@@ -588,7 +647,7 @@ const getBalanceTransactions = async () => {
 };
 
 const getUserOrderHistory = async (userId: string) => {
-  const result = await Payment.find({ userId }).populate({
+  const result = await Order.find({ userId }).populate({
     path: 'deliveryId',
     populate: {
       path: 'order',

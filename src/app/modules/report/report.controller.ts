@@ -3,7 +3,7 @@ import sendResponse from '../../../shared/sendResponse';
 import { ReportServices } from './report.service';
 
 const userReport = catchAsync(async (req, res) => {
-  const result = await ReportServices.userReport();
+  const result = await ReportServices.userReport(req.query);
   sendResponse(res, {
     success: true,
     statusCode: 200,
