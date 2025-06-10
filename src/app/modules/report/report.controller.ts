@@ -13,7 +13,7 @@ const userReport = catchAsync(async (req, res) => {
 });
 
 const riderReport = catchAsync(async (req, res) => {
-  const result = await ReportServices.riderReport();
+  const result = await ReportServices.riderReport(req.query);
   sendResponse(res, {
     success: true,
     statusCode: 200,

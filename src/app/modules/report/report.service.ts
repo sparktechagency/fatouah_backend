@@ -5,8 +5,10 @@ import { User } from '../user/user.model';
 import { startOfDay, endOfDay, subDays } from 'date-fns';
 import { Order } from '../order/order.model';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { riderSearchableFields, userSearchableFields } from './report.constant';
 const { startOfYear, endOfYear } = require('date-fns');
 
+// i will delete this before finish development process
 const userReports = async () => {
   const result = await User.aggregate([
     {
@@ -47,10 +49,6 @@ const userReports = async () => {
   return result;
 };
 
-
-
-const searchableFields = ['name'];
-
 const userReport = async (query: any) => {
   const users = await User.aggregate([
     {
@@ -89,7 +87,7 @@ const userReport = async (query: any) => {
   ]);
 
   const userQuery = new QueryBuilder(users, query)
-    .search(searchableFields)
+    .search(userSearchableFields)
     .filter()
     .paginate();
 
@@ -102,9 +100,8 @@ const userReport = async (query: any) => {
   };
 };
 
-
-const riderReport = async () => {
-  const result = await Payment.aggregate([
+const riderReport = async (query: any) => {
+  const riders = await Payment.aggregate([
     // Step 1: Convert deliveryId to ObjectId
     {
       $addFields: {
@@ -198,7 +195,15 @@ const riderReport = async () => {
     },
   ]);
 
-  return result;
+  const riderQuery = new QueryBuilder(riders, query).search(riderSearchableFields).filter().paginate();
+
+  const result = riderQuery.modelQuery;
+  const meta = await riderQuery.getPaginationInfo();
+  return {
+    data: result,
+    meta,
+  }
+
 };
 
 const parcelReport = async () => {
@@ -647,21 +652,25 @@ const getBalanceTransactions = async () => {
 };
 
 const getUserOrderHistory = async (userId: string) => {
-  const result = await Order.find({ userId }).populate({
-    path: 'deliveryId',
-    populate: {
-      path: 'order',
-      model: 'Order',
-    },
-  }).sort({ createdAt: -1});
+  const result = await Order.find({ userId })
+    .populate({
+      path: 'deliveryId',
+      populate: {
+        path: 'order',
+        model: 'Order',
+      },
+    })
+    .sort({ createdAt: -1 });
 
-  if(!result||result.length===0){
-    throw new ApiError(StatusCodes.NOT_FOUND,"No order history found in database")
+  if (!result || result.length === 0) {
+    throw new ApiError(
+      StatusCodes.NOT_FOUND,
+      'No order history found in database',
+    );
   }
 
   return result;
 };
-
 
 export const ReportServices = {
   userReport,

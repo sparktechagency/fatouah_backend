@@ -96,8 +96,6 @@
 
 // export default QueryBuilder;
 
-
-
 import { FilterQuery, Query } from 'mongoose';
 
 class QueryBuilder<T> {
@@ -117,8 +115,8 @@ class QueryBuilder<T> {
       if (Array.isArray(this.modelQuery)) {
         this.modelQuery = this.modelQuery.filter(item =>
           searchableFields.some(field =>
-            String(item[field])?.toLowerCase().includes(term)
-          )
+            String(item[field])?.toLowerCase().includes(term),
+          ),
         );
       } else {
         this.modelQuery = this.modelQuery.find({
@@ -143,8 +141,10 @@ class QueryBuilder<T> {
     if (Array.isArray(this.modelQuery)) {
       this.modelQuery = this.modelQuery.filter(item =>
         Object.entries(queryObj).every(([key, value]) =>
-          String(item[key])?.toLowerCase().includes(String(value).toLowerCase())
-        )
+          String(item[key])
+            ?.toLowerCase()
+            .includes(String(value).toLowerCase()),
+        ),
       );
     } else {
       this.modelQuery = this.modelQuery.find(queryObj as FilterQuery<T>);
@@ -197,7 +197,7 @@ class QueryBuilder<T> {
         populateFields.map(field => ({
           path: field,
           select: selectFields[field],
-        }))
+        })),
       );
     }
 
@@ -212,7 +212,7 @@ class QueryBuilder<T> {
       total = this.modelQuery.length;
     } else {
       total = await this.modelQuery.model.countDocuments(
-        this.modelQuery.getFilter()
+        this.modelQuery.getFilter(),
       );
     }
 
@@ -230,4 +230,3 @@ class QueryBuilder<T> {
 }
 
 export default QueryBuilder;
-
