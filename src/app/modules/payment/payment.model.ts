@@ -8,7 +8,11 @@ const paymentSchema = new Schema<IPayment>(
       type: String,
       required: true,
     },
-    deliveryId: { type: Schema.Types.ObjectId, required: true, ref: 'Delivery' },
+    deliveryId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'Delivery',
+    },
     userId: { type: String, required: true },
     amountPaid: { type: Number, required: true },
     paidAt: { type: Date, required: true },

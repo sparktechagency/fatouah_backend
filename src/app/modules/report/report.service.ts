@@ -745,7 +745,12 @@ const getUserOrderHistory = async (email: string, query: any) => {
                 case: {
                   $in: [
                     '$delivery.status',
-                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                    [
+                      'ACCEPTED',
+                      'ARRIVED_PICKED_UP',
+                      'STARTED',
+                      'ARRIVED_DESTINATION',
+                    ],
                   ],
                 },
                 then: 'inprogress',
@@ -806,12 +811,15 @@ const getUserOrderHistory = async (email: string, query: any) => {
     },
   ]);
 
-  const userOrderHistoryQuery = new QueryBuilder(history, query).search([
-    "receiversName",
-    "contact",
-    "pickupAddress",
-    "destinationAddress"
-  ]).filter();
+  const userOrderHistoryQuery = new QueryBuilder(history, query)
+    .search([
+      'receiversName',
+      'contact',
+      'pickupAddress',
+      'destinationAddress',
+      'orderId',
+    ])
+    .filter();
 
   const result = userOrderHistoryQuery.modelQuery;
   const meta = await userOrderHistoryQuery.getPaginationInfo();
@@ -819,7 +827,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
   return {
     data: result,
     meta,
-  }
+  };
 };
 
 const getRiderOrderHistory = async (email: string, query: any) => {
@@ -887,7 +895,12 @@ const getRiderOrderHistory = async (email: string, query: any) => {
                 case: {
                   $in: [
                     '$delivery.status',
-                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                    [
+                      'ACCEPTED',
+                      'ARRIVED_PICKED_UP',
+                      'STARTED',
+                      'ARRIVED_DESTINATION',
+                    ],
                   ],
                 },
                 then: 'inprogress',
@@ -933,12 +946,9 @@ const getRiderOrderHistory = async (email: string, query: any) => {
     },
   ]);
 
-  const riderOrderHistoryQuery = new QueryBuilder(history, query).search([
-    "receiversName",
-    "contact",
-    "pickupAddress",
-    "destinationAddress"
-  ]).filter();
+  const riderOrderHistoryQuery = new QueryBuilder(history, query)
+    .search(['receiversName', 'contact', 'pickupAddress', 'destinationAddress'])
+    .filter();
 
   const result = riderOrderHistoryQuery.modelQuery;
   const meta = await riderOrderHistoryQuery.getPaginationInfo();
@@ -946,9 +956,7 @@ const getRiderOrderHistory = async (email: string, query: any) => {
   return {
     data: result,
     meta,
-  }
-
-
+  };
 };
 
 const getUserOrderDetailsById = async (orderId: string, email: string) => {
@@ -960,7 +968,7 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
 
   const orderDetails = await Order.aggregate([
     {
-      $match: { _id: orderObjectId, user: user._id, },
+      $match: { _id: orderObjectId, user: user._id },
     },
     {
       $lookup: {
@@ -1027,12 +1035,20 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
           $switch: {
             branches: [
               { case: { $eq: ['$payment.refunded', true] }, then: 'returned' },
-              { case: { $eq: ['$delivery.status', 'DELIVERED'] }, then: 'completed' },
+              {
+                case: { $eq: ['$delivery.status', 'DELIVERED'] },
+                then: 'completed',
+              },
               {
                 case: {
                   $in: [
                     '$delivery.status',
-                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                    [
+                      'ACCEPTED',
+                      'ARRIVED_PICKED_UP',
+                      'STARTED',
+                      'ARRIVED_DESTINATION',
+                    ],
                   ],
                 },
                 then: 'inprogress',
@@ -1089,7 +1105,7 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
   return orderDetails[0];
 };
 
-const getRiderOrderDetailsById = async (orderId: string, email: string,) => {
+const getRiderOrderDetailsById = async (orderId: string, email: string) => {
   // Step 1: Find Rider ID from email
   const rider = await User.findOne({ email }).select('_id');
   if (!rider) throw new Error('Rider not found');
@@ -1114,7 +1130,7 @@ const getRiderOrderDetailsById = async (orderId: string, email: string,) => {
       $unwind: { path: '$delivery', preserveNullAndEmptyArrays: false },
     },
     {
-      $match: { 'delivery.rider': riderId },  // Check order belongs to rider
+      $match: { 'delivery.rider': riderId }, // Check order belongs to rider
     },
     {
       $lookup: {
@@ -1137,12 +1153,20 @@ const getRiderOrderDetailsById = async (orderId: string, email: string,) => {
           $switch: {
             branches: [
               { case: { $eq: ['$payment.refunded', true] }, then: 'returned' },
-              { case: { $eq: ['$delivery.status', 'DELIVERED'] }, then: 'completed' },
+              {
+                case: { $eq: ['$delivery.status', 'DELIVERED'] },
+                then: 'completed',
+              },
               {
                 case: {
                   $in: [
                     '$delivery.status',
-                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                    [
+                      'ACCEPTED',
+                      'ARRIVED_PICKED_UP',
+                      'STARTED',
+                      'ARRIVED_DESTINATION',
+                    ],
                   ],
                 },
                 then: 'inprogress',
@@ -1248,7 +1272,10 @@ const getRiderWeeklyEarnings = async (email: string) => {
       const d = new Date(sevenDaysAgo);
       d.setDate(sevenDaysAgo.getDate() + i);
       result.push({
-        day: d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Dhaka' }),
+        day: d.toLocaleDateString('en-US', {
+          weekday: 'short',
+          timeZone: 'Asia/Dhaka',
+        }),
         amount: 0,
       });
     }
@@ -1267,12 +1294,17 @@ const getRiderWeeklyEarnings = async (email: string) => {
     d.setDate(startDate.getDate() + i);
 
     // convert date d to 'YYYY-MM-DD' in Asia/Dhaka timezone for matching
-    const dhakaDateStr = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' }); // 'YYYY-MM-DD' format
+    const dhakaDateStr = d.toLocaleDateString('en-CA', {
+      timeZone: 'Asia/Dhaka',
+    }); // 'YYYY-MM-DD' format
 
-    const found = earnings.find((e) => e._id === dhakaDateStr);
+    const found = earnings.find(e => e._id === dhakaDateStr);
 
     result.push({
-      day: d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Dhaka' }),
+      day: d.toLocaleDateString('en-US', {
+        weekday: 'short',
+        timeZone: 'Asia/Dhaka',
+      }),
       amount: found ? found.total : 0,
     });
   }
@@ -1318,7 +1350,6 @@ const getRiderTransactionHistory = async (email: string) => {
         commissionAmount: 1,
         riderAmount: 1,
         isTransferred: 1,
-
       },
     },
     { $sort: { paidAt: -1 } }, // newest first
@@ -1326,7 +1357,6 @@ const getRiderTransactionHistory = async (email: string) => {
 
   return transactions;
 };
-
 
 export const ReportServices = {
   userReport,
@@ -1345,5 +1375,5 @@ export const ReportServices = {
   getUserOrderDetailsById,
   getRiderOrderDetailsById,
   getRiderWeeklyEarnings,
-  getRiderTransactionHistory
+  getRiderTransactionHistory,
 };
