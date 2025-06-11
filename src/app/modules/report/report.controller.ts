@@ -117,7 +117,7 @@ const revenueAnalyticsReport = catchAsync(async (req, res) => {
 
 const getUserOrderHistory = catchAsync(async (req, res) => {
   const user = req.user.email;
-  const result = await ReportServices.getUserOrderHistory(user);
+  const result = await ReportServices.getUserOrderHistory(user,req.query);
   sendResponse(res, {
     success: true,
     statusCode: 200,

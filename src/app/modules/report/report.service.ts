@@ -654,8 +654,7 @@ const getBalanceTransactions = async () => {
   return result;
 };
 
-
-const getUserOrderHistory = async (email: string) => {
+const getUserOrderHistory = async (email: string, query: any) => {
   // 1. User ber koro email diye
   const user = await User.findOne({ email }).select('_id');
   if (!user) throw new Error('User not found');
@@ -805,7 +804,15 @@ const getUserOrderHistory = async (email: string) => {
     },
   ]);
 
-  return history;
+  const userOrderHistoryQuery = new QueryBuilder(history, query).search(["receiversName"]).filter();
+
+  const result = userOrderHistoryQuery.modelQuery;
+  const meta = await userOrderHistoryQuery.getPaginationInfo();
+
+  return {
+    data: result,
+    meta,
+  }
 };
 
 const getRiderOrderHistory = async (email: string) => {
@@ -919,7 +926,6 @@ const getRiderOrderHistory = async (email: string) => {
 
   return history;
 };
-
 
 const getUserOrderDetailsById = async (orderId: string, email: string) => {
   // 1. Prothome user er id ber koren email diye
@@ -1058,8 +1064,6 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
 
   return orderDetails[0];
 };
-
-
 
 const getRiderOrderDetailsById = async (orderId: string, email: string,) => {
   // Step 1: Find Rider ID from email
@@ -1252,13 +1256,11 @@ const getRiderWeeklyEarnings = async (email: string) => {
   return result;
 };
 
-
-
 const getRiderTransactionHistory = async (email: string) => {
   // 1. Prothome rider er user record ta ber koro email diye
   const rider = await User.findOne({ email });
   if (!rider) {
-    throw new ApiError(StatusCodes.NOT_FOUND,'Rider not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Rider not found');
   }
 
   const riderId = new mongoose.Types.ObjectId(rider._id);
@@ -1283,7 +1285,7 @@ const getRiderTransactionHistory = async (email: string) => {
     {
       $project: {
         transactionId: 1,
-      
+
         amountPaid: 1,
         paidAt: 1,
         status: 1,
@@ -1292,7 +1294,7 @@ const getRiderTransactionHistory = async (email: string) => {
         commissionAmount: 1,
         riderAmount: 1,
         isTransferred: 1,
-        
+
       },
     },
     { $sort: { paidAt: -1 } }, // newest first
