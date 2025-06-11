@@ -162,6 +162,18 @@ const getRiderOrderDetailsById = catchAsync(async (req, res) => {
   });
 });
 
+const getRiderWeeklyEarnings = catchAsync(async (req, res) => {
+
+  const user = req.user.email;
+  const result = await ReportServices.getRiderWeeklyEarnings(user);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Rider weekly earnings data retrieved successfully',
+    data: result,
+  });
+});
+
 const getBalanceTransactions = catchAsync(async (req, res) => {
   const result = await ReportServices.getBalanceTransactions();
   sendResponse(res, {
@@ -188,5 +200,6 @@ export const ReportControllers = {
   getUserOrderDetailsById,
   getRiderOrderDetailsById,
   getRiderOrderHistory,
+  getRiderWeeklyEarnings
 
 };

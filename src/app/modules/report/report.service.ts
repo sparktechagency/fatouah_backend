@@ -1160,6 +1160,79 @@ const getRiderOrderDetailsById = async (orderId: string, email: string,) => {
   return orderDetails[0];
 };
 
+export const getRiderWeeklyEarnings = async (email: string) => {
+  // 1. Find rider by email
+  const rider = await User.findOne({ email });
+  if (!rider) {
+    throw new Error('Rider not found');
+  }
+
+  const riderId = new mongoose.Types.ObjectId(rider._id);
+
+  // 2. Date 7 days ago
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+  // 3. Aggregation pipeline
+  const earnings = await Payment.aggregate([
+    {
+      $match: {
+        // refunded: false,
+        paidAt: { $gte: sevenDaysAgo },
+      },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: 'deliveryId',
+        foreignField: '_id',
+        as: 'delivery',
+      },
+    },
+    { $unwind: '$delivery' },
+    {
+      $match: {
+        'delivery.rider': riderId,
+        'delivery.status': 'DELIVERED',
+      },
+    },
+    {
+      $project: {
+        riderAmount: 1,
+        day: { $dateToString: { format: '%Y-%m-%d', date: '$paidAt' } },
+      },
+    },
+    {
+      $group: {
+        _id: '$day',
+        total: { $sum: '$riderAmount' },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+
+  // 4. Fill empty days (if no deliveries on some)
+  const result: { day: string; amount: number }[] = [];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(sevenDaysAgo);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+
+    const found = earnings.find((e) => e._id === key);
+    const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+
+    result.push({
+      day: dayName, // 'Mon', 'Tue', etc.
+      amount: found ? found.total : 0,
+    });
+  }
+
+  return result;
+};
+
+
 
 
 
@@ -1180,5 +1253,6 @@ export const ReportServices = {
   getUserOrderHistory,
   getRiderOrderHistory,
   getUserOrderDetailsById,
-  getRiderOrderDetailsById
+  getRiderOrderDetailsById,
+  getRiderWeeklyEarnings
 };
