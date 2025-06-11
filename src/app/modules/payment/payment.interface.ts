@@ -1,7 +1,9 @@
+import { Schema } from "mongoose";
+
 export type IPayment = {
   transactionId: string;
   paymentIntentId: string;
-  deliveryId: string;
+  deliveryId: Schema.Types.ObjectId;
   userId: string;
   amountPaid: number;
   paidAt: Date;

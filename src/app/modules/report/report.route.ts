@@ -71,10 +71,40 @@ router.get(
   ReportControllers.getBalanceTransactions,
 );
 
+// router.get(
+//   '/order-history',
+//   auth(USER_ROLES.USER),
+//   ReportControllers.getUserOrderHistory,
+// );
+
 router.get(
-  '/order-history',
+  '/user-order-history',
   auth(USER_ROLES.USER),
   ReportControllers.getUserOrderHistory,
+);
+
+router.get(
+  '/rider-order-history',
+  auth(USER_ROLES.RIDER),
+  ReportControllers.getRiderOrderHistory,
+);
+
+router.get(
+  '/user-order-history/:orderId',
+  auth(USER_ROLES.USER),
+  ReportControllers.getUserOrderDetailsById,
+);
+
+router.get(
+  '/rider-order-history/:orderId',
+  auth(USER_ROLES.RIDER),
+  ReportControllers.getRiderOrderDetailsById,
+);
+
+router.get(
+  '/earning',
+  auth(USER_ROLES.RIDER),
+  ReportControllers.getRiderWeeklyEarnings,
 );
 
 export const ReportRoutes = router;

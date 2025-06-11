@@ -6,6 +6,7 @@ import { startOfDay, endOfDay, subDays } from 'date-fns';
 import { Order } from '../order/order.model';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { riderSearchableFields, userSearchableFields } from './report.constant';
+import mongoose from 'mongoose';
 const { startOfYear, endOfYear } = require('date-fns');
 
 // i will delete this before finish development process
@@ -653,26 +654,591 @@ const getBalanceTransactions = async () => {
   return result;
 };
 
-const getUserOrderHistory = async (userId: string) => {
-  const result = await Order.find({ userId })
-    .populate({
-      path: 'deliveryId',
-      populate: {
-        path: 'order',
-        model: 'Order',
-      },
-    })
-    .sort({ createdAt: -1 });
 
-  if (!result || result.length === 0) {
-    throw new ApiError(
-      StatusCodes.NOT_FOUND,
-      'No order history found in database',
-    );
+const getUserOrderHistory = async (email: string) => {
+  // 1. User ber koro email diye
+  const user = await User.findOne({ email }).select('_id');
+  if (!user) throw new Error('User not found');
+
+  const userId = user._id;
+
+  // 2. Aggregation Pipeline
+  const history = await Order.aggregate([
+    {
+      $match: { user: userId },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: '_id',
+        foreignField: 'order',
+        as: 'delivery',
+      },
+    },
+    { $unwind: { path: '$delivery', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'payments',
+        let: { deliveryIdStr: { $toString: '$delivery._id' } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$deliveryId', '$$deliveryIdStr'],
+              },
+            },
+          },
+        ],
+        as: 'payment',
+      },
+    },
+    { $unwind: { path: '$payment', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users', // Rider info from users collection
+        localField: 'delivery.rider',
+        foreignField: '_id',
+        as: 'riderInfo',
+      },
+    },
+    { $unwind: { path: '$riderInfo', preserveNullAndEmptyArrays: true } },
+
+    // ⭐️ Rider Rating
+    {
+      $lookup: {
+        from: 'reviews',
+        let: { riderId: '$delivery.rider' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$rider', '$$riderId'] } } },
+          {
+            $group: {
+              _id: null,
+              averageRating: { $avg: '$rating' },
+              totalReviews: { $sum: 1 },
+            },
+          },
+        ],
+        as: 'riderRating',
+      },
+    },
+    {
+      $unwind: {
+        path: '$riderRating',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    // Status
+    {
+      $addFields: {
+        status: {
+          $switch: {
+            branches: [
+              {
+                case: { $eq: ['$payment.refunded', true] },
+                then: 'returned',
+              },
+              {
+                case: { $eq: ['$delivery.status', 'DELIVERED'] },
+                then: 'completed',
+              },
+              {
+                case: {
+                  $in: [
+                    '$delivery.status',
+                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                  ],
+                },
+                then: 'inprogress',
+              },
+            ],
+            default: 'unknown',
+          },
+        },
+      },
+    },
+    // sort
+    {
+      $sort: { 'delivery.timestamps.createdAt': -1 },
+    },
+
+    // Final Projection
+    {
+      $project: {
+        orderId: 1,
+        receiversName: 1,
+        contact: 1,
+        parcelType: 1,
+        parcelValue: 1,
+        parcelWeight: 1,
+        ride: 1,
+        distance: 1,
+        deliveryCharge: 1,
+        commissionAmount: 1,
+        riderAmount: 1,
+        pickupLocation: 1,
+        destinationLocation: 1,
+        status: 1,
+
+        payment: {
+          amountPaid: '$payment.amountPaid',
+          status: '$payment.status',
+          refunded: '$payment.refunded',
+        },
+
+        deliveryInfo: {
+          status: '$delivery.status',
+          timestamps: '$delivery.timestamps',
+          attempts: '$delivery.attempts',
+        },
+
+        rider: {
+          name: '$riderInfo.name',
+          email: '$riderInfo.email',
+          phone: '$riderInfo.phone',
+          rating: {
+            average: { $round: ['$riderRating.averageRating', 1] },
+            total: '$riderRating.totalReviews',
+          },
+        },
+      },
+    },
+  ]);
+
+  return history;
+};
+
+const getRiderOrderHistory = async (email: string) => {
+  // Step 1: Find Rider ID from email
+  const rider = await User.findOne({ email }).select('_id');
+
+  if (!rider) {
+    throw new Error('Rider not found');
+  }
+
+  const riderId = rider._id;
+
+  // Step 2: Aggregation to get history
+  const history = await Order.aggregate([
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: '_id',
+        foreignField: 'order',
+        as: 'delivery',
+      },
+    },
+    {
+      $unwind: {
+        path: '$delivery',
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    {
+      $match: {
+        'delivery.rider': riderId,
+      },
+    },
+    {
+      $lookup: {
+        from: 'payments',
+        let: { deliveryIdStr: { $toString: '$delivery._id' } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$deliveryId', '$$deliveryIdStr'],
+              },
+            },
+          },
+        ],
+        as: 'payment',
+      },
+    },
+    { $unwind: { path: '$payment', preserveNullAndEmptyArrays: true } },
+    {
+      $addFields: {
+        status: {
+          $switch: {
+            branches: [
+              {
+                case: { $eq: ['$payment.refunded', true] },
+                then: 'returned',
+              },
+              {
+                case: { $eq: ['$delivery.status', 'DELIVERED'] },
+                then: 'completed',
+              },
+              {
+                case: {
+                  $in: [
+                    '$delivery.status',
+                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                  ],
+                },
+                then: 'inprogress',
+              },
+            ],
+            default: 'unknown',
+          },
+        },
+      },
+    },
+    {
+      $sort: { 'delivery.timestamps.createdAt': -1 },
+    },
+    {
+      $project: {
+        orderId: 1,
+        receiversName: 1,
+        contact: 1,
+        parcelType: 1,
+        parcelValue: 1,
+        parcelWeight: 1,
+        ride: 1,
+        distance: 1,
+        deliveryCharge: 1,
+        commissionAmount: 1,
+        riderAmount: 1,
+        pickupLocation: 1,
+        destinationLocation: 1,
+        status: 1,
+        payment: {
+          amountPaid: '$payment.amountPaid',
+          status: '$payment.status',
+          refunded: '$payment.refunded',
+        },
+        deliveryInfo: {
+          status: '$delivery.status',
+          timestamps: '$delivery.timestamps',
+          attempts: '$delivery.attempts',
+        },
+      },
+    },
+  ]);
+
+  return history;
+};
+
+
+const getUserOrderDetailsById = async (orderId: string, email: string) => {
+  // 1. Prothome user er id ber koren email diye
+  const user = await User.findOne({ email: email }, { _id: 1 });
+  if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+
+  const orderObjectId = new mongoose.Types.ObjectId(orderId);
+
+  const orderDetails = await Order.aggregate([
+    {
+      $match: { _id: orderObjectId, user: user._id, },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: '_id',
+        foreignField: 'order',
+        as: 'delivery',
+      },
+    },
+    {
+      $unwind: { path: '$delivery', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $lookup: {
+        from: 'payments',
+        let: { deliveryIdStr: { $toString: '$delivery._id' } },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$deliveryId', '$$deliveryIdStr'] },
+            },
+          },
+        ],
+        as: 'payment',
+      },
+    },
+    {
+      $unwind: { path: '$payment', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $lookup: {
+        from: 'users', // Rider info
+        localField: 'delivery.rider',
+        foreignField: '_id',
+        as: 'riderInfo',
+      },
+    },
+    {
+      $unwind: { path: '$riderInfo', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $lookup: {
+        from: 'reviews',
+        let: { riderId: '$delivery.rider' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$rider', '$$riderId'] } } },
+          {
+            $group: {
+              _id: null,
+              averageRating: { $avg: '$rating' },
+              totalReviews: { $sum: 1 },
+            },
+          },
+        ],
+        as: 'riderRating',
+      },
+    },
+    {
+      $unwind: { path: '$riderRating', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $addFields: {
+        status: {
+          $switch: {
+            branches: [
+              { case: { $eq: ['$payment.refunded', true] }, then: 'returned' },
+              { case: { $eq: ['$delivery.status', 'DELIVERED'] }, then: 'completed' },
+              {
+                case: {
+                  $in: [
+                    '$delivery.status',
+                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                  ],
+                },
+                then: 'inprogress',
+              },
+            ],
+            default: 'unknown',
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        orderId: 1,
+        receiversName: 1,
+        contact: 1,
+        parcelType: 1,
+        parcelValue: 1,
+        parcelWeight: 1,
+        ride: 1,
+        distance: 1,
+        deliveryCharge: 1,
+        commissionAmount: 1,
+        riderAmount: 1,
+        pickupLocation: 1,
+        destinationLocation: 1,
+        status: 1,
+        payment: {
+          amountPaid: '$payment.amountPaid',
+          status: '$payment.status',
+          refunded: '$payment.refunded',
+        },
+        deliveryInfo: {
+          status: '$delivery.status',
+          timestamps: '$delivery.timestamps',
+          attempts: '$delivery.attempts',
+        },
+        rider: {
+          name: '$riderInfo.name',
+          email: '$riderInfo.email',
+          phone: '$riderInfo.phone',
+          rating: {
+            average: { $round: ['$riderRating.averageRating', 1] },
+            total: '$riderRating.totalReviews',
+          },
+        },
+      },
+    },
+  ]);
+
+  if (!orderDetails.length) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found');
+  }
+
+  return orderDetails[0];
+};
+
+
+
+const getRiderOrderDetailsById = async (orderId: string, email: string,) => {
+  // Step 1: Find Rider ID from email
+  const rider = await User.findOne({ email }).select('_id');
+  if (!rider) throw new Error('Rider not found');
+
+  const riderId = rider._id;
+  const orderObjectId = new mongoose.Types.ObjectId(orderId);
+
+  // Step 2: Aggregation pipeline
+  const orderDetails = await Order.aggregate([
+    {
+      $match: { _id: orderObjectId },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: '_id',
+        foreignField: 'order',
+        as: 'delivery',
+      },
+    },
+    {
+      $unwind: { path: '$delivery', preserveNullAndEmptyArrays: false },
+    },
+    {
+      $match: { 'delivery.rider': riderId },  // Check order belongs to rider
+    },
+    {
+      $lookup: {
+        from: 'payments',
+        let: { deliveryIdStr: { $toString: '$delivery._id' } },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$deliveryId', '$$deliveryIdStr'] },
+            },
+          },
+        ],
+        as: 'payment',
+      },
+    },
+    { $unwind: { path: '$payment', preserveNullAndEmptyArrays: true } },
+    {
+      $addFields: {
+        status: {
+          $switch: {
+            branches: [
+              { case: { $eq: ['$payment.refunded', true] }, then: 'returned' },
+              { case: { $eq: ['$delivery.status', 'DELIVERED'] }, then: 'completed' },
+              {
+                case: {
+                  $in: [
+                    '$delivery.status',
+                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                  ],
+                },
+                then: 'inprogress',
+              },
+            ],
+            default: 'unknown',
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        orderId: 1,
+        receiversName: 1,
+        contact: 1,
+        parcelType: 1,
+        parcelValue: 1,
+        parcelWeight: 1,
+        ride: 1,
+        distance: 1,
+        deliveryCharge: 1,
+        commissionAmount: 1,
+        riderAmount: 1,
+        pickupLocation: 1,
+        destinationLocation: 1,
+        status: 1,
+        payment: {
+          amountPaid: '$payment.amountPaid',
+          status: '$payment.status',
+          refunded: '$payment.refunded',
+        },
+        deliveryInfo: {
+          status: '$delivery.status',
+          timestamps: '$delivery.timestamps',
+          attempts: '$delivery.attempts',
+        },
+      },
+    },
+  ]);
+
+  if (orderDetails.length === 0) {
+    throw new Error('Order not found for this rider');
+  }
+
+  return orderDetails[0];
+};
+
+export const getRiderWeeklyEarnings = async (email: string) => {
+  // 1. Find rider by email
+  const rider = await User.findOne({ email });
+  if (!rider) {
+    throw new Error('Rider not found');
+  }
+
+  const riderId = new mongoose.Types.ObjectId(rider._id);
+
+  // 2. Date 7 days ago
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+  // 3. Aggregation pipeline
+  const earnings = await Payment.aggregate([
+    {
+      $match: {
+        // refunded: false,
+        paidAt: { $gte: sevenDaysAgo },
+      },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: 'deliveryId',
+        foreignField: '_id',
+        as: 'delivery',
+      },
+    },
+    { $unwind: '$delivery' },
+    {
+      $match: {
+        'delivery.rider': riderId,
+        'delivery.status': 'DELIVERED',
+      },
+    },
+    {
+      $project: {
+        riderAmount: 1,
+        day: { $dateToString: { format: '%Y-%m-%d', date: '$paidAt' } },
+      },
+    },
+    {
+      $group: {
+        _id: '$day',
+        total: { $sum: '$riderAmount' },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+
+  // 4. Fill empty days (if no deliveries on some)
+  const result: { day: string; amount: number }[] = [];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(sevenDaysAgo);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+
+    const found = earnings.find((e) => e._id === key);
+    const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+
+    result.push({
+      day: dayName, // 'Mon', 'Tue', etc.
+      amount: found ? found.total : 0,
+    });
   }
 
   return result;
 };
+
+
+
+
+
+
 
 export const ReportServices = {
   userReport,
@@ -687,4 +1253,8 @@ export const ReportServices = {
   revenueAnalyticsReport,
   getBalanceTransactions,
   getUserOrderHistory,
+  getRiderOrderHistory,
+  getUserOrderDetailsById,
+  getRiderOrderDetailsById,
+  getRiderWeeklyEarnings
 };

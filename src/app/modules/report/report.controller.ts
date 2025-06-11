@@ -104,13 +104,72 @@ const revenueAnalyticsReport = catchAsync(async (req, res) => {
   });
 });
 
+// const getUserOrderHistory = catchAsync(async (req, res) => {
+//   const userId = req.user.id;
+//   const result = await ReportServices.getUserOrderHistory(userId);
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: 200,
+//     message: 'Order history are retrieved successfully',
+//     data: result,
+//   });
+// });
+
 const getUserOrderHistory = catchAsync(async (req, res) => {
-  const userId = req.user.id;
-  const result = await ReportServices.getUserOrderHistory(userId);
+  const user = req.user.email;
+  const result = await ReportServices.getUserOrderHistory(user);
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: 'Order history are retrieved successfully',
+    message: 'User order history are retrieved successfully',
+    data: result,
+  });
+});
+
+const getRiderOrderHistory = catchAsync(async (req, res) => {
+  const user = req.user.email;
+  const result = await ReportServices.getRiderOrderHistory(user);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Rider order history are retrieved successfully',
+    data: result,
+  });
+});
+
+const getUserOrderDetailsById = catchAsync(async (req, res) => {
+  const orderId = req.params.orderId;
+  const user = req.user.email;
+  const result = await ReportServices.getUserOrderDetailsById(orderId, user);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Order details are retrieved successfully',
+    data: result,
+  });
+});
+
+
+const getRiderOrderDetailsById = catchAsync(async (req, res) => {
+  const orderId = req.params.orderId;
+  const user = req.user.email;
+  const result = await ReportServices.getRiderOrderDetailsById(orderId, user);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Order details are retrieved successfully',
+    data: result,
+  });
+});
+
+const getRiderWeeklyEarnings = catchAsync(async (req, res) => {
+
+  const user = req.user.email;
+  const result = await ReportServices.getRiderWeeklyEarnings(user);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Rider weekly earnings data retrieved successfully',
     data: result,
   });
 });
@@ -138,4 +197,9 @@ export const ReportControllers = {
   revenueAnalyticsReport,
   getBalanceTransactions,
   getUserOrderHistory,
+  getUserOrderDetailsById,
+  getRiderOrderDetailsById,
+  getRiderOrderHistory,
+  getRiderWeeklyEarnings
+
 };
