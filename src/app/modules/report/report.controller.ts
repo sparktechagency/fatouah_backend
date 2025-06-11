@@ -104,13 +104,35 @@ const revenueAnalyticsReport = catchAsync(async (req, res) => {
   });
 });
 
+// const getUserOrderHistory = catchAsync(async (req, res) => {
+//   const userId = req.user.id;
+//   const result = await ReportServices.getUserOrderHistory(userId);
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: 200,
+//     message: 'Order history are retrieved successfully',
+//     data: result,
+//   });
+// });
+
 const getUserOrderHistory = catchAsync(async (req, res) => {
-  const userId = req.user.id;
-  const result = await ReportServices.getUserOrderHistory(userId);
+  const user = req.user.email;
+  const result = await ReportServices.getUserOrderHistory(user);
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: 'Order history are retrieved successfully',
+    message: 'User order history are retrieved successfully',
+    data: result,
+  });
+});
+
+const getRiderOrderHistory = catchAsync(async (req, res) => {
+  const user = req.user.email;
+  const result = await ReportServices.getRiderOrderHistory(user);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Rider order history are retrieved successfully',
     data: result,
   });
 });
@@ -138,4 +160,6 @@ export const ReportControllers = {
   revenueAnalyticsReport,
   getBalanceTransactions,
   getUserOrderHistory,
+  getRiderOrderHistory
+
 };
