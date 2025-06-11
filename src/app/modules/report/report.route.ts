@@ -95,4 +95,10 @@ router.get(
   ReportControllers.getUserOrderDetailsById,
 );
 
+router.get(
+  '/rider-order-history/:orderId',
+  auth(USER_ROLES.RIDER),
+  ReportControllers.getRiderOrderDetailsById,
+);
+
 export const ReportRoutes = router;

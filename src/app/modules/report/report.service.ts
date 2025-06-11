@@ -919,12 +919,16 @@ const getRiderOrderHistory = async (email: string) => {
 };
 
 
-const getUserOrderDetailsById = async (orderId: string) => {
+const getUserOrderDetailsById = async (orderId: string, email: string) => {
+  // 1. Prothome user er id ber koren email diye
+  const user = await User.findOne({ email: email }, { _id: 1 });
+  if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+
   const orderObjectId = new mongoose.Types.ObjectId(orderId);
 
   const orderDetails = await Order.aggregate([
     {
-      $match: { _id: orderObjectId },
+      $match: { _id: orderObjectId, user: user._id, },
     },
     {
       $lookup: {
@@ -1055,6 +1059,110 @@ const getUserOrderDetailsById = async (orderId: string) => {
 
 
 
+const getRiderOrderDetailsById = async (orderId: string, email: string,) => {
+  // Step 1: Find Rider ID from email
+  const rider = await User.findOne({ email }).select('_id');
+  if (!rider) throw new Error('Rider not found');
+
+  const riderId = rider._id;
+  const orderObjectId = new mongoose.Types.ObjectId(orderId);
+
+  // Step 2: Aggregation pipeline
+  const orderDetails = await Order.aggregate([
+    {
+      $match: { _id: orderObjectId },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: '_id',
+        foreignField: 'order',
+        as: 'delivery',
+      },
+    },
+    {
+      $unwind: { path: '$delivery', preserveNullAndEmptyArrays: false },
+    },
+    {
+      $match: { 'delivery.rider': riderId },  // Check order belongs to rider
+    },
+    {
+      $lookup: {
+        from: 'payments',
+        let: { deliveryIdStr: { $toString: '$delivery._id' } },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$deliveryId', '$$deliveryIdStr'] },
+            },
+          },
+        ],
+        as: 'payment',
+      },
+    },
+    { $unwind: { path: '$payment', preserveNullAndEmptyArrays: true } },
+    {
+      $addFields: {
+        status: {
+          $switch: {
+            branches: [
+              { case: { $eq: ['$payment.refunded', true] }, then: 'returned' },
+              { case: { $eq: ['$delivery.status', 'DELIVERED'] }, then: 'completed' },
+              {
+                case: {
+                  $in: [
+                    '$delivery.status',
+                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                  ],
+                },
+                then: 'inprogress',
+              },
+            ],
+            default: 'unknown',
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        orderId: 1,
+        receiversName: 1,
+        contact: 1,
+        parcelType: 1,
+        parcelValue: 1,
+        parcelWeight: 1,
+        ride: 1,
+        distance: 1,
+        deliveryCharge: 1,
+        commissionAmount: 1,
+        riderAmount: 1,
+        pickupLocation: 1,
+        destinationLocation: 1,
+        status: 1,
+        payment: {
+          amountPaid: '$payment.amountPaid',
+          status: '$payment.status',
+          refunded: '$payment.refunded',
+        },
+        deliveryInfo: {
+          status: '$delivery.status',
+          timestamps: '$delivery.timestamps',
+          attempts: '$delivery.attempts',
+        },
+      },
+    },
+  ]);
+
+  if (orderDetails.length === 0) {
+    throw new Error('Order not found for this rider');
+  }
+
+  return orderDetails[0];
+};
+
+
+
+
 
 
 export const ReportServices = {
@@ -1071,5 +1179,6 @@ export const ReportServices = {
   getBalanceTransactions,
   getUserOrderHistory,
   getRiderOrderHistory,
-  getUserOrderDetailsById
+  getUserOrderDetailsById,
+  getRiderOrderDetailsById
 };
