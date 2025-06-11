@@ -184,6 +184,19 @@ const getBalanceTransactions = catchAsync(async (req, res) => {
   });
 });
 
+
+const getRiderTransactionHistory = catchAsync(async (req, res) => {
+  
+  const user = req.user.email;
+  const result = await ReportServices.getRiderTransactionHistory(user);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Successfully retrieved are transactions data for rider',
+    data: result,
+  });
+});
+
 export const ReportControllers = {
   userReport,
   riderReport,
@@ -200,6 +213,7 @@ export const ReportControllers = {
   getUserOrderDetailsById,
   getRiderOrderDetailsById,
   getRiderOrderHistory,
-  getRiderWeeklyEarnings
+  getRiderWeeklyEarnings,
+  getRiderTransactionHistory
 
 };

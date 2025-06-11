@@ -107,4 +107,10 @@ router.get(
   ReportControllers.getRiderWeeklyEarnings,
 );
 
+router.get(
+  '/rider/transaction',
+  auth(USER_ROLES.RIDER),
+  ReportControllers.getRiderTransactionHistory,
+);
+
 export const ReportRoutes = router;

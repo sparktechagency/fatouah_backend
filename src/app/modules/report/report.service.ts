@@ -1254,14 +1254,52 @@ const getRiderWeeklyEarnings = async (email: string) => {
 
 
 
+const getRiderTransactionHistory = async (email: string) => {
+  // 1. Prothome rider er user record ta ber koro email diye
+  const rider = await User.findOne({ email });
+  if (!rider) {
+    throw new ApiError(StatusCodes.NOT_FOUND,'Rider not found');
+  }
 
+  const riderId = new mongoose.Types.ObjectId(rider._id);
 
+  // 2. Tarpor Payment collection theke rider er delivery id gulo theke transaction gula ber koro
+  // eikhane dhore nichi je rider er ID delivery document e 'rider' field e ache
+  const transactions = await Payment.aggregate([
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: 'deliveryId',
+        foreignField: '_id',
+        as: 'delivery',
+      },
+    },
+    { $unwind: '$delivery' },
+    {
+      $match: {
+        'delivery.rider': riderId,
+      },
+    },
+    {
+      $project: {
+        transactionId: 1,
+      
+        amountPaid: 1,
+        paidAt: 1,
+        status: 1,
+        refunded: 1,
+        refundId: 1,
+        commissionAmount: 1,
+        riderAmount: 1,
+        isTransferred: 1,
+        
+      },
+    },
+    { $sort: { paidAt: -1 } }, // newest first
+  ]);
 
-
-
-
-
-
+  return transactions;
+};
 
 
 export const ReportServices = {
@@ -1280,5 +1318,6 @@ export const ReportServices = {
   getRiderOrderHistory,
   getUserOrderDetailsById,
   getRiderOrderDetailsById,
-  getRiderWeeklyEarnings
+  getRiderWeeklyEarnings,
+  getRiderTransactionHistory
 };
