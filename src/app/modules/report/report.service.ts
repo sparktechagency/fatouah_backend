@@ -651,38 +651,18 @@ const getBalanceTransactions = async () => {
   return result;
 };
 
-// const getUserOrderHistory = async (userId: string) => {
-//   const result = await Order.find({ userId })
-//     .populate({
-//       path: 'deliveryId',
-//       populate: {
-//         path: 'order',
-//         model: 'Order',
-//       },
-//     })
-//     .sort({ createdAt: -1 });
-
-//   if (!result || result.length === 0) {
-//     throw new ApiError(
-//       StatusCodes.NOT_FOUND,
-//       'No order history found in database',
-//     );
-//   }
-
-//   return result;
-// };
-
-
 
 const getUserOrderHistory = async (email: string) => {
+  // 1. User ber koro email diye
   const user = await User.findOne({ email }).select('_id');
   if (!user) throw new Error('User not found');
 
+  const userId = user._id;
+
+  // 2. Aggregation Pipeline
   const history = await Order.aggregate([
     {
-      $match: {
-        user: user._id,
-      },
+      $match: { user: userId },
     },
     {
       $lookup: {
@@ -692,26 +672,60 @@ const getUserOrderHistory = async (email: string) => {
         as: 'delivery',
       },
     },
-    {
-      $unwind: {
-        path: '$delivery',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
+    { $unwind: { path: '$delivery', preserveNullAndEmptyArrays: true } },
     {
       $lookup: {
         from: 'payments',
-        localField: '_id',
-        foreignField: 'deliveryId',
+        let: { deliveryIdStr: { $toString: '$delivery._id' } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$deliveryId', '$$deliveryIdStr'],
+              },
+            },
+          },
+        ],
         as: 'payment',
+      },
+    },
+    { $unwind: { path: '$payment', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users', // Rider info from users collection
+        localField: 'delivery.rider',
+        foreignField: '_id',
+        as: 'riderInfo',
+      },
+    },
+    { $unwind: { path: '$riderInfo', preserveNullAndEmptyArrays: true } },
+
+    // ⭐️ Rider Rating
+    {
+      $lookup: {
+        from: 'reviews',
+        let: { riderId: '$delivery.rider' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$rider', '$$riderId'] } } },
+          {
+            $group: {
+              _id: null,
+              averageRating: { $avg: '$rating' },
+              totalReviews: { $sum: 1 },
+            },
+          },
+        ],
+        as: 'riderRating',
       },
     },
     {
       $unwind: {
-        path: '$payment',
+        path: '$riderRating',
         preserveNullAndEmptyArrays: true,
       },
     },
+
+    // Status
     {
       $addFields: {
         status: {
@@ -740,6 +754,12 @@ const getUserOrderHistory = async (email: string) => {
         },
       },
     },
+    // sort
+    {
+      $sort: { 'delivery.timestamps.createdAt': -1 },
+    },
+
+    // Final Projection
     {
       $project: {
         orderId: 1,
@@ -756,10 +776,28 @@ const getUserOrderHistory = async (email: string) => {
         pickupLocation: 1,
         destinationLocation: 1,
         status: 1,
-        'payment.amountPaid': 1,
-        'payment.status': 1,
-        'payment.refunded': 1,
-        'delivery.status': 1,
+
+        payment: {
+          amountPaid: '$payment.amountPaid',
+          status: '$payment.status',
+          refunded: '$payment.refunded',
+        },
+
+        deliveryInfo: {
+          status: '$delivery.status',
+          timestamps: '$delivery.timestamps',
+          attempts: '$delivery.attempts',
+        },
+
+        rider: {
+          name: '$riderInfo.name',
+          email: '$riderInfo.email',
+          phone: '$riderInfo.phone',
+          rating: {
+            average: { $round: ['$riderRating.averageRating', 1] },
+            total: '$riderRating.totalReviews',
+          },
+        },
       },
     },
   ]);
@@ -801,17 +839,20 @@ const getRiderOrderHistory = async (email: string) => {
     {
       $lookup: {
         from: 'payments',
-        localField: 'delivery._id',
-        foreignField: 'deliveryId',
+        let: { deliveryIdStr: { $toString: '$delivery._id' } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$deliveryId', '$$deliveryIdStr'],
+              },
+            },
+          },
+        ],
         as: 'payment',
       },
     },
-    {
-      $unwind: {
-        path: '$payment',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
+    { $unwind: { path: '$payment', preserveNullAndEmptyArrays: true } },
     {
       $addFields: {
         status: {
@@ -841,6 +882,9 @@ const getRiderOrderHistory = async (email: string) => {
       },
     },
     {
+      $sort: { 'delivery.timestamps.createdAt': -1 },
+    },
+    {
       $project: {
         orderId: 1,
         receiversName: 1,
@@ -856,10 +900,16 @@ const getRiderOrderHistory = async (email: string) => {
         pickupLocation: 1,
         destinationLocation: 1,
         status: 1,
-        'payment.amountPaid': 1,
-        'payment.status': 1,
-        'payment.refunded': 1,
-        'delivery.status': 1,
+        payment: {
+          amountPaid: '$payment.amountPaid',
+          status: '$payment.status',
+          refunded: '$payment.refunded',
+        },
+        deliveryInfo: {
+          status: '$delivery.status',
+          timestamps: '$delivery.timestamps',
+          attempts: '$delivery.attempts',
+        },
       },
     },
   ]);
