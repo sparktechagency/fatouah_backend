@@ -1162,8 +1162,7 @@ const getRiderOrderDetailsById = async (orderId: string, email: string,) => {
   return orderDetails[0];
 };
 
-export const getRiderWeeklyEarnings = async (email: string) => {
-  // 1. Find rider by email
+const getRiderWeeklyEarnings = async (email: string) => {
   const rider = await User.findOne({ email });
   if (!rider) {
     throw new Error('Rider not found');
@@ -1171,17 +1170,18 @@ export const getRiderWeeklyEarnings = async (email: string) => {
 
   const riderId = new mongoose.Types.ObjectId(rider._id);
 
-  // 2. Date 7 days ago
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setHours(0, 0, 0, 0);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  // Date range for aggregation (in UTC)
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
 
-  // 3. Aggregation pipeline
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  sevenDaysAgo.setDate(today.getDate() - 6);
+
   const earnings = await Payment.aggregate([
     {
       $match: {
-        // refunded: false,
-        paidAt: { $gte: sevenDaysAgo },
+        paidAt: { $gte: sevenDaysAgo, $lte: today },
       },
     },
     {
@@ -1214,25 +1214,49 @@ export const getRiderWeeklyEarnings = async (email: string) => {
     { $sort: { _id: 1 } },
   ]);
 
-  // 4. Fill empty days (if no deliveries on some)
-  const result: { day: string; amount: number }[] = [];
+  if (earnings.length === 0) {
+    const result = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(sevenDaysAgo);
+      d.setDate(sevenDaysAgo.getDate() + i);
+      result.push({
+        day: d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Dhaka' }),
+        amount: 0,
+      });
+    }
+    return result;
+  }
 
+  const maxDateStr = earnings[earnings.length - 1]._id; // e.g. "2025-06-11"
+  const maxDate = new Date(maxDateStr + 'T23:59:59.999Z');
+
+  const startDate = new Date(maxDate);
+  startDate.setDate(maxDate.getDate() - 6);
+
+  const result = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(sevenDaysAgo);
-    d.setDate(d.getDate() + i);
-    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
 
-    const found = earnings.find((e) => e._id === key);
-    const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+    // convert date d to 'YYYY-MM-DD' in Asia/Dhaka timezone for matching
+    const dhakaDateStr = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' }); // 'YYYY-MM-DD' format
+
+    const found = earnings.find((e) => e._id === dhakaDateStr);
 
     result.push({
-      day: dayName, // 'Mon', 'Tue', etc.
+      day: d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Dhaka' }),
       amount: found ? found.total : 0,
     });
   }
 
   return result;
 };
+
+
+
+
+
+
 
 
 
