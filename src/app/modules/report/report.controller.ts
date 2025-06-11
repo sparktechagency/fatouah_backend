@@ -137,6 +137,17 @@ const getRiderOrderHistory = catchAsync(async (req, res) => {
   });
 });
 
+const getUserOrderDetailsById = catchAsync(async (req, res) => {
+  const orderId = req.params.orderId;
+  const result = await ReportServices.getUserOrderDetailsById(orderId);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Order details are retrieved successfully',
+    data: result,
+  });
+});
+
 const getBalanceTransactions = catchAsync(async (req, res) => {
   const result = await ReportServices.getBalanceTransactions();
   sendResponse(res, {
@@ -160,6 +171,7 @@ export const ReportControllers = {
   revenueAnalyticsReport,
   getBalanceTransactions,
   getUserOrderHistory,
+  getUserOrderDetailsById,
   getRiderOrderHistory
 
 };

@@ -6,6 +6,7 @@ import { startOfDay, endOfDay, subDays } from 'date-fns';
 import { Order } from '../order/order.model';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { riderSearchableFields, userSearchableFields } from './report.constant';
+import mongoose from 'mongoose';
 const { startOfYear, endOfYear } = require('date-fns');
 
 // i will delete this before finish development process
@@ -918,6 +919,141 @@ const getRiderOrderHistory = async (email: string) => {
 };
 
 
+const getUserOrderDetailsById = async (orderId: string) => {
+  const orderObjectId = new mongoose.Types.ObjectId(orderId);
+
+  const orderDetails = await Order.aggregate([
+    {
+      $match: { _id: orderObjectId },
+    },
+    {
+      $lookup: {
+        from: 'deliveries',
+        localField: '_id',
+        foreignField: 'order',
+        as: 'delivery',
+      },
+    },
+    {
+      $unwind: { path: '$delivery', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $lookup: {
+        from: 'payments',
+        let: { deliveryIdStr: { $toString: '$delivery._id' } },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$deliveryId', '$$deliveryIdStr'] },
+            },
+          },
+        ],
+        as: 'payment',
+      },
+    },
+    {
+      $unwind: { path: '$payment', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $lookup: {
+        from: 'users', // Rider info
+        localField: 'delivery.rider',
+        foreignField: '_id',
+        as: 'riderInfo',
+      },
+    },
+    {
+      $unwind: { path: '$riderInfo', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $lookup: {
+        from: 'reviews',
+        let: { riderId: '$delivery.rider' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$rider', '$$riderId'] } } },
+          {
+            $group: {
+              _id: null,
+              averageRating: { $avg: '$rating' },
+              totalReviews: { $sum: 1 },
+            },
+          },
+        ],
+        as: 'riderRating',
+      },
+    },
+    {
+      $unwind: { path: '$riderRating', preserveNullAndEmptyArrays: true },
+    },
+    {
+      $addFields: {
+        status: {
+          $switch: {
+            branches: [
+              { case: { $eq: ['$payment.refunded', true] }, then: 'returned' },
+              { case: { $eq: ['$delivery.status', 'DELIVERED'] }, then: 'completed' },
+              {
+                case: {
+                  $in: [
+                    '$delivery.status',
+                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                  ],
+                },
+                then: 'inprogress',
+              },
+            ],
+            default: 'unknown',
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        orderId: 1,
+        receiversName: 1,
+        contact: 1,
+        parcelType: 1,
+        parcelValue: 1,
+        parcelWeight: 1,
+        ride: 1,
+        distance: 1,
+        deliveryCharge: 1,
+        commissionAmount: 1,
+        riderAmount: 1,
+        pickupLocation: 1,
+        destinationLocation: 1,
+        status: 1,
+        payment: {
+          amountPaid: '$payment.amountPaid',
+          status: '$payment.status',
+          refunded: '$payment.refunded',
+        },
+        deliveryInfo: {
+          status: '$delivery.status',
+          timestamps: '$delivery.timestamps',
+          attempts: '$delivery.attempts',
+        },
+        rider: {
+          name: '$riderInfo.name',
+          email: '$riderInfo.email',
+          phone: '$riderInfo.phone',
+          rating: {
+            average: { $round: ['$riderRating.averageRating', 1] },
+            total: '$riderRating.totalReviews',
+          },
+        },
+      },
+    },
+  ]);
+
+  if (!orderDetails.length) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found');
+  }
+
+  return orderDetails[0];
+};
+
+
 
 
 
@@ -934,5 +1070,6 @@ export const ReportServices = {
   revenueAnalyticsReport,
   getBalanceTransactions,
   getUserOrderHistory,
-  getRiderOrderHistory
+  getRiderOrderHistory,
+  getUserOrderDetailsById
 };
