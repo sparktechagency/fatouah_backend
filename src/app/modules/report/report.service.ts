@@ -778,6 +778,8 @@ const getUserOrderHistory = async (email: string, query: any) => {
         pickupLocation: 1,
         destinationLocation: 1,
         status: 1,
+        pickupAddress: '$pickupLocation.address',
+        destinationAddress: '$destinationLocation.address',
 
         payment: {
           amountPaid: '$payment.amountPaid',
@@ -804,7 +806,12 @@ const getUserOrderHistory = async (email: string, query: any) => {
     },
   ]);
 
-  const userOrderHistoryQuery = new QueryBuilder(history, query).search(["receiversName"]).filter();
+  const userOrderHistoryQuery = new QueryBuilder(history, query).search([
+    "receiversName",
+    "contact",
+    "pickupAddress",
+    "destinationAddress"
+  ]).filter();
 
   const result = userOrderHistoryQuery.modelQuery;
   const meta = await userOrderHistoryQuery.getPaginationInfo();
@@ -815,7 +822,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
   }
 };
 
-const getRiderOrderHistory = async (email: string) => {
+const getRiderOrderHistory = async (email: string, query: any) => {
   // Step 1: Find Rider ID from email
   const rider = await User.findOne({ email }).select('_id');
 
@@ -909,6 +916,8 @@ const getRiderOrderHistory = async (email: string) => {
         riderAmount: 1,
         pickupLocation: 1,
         destinationLocation: 1,
+        pickupAddress: '$pickupLocation.address',
+        destinationAddress: '$destinationLocation.address',
         status: 1,
         payment: {
           amountPaid: '$payment.amountPaid',
@@ -924,7 +933,22 @@ const getRiderOrderHistory = async (email: string) => {
     },
   ]);
 
-  return history;
+  const riderOrderHistoryQuery = new QueryBuilder(history, query).search([
+    "receiversName",
+    "contact",
+    "pickupAddress",
+    "destinationAddress"
+  ]).filter();
+
+  const result = riderOrderHistoryQuery.modelQuery;
+  const meta = await riderOrderHistoryQuery.getPaginationInfo();
+
+  return {
+    data: result,
+    meta,
+  }
+
+
 };
 
 const getUserOrderDetailsById = async (orderId: string, email: string) => {

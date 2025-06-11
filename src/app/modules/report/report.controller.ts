@@ -104,16 +104,6 @@ const revenueAnalyticsReport = catchAsync(async (req, res) => {
   });
 });
 
-// const getUserOrderHistory = catchAsync(async (req, res) => {
-//   const userId = req.user.id;
-//   const result = await ReportServices.getUserOrderHistory(userId);
-//   sendResponse(res, {
-//     success: true,
-//     statusCode: 200,
-//     message: 'Order history are retrieved successfully',
-//     data: result,
-//   });
-// });
 
 const getUserOrderHistory = catchAsync(async (req, res) => {
   const user = req.user.email;
@@ -128,7 +118,7 @@ const getUserOrderHistory = catchAsync(async (req, res) => {
 
 const getRiderOrderHistory = catchAsync(async (req, res) => {
   const user = req.user.email;
-  const result = await ReportServices.getRiderOrderHistory(user);
+  const result = await ReportServices.getRiderOrderHistory(user,req.query);
   sendResponse(res, {
     success: true,
     statusCode: 200,
