@@ -143,6 +143,12 @@ const updateProfileToDB = async (
   payload: Partial<IUser>,
 ): Promise<Partial<IUser | null>> => {
   const { id } = user;
+  if (payload.role || payload.verified) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      "You dont't change the role or verified",
+    );
+  }
   const isExistUser = await User.isExistUserById(id);
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");

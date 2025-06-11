@@ -1,2 +1,2 @@
 export const userSearchableFields = ['name'];
-export const riderSearchableFields = ["name"]
+export const riderSearchableFields = ['name'];

@@ -195,15 +195,17 @@ const riderReport = async (query: any) => {
     },
   ]);
 
-  const riderQuery = new QueryBuilder(riders, query).search(riderSearchableFields).filter().paginate();
+  const riderQuery = new QueryBuilder(riders, query)
+    .search(riderSearchableFields)
+    .filter()
+    .paginate();
 
   const result = riderQuery.modelQuery;
   const meta = await riderQuery.getPaginationInfo();
   return {
     data: result,
     meta,
-  }
-
+  };
 };
 
 const parcelReport = async () => {
