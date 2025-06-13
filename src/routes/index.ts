@@ -7,7 +7,7 @@ import { FaqRoutes } from '../app/modules/faq/faq.route';
 import { BannerRoutes } from '../app/modules/banner/banner.route';
 import { AdminRoutes } from '../app/modules/admin/admin.route';
 import { ContactRoutes } from '../app/modules/contact/contact.route';
-import { NotificationRoutes } from '../app/modules/notification/notification.route';
+import { PushNotificationRoutes } from '../app/modules/pushNotification/pushNotification.route';
 import { OrderRoutes } from '../app/modules/order/order.route';
 import { DeliveryRoutes } from '../app/modules/delivery/delivery.route';
 import { ReportRoutes } from '../app/modules/report/report.route';
@@ -48,8 +48,8 @@ const apiRoutes = [
     route: ContactRoutes,
   },
   {
-    path: '/notification',
-    route: NotificationRoutes,
+    path: '/push-notification',
+    route: PushNotificationRoutes,
   },
   {
     path: '/order',

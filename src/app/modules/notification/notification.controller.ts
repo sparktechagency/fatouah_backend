@@ -1,26 +1,33 @@
-import { StatusCodes } from 'http-status-codes';
-import ApiError from '../../../errors/ApiError';
-import catchAsync from '../../../shared/catchAsync';
-import sendResponse from '../../../shared/sendResponse';
-import { sendToTopic } from '../services/fcmService';
+import catchAsync from "../../../shared/catchAsync";
+import sendResponse from "../../../shared/sendResponse";
+import { NotificationServices } from "./notification.service";
 
-const sendNotificationController = catchAsync(async (req, res) => {
-  const { topic, title, body } = req.body;
+const getNotification = catchAsync(async (req, res) => {
+    const user = req.user;
+    const result = await NotificationServices.getNotificationFromDB(user);
 
-  if (!topic || !title || !body) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Missing fields');
-  }
+    sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: "Notification are retrieved successfully",
+        data: result,
+    })
+})
 
-  const result = await sendToTopic(topic, { title, body });
+const readNotification = catchAsync(async (req, res) => {
+    const user = req.user;
+    const result = await NotificationServices.readNotificationToDB(user);
+    sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: "Notification read successfully",
+        data: result,
+    })
 
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Notification send successfully',
-    data: result,
-  });
-});
+})
+
 
 export const NotificationControllers = {
-  sendNotificationController,
-};
+    getNotification,
+    readNotification
+}
