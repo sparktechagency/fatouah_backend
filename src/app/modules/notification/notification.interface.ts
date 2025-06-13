@@ -1,11 +1,11 @@
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
 export type INotification = {
-    title?:string;
-    receiver?: Types.ObjectId;
-    read: boolean;
-    riderId: string;
-    orderId: string;
-    sender: Types.ObjectId;
-    delivery?:any;
-}
+  title?: string;
+  receiver?: Types.ObjectId;
+  read: boolean;
+  riderId: string;
+  orderId: string;
+  sender: Types.ObjectId;
+  delivery?: any;
+};

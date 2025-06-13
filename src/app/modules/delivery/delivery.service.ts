@@ -87,7 +87,7 @@ const updateRiderLocation = async (
     // @ts-ignore
     const io = global.io;
     if (io) {
-      io.emit(`rider::${riderId}` , {
+      io.emit(`rider::${riderId}`, {
         riderId,
         coordinates: result.geoLocation?.coordinates,
       });
@@ -259,14 +259,16 @@ const updateStatus = async ({
   if (updatedDelivery) {
     const payload = {
       title: `Delivery ${status}`,
-      receiver: new Types.ObjectId((updatedDelivery.order as IOrder).user.toString()),
+      receiver: new Types.ObjectId(
+        (updatedDelivery.order as IOrder).user.toString(),
+      ),
       sender: new Types.ObjectId(riderId),
       riderId: riderId!,
-      orderId: (updatedDelivery.order)._id.toString(),
+      orderId: updatedDelivery.order._id.toString(),
       read: false,
-      delivery:updatedDelivery,
-    }
-    await NotificationServices.sendNotificationToDB(payload)
+      delivery: updatedDelivery,
+    };
+    await NotificationServices.sendNotificationToDB(payload);
   }
 
   return updatedDelivery;

@@ -3,6 +3,9 @@ import { PushNotificationControllers } from './pushNotification.controller';
 
 const router = express.Router();
 
-router.post('/send', PushNotificationControllers.sendPushNotificationController);
+router.post(
+  '/send',
+  PushNotificationControllers.sendPushNotificationController,
+);
 
-export const  PushNotificationRoutes = router;
+export const PushNotificationRoutes = router;

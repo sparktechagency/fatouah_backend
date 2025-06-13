@@ -11,6 +11,7 @@ import { PushNotificationRoutes } from '../app/modules/pushNotification/pushNoti
 import { OrderRoutes } from '../app/modules/order/order.route';
 import { DeliveryRoutes } from '../app/modules/delivery/delivery.route';
 import { ReportRoutes } from '../app/modules/report/report.route';
+import { NotificationRoutes } from '../app/modules/notification/notification.route';
 
 const router = express.Router();
 
@@ -50,6 +51,10 @@ const apiRoutes = [
   {
     path: '/push-notification',
     route: PushNotificationRoutes,
+  },
+  {
+    path: '/notification',
+    route: NotificationRoutes,
   },
   {
     path: '/order',

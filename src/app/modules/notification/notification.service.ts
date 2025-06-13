@@ -1,10 +1,9 @@
-import { JwtPayload } from "jsonwebtoken";
-import { INotification } from "./notification.interface"
-import { Notification } from "./notification.model"
+import { JwtPayload } from 'jsonwebtoken';
+import { INotification } from './notification.interface';
+import { Notification } from './notification.model';
 
 // save notification
 // const sendNotificationToDB = async (payload: INotification) => {
-    
 
 //     const response = await Notification.create(payload);
 
@@ -42,37 +41,35 @@ const sendNotificationToDB = async (payload: INotification) => {
   return response;
 };
 
-
-
-
 // get notifications
 const getNotificationFromDB = async (user: JwtPayload) => {
-    console.log(user.id, "User ID")
-    const result = await Notification.find({ receiver: user.id }).
-        populate({
-            path: "sender",
-            select: "name email"
-        })
-    const unreadCount = await Notification.countDocuments({
-        receiver: user.id,
-        read: false,
-    })
-    const data = {
-        result,
-        unreadCount,
-    }
-    return data;
-}
+  console.log(user.id, 'User ID');
+  const result = await Notification.find({ receiver: user.id }).populate({
+    path: 'sender',
+    select: 'name email',
+  });
+  const unreadCount = await Notification.countDocuments({
+    receiver: user.id,
+    read: false,
+  });
+  const data = {
+    result,
+    unreadCount,
+  };
+  return data;
+};
 
 // read notifications only for user
 const readNotificationToDB = async (user: JwtPayload) => {
-    const result = await Notification.updateMany({ receiver: user.id, read: false }, { $set: { read: true } });
-    return result;
-}
-
+  const result = await Notification.updateMany(
+    { receiver: user.id, read: false },
+    { $set: { read: true } },
+  );
+  return result;
+};
 
 export const NotificationServices = {
-    sendNotificationToDB,
-    getNotificationFromDB,
-    readNotificationToDB
-}
+  sendNotificationToDB,
+  getNotificationFromDB,
+  readNotificationToDB,
+};
