@@ -21,6 +21,9 @@ const userSchema = new Schema<IUser, UserModal>(
     contact: {
       type: String,
     },
+    countryCode: {
+      type: String,
+    },
     email: {
       type: String,
       required: true,
