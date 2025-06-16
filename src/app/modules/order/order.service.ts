@@ -4,6 +4,7 @@ import { Order } from './order.model';
 import { Delivery } from '../delivery/delivery.model';
 import stripe from '../../../config/stripe';
 import { generateOrderId } from '../../../helpers/generateOrderId';
+import { Payment } from '../payment/payment.model';
 // import { getDistanceAndDurationFromGoogle } from './distanceCalculation';
 
 const getRatePerKm = (ride: string) => {
@@ -32,9 +33,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -136,35 +137,85 @@ export const createParcelOrderToDB = async (
   // return { order, delivery };
 };
 
-// export const createParcelOrderToDB = async (user: JwtPayload, payload: IOrder) => {
-//     const origin = payload.pickupLocation.coordinates;       // [lng, lat]
-//     const destination = payload.destinationLocation.coordinates; // [lng, lat]
+// --------------------
+const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
+  const distance = Math.round(getDistanceFromLatLonInKm(
+    payload.pickupLocation.coordinates,
+    payload.destinationLocation.coordinates,
+  ) * 100) / 100;
 
-//     // call Google Maps Distance Matrix API
-//     const { distance, duration } = await getDistanceAndDurationFromGoogle(origin, destination);
+  const ratePerKm = getRatePerKm(payload.ride);
+  const deliveryCharge = Math.round(distance * ratePerKm * 100) / 100;
+  const commissionRate = 0.1;
+  const commissionAmount = Math.round(deliveryCharge * commissionRate * 100) / 100;
+  const riderAmount = Math.round((deliveryCharge - commissionAmount) * 100) / 100;
 
-//     // convert distance to km (Google returns meters)
-//     const distanceInKm = distance / 1000;
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    mode: 'payment',
+    line_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `Parcel Delivery to ${payload.destinationLocation.address}`,
+            description: `Type: ${payload.parcelType}`,
+          },
+          unit_amount: Math.round(deliveryCharge * 100),
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: 'http://10.0.60.210:5000/api/v1/order/success?session_id={CHECKOUT_SESSION_ID}',
+    cancel_url: 'http://10.0.60.210:5000/api/v1/order/cancel',
+    payment_intent_data: {
+      metadata: {
+        userId: user.id,
+        jsonOrder: JSON.stringify(payload), // send full order data as string
+        distance: distance.toString(),
+        deliveryCharge: deliveryCharge.toString(),
+        commissionAmount: commissionAmount.toString(),
+        riderAmount: riderAmount.toString(),
+      },
+    },
+    customer_email: user.email,
+  });
 
-//     // delivery charge calculation
-//     const deliveryCharge = distanceInKm * CHARGE_PER_KM;
+  return { redirectUrl: session.url };
+};
 
-//     const order = await Order.create({
-//         ...payload,
-//         user: user.id,
-//         distance: distanceInKm,
-//         estimatedTime: duration,      // in seconds, save ETA if needed
-//         deliveryCharge,
-//     });
+const successMessage = async (id: string) => {
+  const session = await stripe.checkout.sessions.retrieve(id);
+  return session;
+};
 
-//     const delivery = await Delivery.create({
-//         order: order._id,
-//         status: "REQUESTED",
-//     });
+const getSuccessOrderDetails = async (sessionId: string) => {
+  // 1️⃣ Stripe থেকে session আনা
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-//     return { order, delivery };
-// // };
+  // 2️⃣ Payment Intent ID নেওয়া
+  const paymentIntentId = session.payment_intent as string;
+
+  // 3️⃣ Payment DB থেকে আনা
+  const payment = await Payment.findOne({ paymentIntentId });
+  if (!payment) {
+    throw new Error('Payment not found');
+  }
+
+  // 4️⃣ Delivery ও তার মধ্যে থাকা Order আনো
+  const delivery = await Delivery.findById(payment.deliveryId).populate('order');
+
+  return {
+    // order: delivery?.order,
+    delivery,
+    payment,
+  };
+};
+
 
 export const OrderServices = {
   createParcelOrderToDB,
+  createStripeSessionOnly,
+  successMessage,
+  getSuccessOrderDetails
 };

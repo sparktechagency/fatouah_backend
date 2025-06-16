@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction Success</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #1e1e1e; /* Dark background */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+      background: #333; /* Dark background for the container */
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 600px;
+      animation: slideUp 0.8s ease-out;
+    }
+
+    @keyframes slideUp {
+      0% {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .success-icon {
+      font-size: 5rem;
+      color: #f44336; /* Red color for success */
+      margin-bottom: 1rem;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    h1 {
+      color: #fff; /* White text for headings */
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      color: #b0bec5; /* Light gray for regular text */
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .details {
+      font-size: 1rem;
+      color: #ffffff; /* White text for details */
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .details p {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Buttons */
+    .btn-home {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background-color: #d32f2f; /* Red for primary button */
+      color: #fff;
+      text-decoration: none;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      width: 45%;
+      margin: 0.5rem;
+    }
+
+    .btn-home:hover {
+      background-color: #b71c1c; /* Darker red for hover */
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-home:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .receipt {
+      margin-top: 2rem;
+      border: 1px solid #232333; /* Green border for receipt */
+      padding: 1rem;
+      background: #222; /* Dark background for receipt */
+      border-radius: 10px;
+    }
+
+    .receipt div {
+      margin-bottom: 1rem;
+    }
+
+    .flex {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .flex span {
+      color: #bbb; /* Gray text for labels */
+    }
+
+    .flex span:last-child {
+      color: #fff; /* White text for values */
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 1.5rem;
+      }
+
+      .success-icon {
+        font-size: 4rem;
+      }
+
+      h1 {
+        font-size: 1.4rem;
+      }
+
+      p {
+        font-size: 0.9rem;
+      }
+
+      .btn-home {
+        padding: 0.85rem 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="success-icon">
+      ✔️
+    </div>
+
+    <h1>Transaction Successful</h1>
+    <p>Your top up has been successfully completed</p>
+
+    <div class="details">
+      <p><strong>Total Pay:</strong> $14.88</p>
+      <p><strong>Payment Status:</strong> Paid</p>
+    </div>
+
+    <!-- Receipt details -->
+    <div class="receipt">
+      <div class="flex">
+        <span>Date</span>
+        <span>4/9/2025</span>
+      </div>
+      <div class="flex">
+        <span>Time</span>
+        <span>6:08:17 PM</span>
+      </div>
+      <div class="flex">
+        <span>Reference</span>
+        <span>TXN-1446</span>
+      </div>
+    </div>
+
+    <div class="flex justify-center items-center gap-4 p-4">
+      <a href="https://2a7c-103-174-189-193.ngrok-free.app/" class="btn-home">
+        Go To Home
+      </a>
+      <a href="https://2a7c-103-174-189-193.ngrok-free.app/shop" class="btn-home">
+        Go To Shop
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -13,6 +13,12 @@ import {
 import auth from './app/middlewares/auth';
 import { USER_ROLES } from './enums/user';
 const app = express();
+import path from "path"
+
+// Set the view engine to EJS
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 
 // ✅ Stripe webhook endpoint
 // app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
