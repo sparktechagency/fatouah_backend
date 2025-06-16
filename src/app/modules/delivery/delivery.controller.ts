@@ -14,6 +14,8 @@ const findNearestOnlineRiders = catchAsync(async (req, res) => {
   });
 });
 
+
+
 const assignRiderWithTimeout = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
   const result = await DeliveryServices.assignRiderWithTimeout(deliveryId);
@@ -141,21 +143,21 @@ const getDeliveryDetails = catchAsync(async (req, res) => {
   });
 });
 
-const updateRiderLocation = catchAsync(async (req, res) => {
-  const { geoLocation } = req.body;
+// const updateRiderLocation = catchAsync(async (req, res) => {
+//   const { geoLocation } = req.body;
 
-  const riderId = req.user.id;
-  const result = await DeliveryServices.updateRiderLocation(
-    riderId,
-    geoLocation,
-  );
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Successfully update rider location',
-    data: result,
-  });
-});
+//   const riderId = req.user.id;
+//   const result = await DeliveryServices.updateRiderLocation(
+//     riderId,
+//     geoLocation,
+//   );
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: 200,
+//     message: 'Successfully update rider location',
+//     data: result,
+//   });
+// });
 
 export const DeliveryControllers = {
   findNearestOnlineRiders,
@@ -164,7 +166,7 @@ export const DeliveryControllers = {
   cancelDeliveryByUser,
   getDeliveryDetails,
   acceptDeliveryByRider,
-  updateRiderLocation,
+  // updateRiderLocation,
   markDeliveryStarted,
   markDeliveryArrivedDestination,
   markDeliveryArrivedPickedUp,

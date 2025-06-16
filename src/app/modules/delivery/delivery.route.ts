@@ -16,11 +16,11 @@ router.post(
   DeliveryControllers.cancelDeliveryByUser,
 );
 
-router.patch(
-  '/update-location',
-  auth(USER_ROLES.RIDER),
-  DeliveryControllers.updateRiderLocation,
-);
+// router.patch(
+//   '/update-location',
+//   auth(USER_ROLES.RIDER),
+//   DeliveryControllers.updateRiderLocation,
+// );
 
 router.patch(
   '/:deliveryId/accept',

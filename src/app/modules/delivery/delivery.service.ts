@@ -41,91 +41,91 @@ const findNearestOnlineRiders = async (location: {
   return result;
 };
 
-const getOrderIdForRider = async (riderId: string) => {
-  const delivery = await Delivery.findOne({
-    rider: riderId,
-    status: {
-      $in: [
-        'ASSIGNED',
-        'ACCEPTED',
-        'ARRIVED_PICKED_UP',
-        'STARTED',
-        'ARRIVED_DESTINATION',
-      ],
-    }, // active delivery status
-  }).populate('order');
+// const getOrderIdForRider = async (riderId: string) => {
+//   const delivery = await Delivery.findOne({
+//     rider: riderId,
+//     status: {
+//       $in: [
+//         'ASSIGNED',
+//         'ACCEPTED',
+//         'ARRIVED_PICKED_UP',
+//         'STARTED',
+//         'ARRIVED_DESTINATION',
+//       ],
+//     }, // active delivery status
+//   }).populate('order');
 
-  if (!delivery) return null;
+//   if (!delivery) return null;
 
-  return delivery.order._id.toString();
-};
+//   return delivery.order._id.toString();
+// };
 
-const updateRiderLocation = async (
-  riderId: string,
-  { coordinates }: { coordinates: [number, number] },
-) => {
-  if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid coordinates');
-  }
+// const updateRiderLocation = async (
+//   riderId: string,
+//   { coordinates }: { coordinates: [number, number] },
+// ) => {
+//   if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid coordinates');
+//   }
 
-  // Update rider geoLocation & online status
-  const result = await User.findByIdAndUpdate(
-    riderId,
-    {
-      geoLocation: {
-        type: 'Point',
-        coordinates: coordinates,
-      },
-      isOnline: true,
-    },
-    { new: true },
-  );
+//   // Update rider geoLocation & online status
+//   const result = await User.findByIdAndUpdate(
+//     riderId,
+//     {
+//       geoLocation: {
+//         type: 'Point',
+//         coordinates: coordinates,
+//       },
+//       isOnline: true,
+//     },
+//     { new: true },
+//   );
 
-  if (result) {
-    const orderId = await getOrderIdForRider(riderId);
+//   if (result) {
+//     const orderId = await getOrderIdForRider(riderId);
 
-    // @ts-ignore
-    const io = global.io;
-    if (io) {
-      io.emit(`rider::${riderId}`, {
-        riderId,
-        coordinates: result.geoLocation?.coordinates,
-      });
+//     // @ts-ignore
+//     const io = global.io;
+//     if (io) {
+//       io.emit(`rider::${riderId}`, {
+//         riderId,
+//         coordinates: result.geoLocation?.coordinates,
+//       });
 
-      if (orderId) {
-        const delivery = await Delivery.findOne({
-          rider: riderId,
-          status: {
-            $in: [
-              'ASSIGNED',
-              'ACCEPTED',
-              'ARRIVED_PICKED_UP',
-              'STARTED',
-              'ARRIVED_DESTINATION',
-            ],
-          },
-        }).populate({
-          path: 'order',
-          populate: { path: 'user' },
-        });
+//       if (orderId) {
+//         const delivery = await Delivery.findOne({
+//           rider: riderId,
+//           status: {
+//             $in: [
+//               'ASSIGNED',
+//               'ACCEPTED',
+//               'ARRIVED_PICKED_UP',
+//               'STARTED',
+//               'ARRIVED_DESTINATION',
+//             ],
+//           },
+//         }).populate({
+//           path: 'order',
+//           populate: { path: 'user' },
+//         });
 
-        const user = (delivery?.order as any)?.user as {
-          _id: Types.ObjectId | string;
-        };
+//         const user = (delivery?.order as any)?.user as {
+//           _id: Types.ObjectId | string;
+//         };
 
-        if (user) {
-          io.emit(`user::${user._id.toString()}`, {
-            riderId,
-            coordinates: result.geoLocation?.coordinates,
-            orderId,
-          });
-        }
-      }
-    }
-  }
+//         if (user) {
+//           io.emit(`user::${user._id.toString()}`, {
+//             riderId,
+//             coordinates: result.geoLocation?.coordinates,
+//             orderId,
+//           });
+//         }
+//       }
+//     }
+//   }
 
-  return result;
-};
+//   return result;
+// };
 
 const finalStatuses = ['DELIVERED', 'CANCELLED', 'FAILED'];
 
@@ -274,28 +274,29 @@ const updateStatus = async ({
   return updatedDelivery;
 };
 
-export const detectOfflineRiders = async () => {
-  const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000); // 2 minutes ago
+ const updateRiderLocation = async (riderId: string, coordinates: [number, number]) => {
+  
+  if (!riderId) throw new Error('Rider ID is required');
+  if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
+    throw new Error('Invalid coordinates');
+  }
 
-  const result = await User.updateMany(
-    {
-      isOnline: true,
-      updatedAt: { $lt: offlineThreshold },
-    },
-    { isOnline: false },
-  );
+  const user = await User.findById(riderId);
+  if (!user) throw new Error('Rider not found');
 
-  console.log(
-    `Offline detection: ${result.modifiedCount} riders marked offline`,
-  );
+  const currentCoords = user.geoLocation?.coordinates || [];
+  const [lon, lat] = coordinates;
+
+  if (currentCoords[0] !== lon || currentCoords[1] !== lat) {
+    user.geoLocation = {
+      type: 'Point',
+      coordinates,
+    };
+    await user.save();
+  }
+
+  return user;
 };
-
-setInterval(
-  () => {
-    detectOfflineRiders().catch(console.error);
-  },
-  10 * 60 * 1000,
-); // every 2 minutes
 
 const assignRiderWithTimeout = async (deliveryId: string) => {
   const delivery = await Delivery.findById(deliveryId).populate<{
