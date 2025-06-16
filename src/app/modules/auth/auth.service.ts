@@ -21,6 +21,7 @@ import { User } from '../user/user.model';
 const loginUserFromDB = async (payload: ILoginData) => {
   const { email, password } = payload;
   const isExistUser = await User.findOne({ email }).select('+password');
+  console.log(isExistUser);
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
@@ -56,7 +57,10 @@ const loginUserFromDB = async (payload: ILoginData) => {
     config.jwt.jwt_expire_in as string,
   );
 
-  return { createToken };
+  return {
+    token: createToken,
+    user: isExistUser,
+  };
 };
 
 //forget password
@@ -85,21 +89,31 @@ const forgetPasswordToDB = async (email: string) => {
 
 // resend otp
 const resendOtpFromDb = async (email: string) => {
-     // Check if the user exists
-     const isExistUser = await User.isExistUserByEmail(email);
-     if (!isExistUser || !isExistUser._id) {
-          throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
-     }
+  // Check if the user exists
+  const isExistUser = await User.isExistUserByEmail(email);
+  if (!isExistUser || !isExistUser._id) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+  }
 
-     // send email
-     const otp = generateOTP();
-     const values = { name: isExistUser.name, otp: otp, email: isExistUser.email! };
-     const createAccountTemplate = emailTemplate.createAccount(values);
-     emailHelper.sendEmail(createAccountTemplate);
+  // send email
+  const otp = generateOTP();
+  const values = {
+    name: isExistUser.name,
+    otp: otp,
+    email: isExistUser.email!,
+  };
+  const createAccountTemplate = emailTemplate.createAccount(values);
+  emailHelper.sendEmail(createAccountTemplate);
 
-     //save to DB
-     const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 3 * 60000) };
-     await User.findOneAndUpdate({ _id: isExistUser._id }, { $set: { authentication } });
+  //save to DB
+  const authentication = {
+    oneTimeCode: otp,
+    expireAt: new Date(Date.now() + 3 * 60000),
+  };
+  await User.findOneAndUpdate(
+    { _id: isExistUser._id },
+    { $set: { authentication } },
+  );
 };
 
 //verify email
