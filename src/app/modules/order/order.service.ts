@@ -94,7 +94,7 @@ export const createParcelOrderToDB = async (
           currency: 'usd',
           product_data: {
             name: `Parcel Delivery to ${payload.destinationLocation.address}`,
-            description: `Type: ${payload.parcelType}, Weight: ${payload.parcelWeight}kg`,
+            description: `Type: ${payload.parcelType}, Minimum Weight: ${payload.minParcelWeight}kg & Maximum Weight ${payload.maxParcelWeight}`,
             metadata: {
               pickupAddress: payload.pickupLocation.address,
               destinationAddress: payload.destinationLocation.address,
@@ -118,7 +118,8 @@ export const createParcelOrderToDB = async (
         receiversName: payload.receiversName,
         contact: payload.contact,
         parcelType: payload.parcelType,
-        parcelWeight: payload.parcelWeight.toString(),
+        minParcelWeight: payload.minParcelWeight.toString(),
+        maxParcelWeight: payload.maxParcelWeight.toString(),
         parcelValue: payload.parcelValue.toString(),
         ride: payload.ride,
         commissionAmount: commissionAmount.toString(),

@@ -20,7 +20,13 @@ const createOrderZodSchema = z.object({
     additionalInformation: z.string().optional(),
     // parcel types
     parcelValue: z.number({ required_error: 'Parcel value is required' }),
-    parcelWeight: z.number({ required_error: 'Parcel weight is required' }),
+    // parcelWeight: z.number({ required_error: 'Parcel weight is required' }),
+    minParcelWeight: z.number({
+      required_error: 'Minimum parcel weight is required',
+    }),
+    maxParcelWeight: z.number({
+      required_error: 'Maximum parcel weight is required',
+    }),
     // ride
     distance: z.number().optional(),
     deliveryCharge: z.number().optional(),
