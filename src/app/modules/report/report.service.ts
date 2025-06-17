@@ -783,9 +783,9 @@ const getUserOrderHistory = async (email: string, query: any) => {
         pickupLocation: 1,
         destinationLocation: 1,
         status: 1,
+        createdAt: { $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'] },
         pickupAddress: '$pickupLocation.address',
         destinationAddress: '$destinationLocation.address',
-
         payment: {
           amountPaid: '$payment.amountPaid',
           status: '$payment.status',
@@ -795,13 +795,14 @@ const getUserOrderHistory = async (email: string, query: any) => {
         deliveryInfo: {
           status: '$delivery.status',
           timestamps: '$delivery.timestamps',
-          attempts: '$delivery.attempts',
+          // attempts: '$delivery.attempts',
         },
 
         rider: {
           name: '$riderInfo.name',
           email: '$riderInfo.email',
           phone: '$riderInfo.phone',
+          image: "$riderInfo.image",
           rating: {
             average: { $round: ['$riderRating.averageRating', 1] },
             total: '$riderRating.totalReviews',
@@ -929,6 +930,7 @@ const getRiderOrderHistory = async (email: string, query: any) => {
         riderAmount: 1,
         pickupLocation: 1,
         destinationLocation: 1,
+        createdAt: { $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'] },
         pickupAddress: '$pickupLocation.address',
         destinationAddress: '$destinationLocation.address',
         status: 1,
@@ -940,7 +942,7 @@ const getRiderOrderHistory = async (email: string, query: any) => {
         deliveryInfo: {
           status: '$delivery.status',
           timestamps: '$delivery.timestamps',
-          attempts: '$delivery.attempts',
+          // attempts: '$delivery.attempts',
         },
       },
     },
@@ -1075,6 +1077,7 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
         pickupLocation: 1,
         destinationLocation: 1,
         status: 1,
+        createdAt: { $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'] },
         payment: {
           amountPaid: '$payment.amountPaid',
           status: '$payment.status',
@@ -1083,12 +1086,13 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
         deliveryInfo: {
           status: '$delivery.status',
           timestamps: '$delivery.timestamps',
-          attempts: '$delivery.attempts',
+          // attempts: '$delivery.attempts',
         },
         rider: {
           name: '$riderInfo.name',
           email: '$riderInfo.email',
           phone: '$riderInfo.phone',
+          image: "$riderInfo.image",
           rating: {
             average: { $round: ['$riderRating.averageRating', 1] },
             total: '$riderRating.totalReviews',
@@ -1193,6 +1197,7 @@ const getRiderOrderDetailsById = async (orderId: string, email: string) => {
         pickupLocation: 1,
         destinationLocation: 1,
         status: 1,
+        createdAt: { $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'] },
         payment: {
           amountPaid: '$payment.amountPaid',
           status: '$payment.status',

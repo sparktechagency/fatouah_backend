@@ -146,9 +146,10 @@ const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
 
   const ratePerKm = getRatePerKm(payload.ride);
   const deliveryCharge = Math.round(distance * ratePerKm * 100) / 100;
-  const commissionRate = 0.1;
+  const commissionRate = 0.1; // 10% commision
   const commissionAmount = Math.round(deliveryCharge * commissionRate * 100) / 100;
   const riderAmount = Math.round((deliveryCharge - commissionAmount) * 100) / 100;
+  const orderId = await generateOrderId();
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
@@ -170,6 +171,7 @@ const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
     cancel_url: 'http://10.0.60.210:5000/api/v1/order/cancel',
     payment_intent_data: {
       metadata: {
+        orderId: orderId,
         userId: user.id,
         jsonOrder: JSON.stringify(payload), // send full order data as string
         distance: distance.toString(),
@@ -177,6 +179,7 @@ const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
         commissionAmount: commissionAmount.toString(),
         riderAmount: riderAmount.toString(),
       },
+      transfer_group: `order_${orderId}`,
     },
     customer_email: user.email,
   });

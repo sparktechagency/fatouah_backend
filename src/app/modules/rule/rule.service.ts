@@ -1,5 +1,3 @@
-import { StatusCodes } from 'http-status-codes';
-import ApiError from '../../../errors/ApiError';
 import { IRule } from './rule.interface';
 import { Rule } from './rule.model';
 
@@ -25,12 +23,7 @@ const createPrivacyPolicyToDB = async (payload: IRule) => {
 
 const getPrivacyPolicyFromDB = async () => {
   const result = await Rule.findOne({ type: 'privacy' });
-  if (!result) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'No privacy policy found in database',
-    );
-  }
+  
   return result;
 };
 
@@ -40,25 +33,20 @@ const createTermsAndConditionToDB = async (payload: IRule) => {
   if (isExistTerms) {
     const result = await Rule.findOneAndUpdate(
       { type: 'terms' },
-      { content: payload.content },
+      { content: payload?.content },
       { new: true },
     );
     return result;
   } else {
     // create new terms and condition if not exist
     const result = await Rule.create({ ...payload, type: 'terms' });
-    result;
+    return result;
   }
 };
 
 const getTermsAndConditionFromDB = async () => {
   const result = await Rule.findOne({ type: 'terms' });
-  if (!result) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'No terms and condition found in database',
-    );
-  }
+  
   return result;
 };
 
@@ -82,9 +70,7 @@ const createAboutToDB = async (payload: IRule) => {
 
 const getAboutFromDB = async () => {
   const result = await Rule.findOne({ type: 'about' });
-  if (!result) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'No about found in database');
-  }
+  
   return result;
 };
 

@@ -3,7 +3,6 @@ import { IPayment } from '../app/modules/payment/payment.interface';
 import { savePaymentInfo } from '../app/modules/payment/payment.service';
 import stripe from '../config/stripe';
 import config from '../config';
-import { Types } from 'mongoose';
 import { IOrder } from '../app/modules/order/order.interface';
 import { generateOrderId } from '../helpers/generateOrderId';
 import { Order } from '../app/modules/order/order.model';
@@ -26,6 +25,7 @@ export async function transferToRider({
     metadata: {
       orderId,
     },
+    transfer_group: `order_${orderId}`,
   });
 
   return transfer;
