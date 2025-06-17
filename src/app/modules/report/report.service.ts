@@ -10,47 +10,6 @@ import mongoose from 'mongoose';
 import { Delivery } from '../delivery/delivery.model';
 const { startOfYear, endOfYear } = require('date-fns');
 
-// i will delete this before finish development process
-const userReports = async () => {
-  const result = await User.aggregate([
-    {
-      $match: { role: 'USER' },
-    },
-    {
-      $lookup: {
-        from: 'payments',
-        let: { userIdStr: { $toString: '$_id' } },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $eq: ['$userId', '$$userIdStr'],
-              },
-            },
-          },
-        ],
-        as: 'payments',
-      },
-    },
-    {
-      $project: {
-        name: 1,
-        status: 1,
-        joiningDate: '$createdAt',
-        parcelSent: {
-          $cond: {
-            if: { $isArray: '$payments' },
-            then: { $size: '$payments' },
-            else: 0,
-          },
-        },
-      },
-    },
-  ]);
-
-  return result;
-};
-
 const userReport = async (query: any) => {
   const users = await User.aggregate([
     {
@@ -233,7 +192,7 @@ const parcelReport = async () => {
     // Step 3: Filter only deliveries with status ACCEPTED
     {
       $match: {
-        'delivery.status': { $in: ['ACCEPTED', 'DELIVERED'] },
+        'delivery.status': { $in: ['ACCEPTED', "ARRIVED_PICKED_UP", "STARTED", "ARRIVED_DESTINATION", 'DELIVERED'] },
       },
     },
 

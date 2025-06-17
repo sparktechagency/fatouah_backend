@@ -4,6 +4,7 @@ import { IPayment } from './payment.interface';
 import { Payment } from './payment.model';
 import { User } from '../user/user.model';
 import stripe from '../../../config/stripe';
+import { JwtPayload } from 'jsonwebtoken';
 
 export async function savePaymentInfo(paymentData: IPayment) {
   const { transactionId } = paymentData;
@@ -52,6 +53,18 @@ export async function createStripeOnboardingLink(
 
   return accountLink.url;
 }
+
+
+export const getStripeLoginLinkForRider = async (user: JwtPayload) => {
+  const rider = await User.findById(user.id);
+
+  if (!rider || !rider.stripeAccountId) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Rider or Stripe account not found');
+  }
+
+  const loginLink = await stripe.accounts.createLoginLink(rider.stripeAccountId);
+  return loginLink.url;
+};
 
 export const refundIfNeeded = async (deliveryId: string) => {
   const payment = await Payment.findOne({ deliveryId });

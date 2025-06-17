@@ -3,6 +3,7 @@ import { handleStripeWebhook } from '../../../util/stripeWebHooksHandler';
 import {
   createOrGetStripeAccount,
   createStripeOnboardingLink,
+  getStripeLoginLinkForRider,
 } from './payment.service';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
@@ -33,3 +34,19 @@ export const createConnectLink = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Stripe connect account creation failed' });
   }
 };
+
+
+export const getStripeLoginLink = catchAsync(async (req: Request, res: Response) => {
+
+  const user=req.user;
+
+  const loginUrl = await getStripeLoginLinkForRider(user);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Stripe login link generated successfully",
+    data: loginUrl,
+  })
+
+})

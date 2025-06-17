@@ -256,7 +256,7 @@ const updateStatus = async ({
     .populate('rider')
     .populate<{ order: IOrder }>('order');
 
-  if (updatedDelivery) {
+  if (riderId && updatedDelivery) {
     const payload = {
       title: `Delivery ${status}`,
       receiver: new Types.ObjectId(
@@ -274,8 +274,8 @@ const updateStatus = async ({
   return updatedDelivery;
 };
 
- const updateRiderLocation = async (riderId: string, coordinates: [number, number]) => {
-  
+const updateRiderLocation = async (riderId: string, coordinates: [number, number]) => {
+
   if (!riderId) throw new Error('Rider ID is required');
   if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
     throw new Error('Invalid coordinates');
@@ -379,6 +379,7 @@ const acceptDeliveryByRider = async (deliveryId: string, riderId: string) => {
 };
 
 const rejectDeliveryByRider = async (deliveryId: string, riderId: string) => {
+  console.log(riderId, "Rider ID")
   await updateStatus({ deliveryId, status: 'REJECTED', riderId });
 
   await updateStatus({ deliveryId, status: 'REQUESTED' });
