@@ -10,6 +10,57 @@ import mongoose from 'mongoose';
 import { Delivery } from '../delivery/delivery.model';
 const { startOfYear, endOfYear } = require('date-fns');
 
+// const userReport = async (query: any) => {
+//   const users = await User.aggregate([
+//     {
+//       $match: { role: 'USER' },
+//     },
+//     {
+//       $lookup: {
+//         from: 'payments',
+//         let: { userIdStr: { $toString: '$_id' } },
+//         pipeline: [
+//           {
+//             $match: {
+//               $expr: {
+//                 $eq: ['$userId', '$$userIdStr'],
+//               },
+//             },
+//           },
+//         ],
+//         as: 'payments',
+//       },
+//     },
+//     {
+//       $project: {
+//         name: 1,
+//         status: 1,
+//         joiningDate: '$createdAt',
+//         parcelSent: {
+//           $cond: {
+//             if: { $isArray: '$payments' },
+//             then: { $size: '$payments' },
+//             else: 0,
+//           },
+//         },
+//       },
+//     },
+//   ]);
+
+//   const userQuery = new QueryBuilder(users, query)
+//     .search(userSearchableFields)
+//     .filter()
+//     .paginate();
+
+//   const result = userQuery.modelQuery;
+//   const meta = await userQuery.getPaginationInfo();
+
+//   return {
+//     data: result,
+//     meta,
+//   };
+// };
+
 const userReport = async (query: any) => {
   const users = await User.aggregate([
     {
@@ -24,6 +75,24 @@ const userReport = async (query: any) => {
             $match: {
               $expr: {
                 $eq: ['$userId', '$$userIdStr'],
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: 'deliveries',
+              localField: 'deliveryId',
+              foreignField: '_id',
+              as: 'delivery',
+            },
+          },
+          {
+            $unwind: '$delivery',
+          },
+          {
+            $match: {
+              'delivery.status': {
+                $in: ['ACCEPTED', "ARRIVED_PICKED_UP", 'STARTED', "ARRIVED_DESTINATION", 'DELIVERED'],
               },
             },
           },
@@ -61,116 +130,74 @@ const userReport = async (query: any) => {
   };
 };
 
+
 const riderReport = async (query: any) => {
-  const riders = await Payment.aggregate([
-    // Step 1: Convert deliveryId to ObjectId
+  const riders = await User.aggregate([
     {
-      $addFields: {
-        deliveryId: { $toObjectId: '$deliveryId' },
-      },
+      $match: { role: 'RIDER' },
     },
-    // Step 2: Lookup delivery
     {
       $lookup: {
-        from: 'deliveries',
-        localField: 'deliveryId',
-        foreignField: '_id',
-        as: 'delivery',
-      },
-    },
-    {
-      $unwind: '$delivery',
-    },
-    // Step 3: Filter only delivered deliveries
-    {
-      $match: {
-        'delivery.status': 'DELIVERED',
-      },
-    },
-    // Step 5: Convert delivery.rider to ObjectId
-    {
-      $addFields: {
-        'delivery.rider': { $toObjectId: '$delivery.rider' },
-      },
-    },
-    // Step 6: Lookup rider info
-    {
-      $lookup: {
-        from: 'users', // or 'riders' if your rider collection has a different name
-        localField: 'delivery.rider',
-        foreignField: '_id',
-        as: 'rider',
-      },
-    },
-
-    // Step 7: Unwind rider
-    {
-      $unwind: '$rider',
-    },
-
-    // Step 8: Lookup total deliveries by this rider (with status DELIVERED)
-    {
-      $lookup: {
-        from: 'deliveries',
-        let: { riderId: '$delivery.rider' },
+        from: 'payments',
+        let: { riderIdObj: '$_id' },
         pipeline: [
+          {
+            $lookup: {
+              from: 'deliveries',
+              localField: 'deliveryId',
+              foreignField: '_id',
+              as: 'delivery',
+            },
+          },
+          {
+            $unwind: '$delivery',
+          },
           {
             $match: {
               $expr: {
-                $and: [
-                  { $eq: ['$rider', '$$riderId'] },
-                  { $eq: ['$status', 'DELIVERED'] },
-                ],
+                $eq: ['$delivery.rider', '$$riderIdObj'],
               },
             },
           },
-          { $count: 'deliveredCount' },
         ],
-        as: 'riderDelivered',
+        as: 'payments',
       },
     },
-
-    // Step 9: Flatten deliveredCount result
-    {
-      $addFields: {
-        deliveredCount: {
-          $ifNull: [{ $arrayElemAt: ['$riderDelivered.deliveredCount', 0] }, 0],
-        },
-      },
-    },
-
-    // Step 10: Final projection
     {
       $project: {
-        _id: 0,
-        transactionId: 1,
-        amountPaid: 1,
-        paidAt: 1,
+        name: 1,
         status: 1,
-        riderName: '$rider.name',
-        riderStatus: '$rider.status',
-        riderJoinedAt: '$rider.createdAt',
-        deliveredParcelCount: '$deliveredCount',
-        vehicle: '$rider.vehicleType',
+        joiningDate: '$createdAt',
+        parcelDelivered: {
+          $cond: {
+            if: { $isArray: '$payments' },
+            then: { $size: '$payments' },
+            else: 0,
+          },
+        },
       },
     },
   ]);
 
   const riderQuery = new QueryBuilder(riders, query)
-    .search(riderSearchableFields)
+    .search(userSearchableFields)
     .filter()
     .paginate();
 
   const result = riderQuery.modelQuery;
   const meta = await riderQuery.getPaginationInfo();
+
   return {
     data: result,
     meta,
   };
 };
 
-const parcelReport = async () => {
-  const result = await Payment.aggregate([
+
+
+const parcelReport = async (query: any) => {
+
+  const parcel = await Payment.aggregate([
     // Step 1: Convert deliveryId to ObjectId
     {
       $addFields: {
@@ -248,7 +275,7 @@ const parcelReport = async () => {
     {
       $project: {
         _id: 0,
-        orderId: '$order._id',
+        orderId: '$orderId',
         orderCreatedAt: '$order.createdAt',
         senderName: '$sender.name',
         receiverName: '$order.receiversName',
@@ -264,7 +291,15 @@ const parcelReport = async () => {
     },
   ]);
 
-  return result;
+  const parcelQuery = new QueryBuilder(parcel, query).search(["OrderId"]).filter().paginate();
+
+  const result = parcelQuery.modelQuery;
+  const meta = await parcelQuery.getPaginationInfo();
+
+  return {
+    data: result,
+    meta,
+  }
 };
 
 const totalUsers = async (): Promise<number> => {

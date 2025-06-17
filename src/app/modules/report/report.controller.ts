@@ -23,7 +23,7 @@ const riderReport = catchAsync(async (req, res) => {
 });
 
 const parcelReport = catchAsync(async (req, res) => {
-  const result = await ReportServices.parcelReport();
+  const result = await ReportServices.parcelReport(req.query);
   sendResponse(res, {
     success: true,
     statusCode: 200,
