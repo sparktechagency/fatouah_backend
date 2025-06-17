@@ -182,6 +182,18 @@ const getRiderTransactionHistory = catchAsync(async (req, res) => {
   });
 });
 
+
+const getRiderTrips = catchAsync(async (req, res) => {
+  const { riderId } = req.params;
+  const result = await ReportServices.getRiderTrips(riderId);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Successfully retrieved are rider trips',
+    data: result,
+  });
+});
+
 export const ReportControllers = {
   userReport,
   riderReport,
@@ -200,4 +212,5 @@ export const ReportControllers = {
   getRiderOrderHistory,
   getRiderWeeklyEarnings,
   getRiderTransactionHistory,
+  getRiderTrips,
 };

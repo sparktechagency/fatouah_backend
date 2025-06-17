@@ -113,4 +113,9 @@ router.get(
   ReportControllers.getRiderTransactionHistory,
 );
 
+router.get(
+  '/rider/:riderId/trips',
+  ReportControllers.getRiderTrips,
+);
+
 export const ReportRoutes = router;

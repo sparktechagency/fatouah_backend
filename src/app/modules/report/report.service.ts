@@ -7,6 +7,7 @@ import { Order } from '../order/order.model';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { riderSearchableFields, userSearchableFields } from './report.constant';
 import mongoose from 'mongoose';
+import { Delivery } from '../delivery/delivery.model';
 const { startOfYear, endOfYear } = require('date-fns');
 
 // i will delete this before finish development process
@@ -727,6 +728,34 @@ const getUserOrderHistory = async (email: string, query: any) => {
       },
     },
 
+    // New: total completed trips count by rider
+    {
+      $lookup: {
+        from: 'deliveries',
+        let: { riderId: '$delivery.rider' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$rider', '$$riderId'] },
+                  { $eq: ['$status', 'DELIVERED'] },
+                ],
+              },
+            },
+          },
+          { $count: 'count' },
+        ],
+        as: 'completedTrips',
+      },
+    },
+    {
+      $addFields: {
+        'rider.trips': { $ifNull: [{ $arrayElemAt: ['$completedTrips.count', 0] }, 0] },
+      },
+    },
+
+
     // Status
     {
       $addFields: {
@@ -807,6 +836,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
             average: { $round: ['$riderRating.averageRating', 1] },
             total: '$riderRating.totalReviews',
           },
+          trips: 1,
         },
       },
     },
@@ -1011,6 +1041,8 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
     {
       $unwind: { path: '$riderInfo', preserveNullAndEmptyArrays: true },
     },
+
+    // review
     {
       $lookup: {
         from: 'reviews',
@@ -1031,6 +1063,32 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
     {
       $unwind: { path: '$riderRating', preserveNullAndEmptyArrays: true },
     },
+    {
+      $lookup: {
+        from: 'deliveries',
+        let: { riderId: '$delivery.rider' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$rider', '$$riderId'] },
+                  { $eq: ['$status', 'DELIVERED'] },
+                ],
+              },
+            },
+          },
+          { $count: 'count' },
+        ],
+        as: 'completedTrips',
+      },
+    },
+    {
+      $addFields: {
+        'rider.trips': { $ifNull: [{ $arrayElemAt: ['$completedTrips.count', 0] }, 0] },
+      },
+    },
+
     {
       $addFields: {
         status: {
@@ -1097,6 +1155,7 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
             average: { $round: ['$riderRating.averageRating', 1] },
             total: '$riderRating.totalReviews',
           },
+          trips: 1,
         },
       },
     },
@@ -1363,6 +1422,29 @@ const getRiderTransactionHistory = async (email: string) => {
   return transactions;
 };
 
+const getRiderTrips = async (riderId: string) => {
+  if (!mongoose.Types.ObjectId.isValid(riderId)) {
+    throw new Error('Invalid rider ID');
+  }
+
+  const result = await Delivery.aggregate([
+    {
+      $match: {
+        rider: new mongoose.Types.ObjectId(riderId),
+        status: 'DELIVERED',
+      },
+    },
+    {
+      $count: 'totalTrips',
+    },
+  ]);
+
+  return {
+    riderId,
+    trips: result[0]?.totalTrips || 0,
+  };
+};
+
 export const ReportServices = {
   userReport,
   riderReport,
@@ -1381,4 +1463,5 @@ export const ReportServices = {
   getRiderOrderDetailsById,
   getRiderWeeklyEarnings,
   getRiderTransactionHistory,
+  getRiderTrips,
 };
