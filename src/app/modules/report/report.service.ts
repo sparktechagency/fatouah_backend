@@ -5,7 +5,7 @@ import { User } from '../user/user.model';
 import { startOfDay, endOfDay, subDays } from 'date-fns';
 import { Order } from '../order/order.model';
 import QueryBuilder from '../../builder/QueryBuilder';
-import { riderSearchableFields, userSearchableFields } from './report.constant';
+import { userSearchableFields } from './report.constant';
 import mongoose from 'mongoose';
 import { Delivery } from '../delivery/delivery.model';
 const { startOfYear, endOfYear } = require('date-fns');
@@ -116,16 +116,52 @@ const userReport = async (query: any) => {
     },
   ]);
 
-  const userQuery = new QueryBuilder(users, query)
-    .search(userSearchableFields)
-    .filter()
-    .paginate();
+  // Manual filtering, searching, and pagination on the resulting array
+  let filteredUsers = [...users];
 
-  const result = userQuery.modelQuery;
-  const meta = await userQuery.getPaginationInfo();
+  // Search
+  if (query.searchTerm) {
+    const searchRegex = new RegExp(query.searchTerm, 'i');
+    filteredUsers = filteredUsers.filter(user =>
+      userSearchableFields.some(field =>
+        user[field]?.toString().match(searchRegex)
+      )
+    );
+  }
+
+  // Basic filter (if you want to support any additional filters)
+  const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+  const filterQuery = { ...query };
+  excludeFields.forEach((key) => delete filterQuery[key]);
+
+  for (const key in filterQuery) {
+    filteredUsers = filteredUsers.filter(user => user[key] == filterQuery[key]);
+  }
+
+  // Sort (optional)
+  if (query.sort) {
+    const sortField = query.sort.replace('-', '');
+    const sortOrder = query.sort.startsWith('-') ? -1 : 1;
+    filteredUsers.sort((a, b) =>
+      (a[sortField] > b[sortField] ? 1 : -1) * sortOrder
+    );
+  }
+
+  // Pagination
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const paginatedData = filteredUsers.slice(skip, skip + limit);
+
+  const meta = {
+    page,
+    limit,
+    total: filteredUsers.length,
+    totalPage: Math.ceil(filteredUsers.length / limit),
+  };
 
   return {
-    data: result,
+    data: paginatedData,
     meta,
   };
 };
@@ -179,33 +215,65 @@ const riderReport = async (query: any) => {
     },
   ]);
 
-  const riderQuery = new QueryBuilder(riders, query)
-    .search(userSearchableFields)
-    .filter()
-    .paginate();
+  // Manual search, filter, sort, and pagination
+  let filteredRiders = [...riders];
 
-  const result = riderQuery.modelQuery;
-  const meta = await riderQuery.getPaginationInfo();
+  // Search
+  if (query.searchTerm) {
+    const searchRegex = new RegExp(query.searchTerm, 'i');
+    filteredRiders = filteredRiders.filter(rider =>
+      userSearchableFields.some(field =>
+        rider[field]?.toString().match(searchRegex)
+      )
+    );
+  }
+
+  // Basic filters (remove excluded query params first)
+  const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+  const filterQuery = { ...query };
+  excludeFields.forEach(field => delete filterQuery[field]);
+
+  for (const key in filterQuery) {
+    filteredRiders = filteredRiders.filter(rider =>
+      rider[key]?.toString() === filterQuery[key]
+    );
+  }
+
+  // Sort
+  if (query.sort) {
+    const sortField = query.sort.replace('-', '');
+    const sortOrder = query.sort.startsWith('-') ? -1 : 1;
+    filteredRiders.sort((a, b) =>
+      (a[sortField] > b[sortField] ? 1 : -1) * sortOrder
+    );
+  }
+
+  // Pagination
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const paginatedData = filteredRiders.slice(skip, skip + limit);
+  const total = filteredRiders.length;
+  const totalPage = Math.ceil(total / limit);
+
+  const meta = {
+    page,
+    limit,
+    total,
+    totalPage,
+  };
 
   return {
-    data: result,
+    data: paginatedData,
     meta,
   };
 };
 
 
-
 const parcelReport = async (query: any) => {
-
   const parcel = await Payment.aggregate([
-    // Step 1: Convert deliveryId to ObjectId
-    {
-      $addFields: {
-        deliveryId: { $toObjectId: '$deliveryId' },
-      },
-    },
-
-    // Step 2: Lookup delivery info
+    { $addFields: { deliveryId: { $toObjectId: '$deliveryId' } } },
     {
       $lookup: {
         from: 'deliveries',
@@ -215,23 +283,19 @@ const parcelReport = async (query: any) => {
       },
     },
     { $unwind: '$delivery' },
-
-    // Step 3: Filter only deliveries with status ACCEPTED
     {
       $match: {
-        'delivery.status': { $in: ['ACCEPTED', "ARRIVED_PICKED_UP", "STARTED", "ARRIVED_DESTINATION", 'DELIVERED'] },
+        'delivery.status': {
+          $in: ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION', 'DELIVERED'],
+        },
       },
     },
-
-    // Step 4: Convert nested IDs to ObjectId
     {
       $addFields: {
         orderId: { $toObjectId: '$delivery.order' },
         riderId: { $toObjectId: '$delivery.rider' },
       },
     },
-
-    // Step 5: Lookup order
     {
       $lookup: {
         from: 'orders',
@@ -241,15 +305,11 @@ const parcelReport = async (query: any) => {
       },
     },
     { $unwind: '$order' },
-
-    // Step 6: Convert sender ID
     {
       $addFields: {
         senderId: { $toObjectId: '$order.user' },
       },
     },
-
-    // Step 7: Lookup sender
     {
       $lookup: {
         from: 'users',
@@ -259,8 +319,6 @@ const parcelReport = async (query: any) => {
       },
     },
     { $unwind: '$sender' },
-
-    // Step 8: Lookup rider
     {
       $lookup: {
         from: 'users',
@@ -270,12 +328,10 @@ const parcelReport = async (query: any) => {
       },
     },
     { $unwind: '$rider' },
-
-    // Step 9: Final projection
     {
       $project: {
         _id: 0,
-        orderId: '$orderId',
+        orderId: { $toString: '$orderId' },
         orderCreatedAt: '$order.createdAt',
         senderName: '$sender.name',
         receiverName: '$order.receiversName',
@@ -291,16 +347,62 @@ const parcelReport = async (query: any) => {
     },
   ]);
 
-  const parcelQuery = new QueryBuilder(parcel, query).search(["OrderId"]).filter().paginate();
+  // === Manual Filtering, Searching, Pagination ===
 
-  const result = parcelQuery.modelQuery;
-  const meta = await parcelQuery.getPaginationInfo();
+  let filteredParcels = [...parcel];
+
+  // Search (case-insensitive)
+  if (query.searchTerm) {
+    const searchRegex = new RegExp(query.searchTerm, 'i');
+    filteredParcels = filteredParcels.filter((item) =>
+      ['orderId', 'senderName', 'receiverName', 'riderName'].some((field) =>
+        item[field]?.toString().match(searchRegex)
+      )
+    );
+  }
+
+  // Basic filters (excluding some meta fields)
+  const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+  const filterQuery = { ...query };
+  excludeFields.forEach((key) => delete filterQuery[key]);
+
+  for (const key in filterQuery) {
+    filteredParcels = filteredParcels.filter((item) =>
+      item[key]?.toString() === filterQuery[key]
+    );
+  }
+
+  // Sorting
+  if (query.sort) {
+    const sortField = query.sort.replace('-', '');
+    const sortOrder = query.sort.startsWith('-') ? -1 : 1;
+    filteredParcels.sort((a, b) =>
+      (a[sortField] > b[sortField] ? 1 : -1) * sortOrder
+    );
+  }
+
+  // Pagination
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const paginatedData = filteredParcels.slice(skip, skip + limit);
+  const total = filteredParcels.length;
+  const totalPage = Math.ceil(total / limit);
+
+  const meta = {
+    page,
+    limit,
+    total,
+    totalPage,
+  };
 
   return {
-    data: result,
+    data: paginatedData,
     meta,
-  }
+  };
 };
+
 
 const totalUsers = async (): Promise<number> => {
   return await User.countDocuments({
@@ -650,17 +752,14 @@ const getBalanceTransactions = async () => {
 };
 
 const getUserOrderHistory = async (email: string, query: any) => {
-  // 1. User ber koro email diye
+  // 1. Get user ID by email
   const user = await User.findOne({ email }).select('_id');
   if (!user) throw new Error('User not found');
-
   const userId = user._id;
 
-  // 2. Aggregation Pipeline
+  // 2. Aggregation pipeline
   const history = await Order.aggregate([
-    {
-      $match: { user: userId },
-    },
+    { $match: { user: userId } },
     {
       $lookup: {
         from: 'deliveries',
@@ -677,9 +776,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
         pipeline: [
           {
             $match: {
-              $expr: {
-                $eq: ['$deliveryId', '$$deliveryIdStr'],
-              },
+              $expr: { $eq: ['$deliveryId', '$$deliveryIdStr'] },
             },
           },
         ],
@@ -689,7 +786,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
     { $unwind: { path: '$payment', preserveNullAndEmptyArrays: true } },
     {
       $lookup: {
-        from: 'users', // Rider info from users collection
+        from: 'users',
         localField: 'delivery.rider',
         foreignField: '_id',
         as: 'riderInfo',
@@ -697,7 +794,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
     },
     { $unwind: { path: '$riderInfo', preserveNullAndEmptyArrays: true } },
 
-    // ⭐️ Rider Rating
+    // Rider rating
     {
       $lookup: {
         from: 'reviews',
@@ -715,14 +812,9 @@ const getUserOrderHistory = async (email: string, query: any) => {
         as: 'riderRating',
       },
     },
-    {
-      $unwind: {
-        path: '$riderRating',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
+    { $unwind: { path: '$riderRating', preserveNullAndEmptyArrays: true } },
 
-    // New: total completed trips count by rider
+    // Completed trips count
     {
       $lookup: {
         from: 'deliveries',
@@ -749,8 +841,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
       },
     },
 
-
-    // Status
+    // Status logic
     {
       $addFields: {
         status: {
@@ -768,12 +859,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
                 case: {
                   $in: [
                     '$delivery.status',
-                    [
-                      'ACCEPTED',
-                      'ARRIVED_PICKED_UP',
-                      'STARTED',
-                      'ARRIVED_DESTINATION',
-                    ],
+                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
                   ],
                 },
                 then: 'inprogress',
@@ -784,12 +870,9 @@ const getUserOrderHistory = async (email: string, query: any) => {
         },
       },
     },
-    // sort
-    {
-      $sort: { 'delivery.timestamps.createdAt': -1 },
-    },
 
-    // Final Projection
+    { $sort: { 'delivery.timestamps.createdAt': -1 } },
+
     {
       $project: {
         orderId: 1,
@@ -814,18 +897,15 @@ const getUserOrderHistory = async (email: string, query: any) => {
           status: '$payment.status',
           refunded: '$payment.refunded',
         },
-
         deliveryInfo: {
           status: '$delivery.status',
           timestamps: '$delivery.timestamps',
-          // attempts: '$delivery.attempts',
         },
-
         rider: {
           name: '$riderInfo.name',
           email: '$riderInfo.email',
           phone: '$riderInfo.phone',
-          image: "$riderInfo.image",
+          image: '$riderInfo.image',
           rating: {
             average: { $round: ['$riderRating.averageRating', 1] },
             total: '$riderRating.totalReviews',
@@ -836,33 +916,64 @@ const getUserOrderHistory = async (email: string, query: any) => {
     },
   ]);
 
-  const userOrderHistoryQuery = new QueryBuilder(history, query)
-    .search([
-      'receiversName',
-      'contact',
-      'pickupAddress',
-      'destinationAddress',
-      'orderId',
-    ])
-    .filter();
+  // === Manual search, filter, paginate ===
 
-  const result = userOrderHistoryQuery.modelQuery;
-  const meta = await userOrderHistoryQuery.getPaginationInfo();
+  let filtered = [...history];
+
+  // Search on specific fields (case-insensitive)
+  if (query.searchTerm) {
+    const searchRegex = new RegExp(query.searchTerm, 'i');
+    filtered = filtered.filter((item) =>
+      ['receiversName', 'contact', 'pickupAddress', 'destinationAddress', 'orderId'].some((field) =>
+        item[field]?.toString().match(searchRegex)
+      )
+    );
+  }
+
+  // Filter by other fields (except meta)
+  const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+  const filterQuery = { ...query };
+  excludeFields.forEach((key) => delete filterQuery[key]);
+
+  for (const key in filterQuery) {
+    filtered = filtered.filter((item) =>
+      item[key]?.toString() === filterQuery[key]
+    );
+  }
+
+  // Sorting
+  if (query.sort) {
+    const sortField = query.sort.replace('-', '');
+    const sortOrder = query.sort.startsWith('-') ? -1 : 1;
+    filtered.sort((a, b) =>
+      (a[sortField] > b[sortField] ? 1 : -1) * sortOrder
+    );
+  }
+
+  // Pagination
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const paginated = filtered.slice(skip, skip + limit);
+
+  const meta = {
+    page,
+    limit,
+    total: filtered.length,
+    totalPage: Math.ceil(filtered.length / limit),
+  };
 
   return {
-    data: result,
+    data: paginated,
     meta,
   };
 };
 
+
 const getRiderOrderHistory = async (email: string, query: any) => {
   // Step 1: Find Rider ID from email
   const rider = await User.findOne({ email }).select('_id');
-
-  if (!rider) {
-    throw new Error('Rider not found');
-  }
-
+  if (!rider) throw new Error('Rider not found');
   const riderId = rider._id;
 
   // Step 2: Aggregation to get history
@@ -893,9 +1004,7 @@ const getRiderOrderHistory = async (email: string, query: any) => {
         pipeline: [
           {
             $match: {
-              $expr: {
-                $eq: ['$deliveryId', '$$deliveryIdStr'],
-              },
+              $expr: { $eq: ['$deliveryId', '$$deliveryIdStr'] },
             },
           },
         ],
@@ -908,24 +1017,13 @@ const getRiderOrderHistory = async (email: string, query: any) => {
         status: {
           $switch: {
             branches: [
-              {
-                case: { $eq: ['$payment.refunded', true] },
-                then: 'returned',
-              },
-              {
-                case: { $eq: ['$delivery.status', 'DELIVERED'] },
-                then: 'completed',
-              },
+              { case: { $eq: ['$payment.refunded', true] }, then: 'returned' },
+              { case: { $eq: ['$delivery.status', 'DELIVERED'] }, then: 'completed' },
               {
                 case: {
                   $in: [
                     '$delivery.status',
-                    [
-                      'ACCEPTED',
-                      'ARRIVED_PICKED_UP',
-                      'STARTED',
-                      'ARRIVED_DESTINATION',
-                    ],
+                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
                   ],
                 },
                 then: 'inprogress',
@@ -936,9 +1034,7 @@ const getRiderOrderHistory = async (email: string, query: any) => {
         },
       },
     },
-    {
-      $sort: { 'delivery.timestamps.createdAt': -1 },
-    },
+    { $sort: { 'delivery.timestamps.createdAt': -1 } },
     {
       $project: {
         orderId: 1,
@@ -966,24 +1062,60 @@ const getRiderOrderHistory = async (email: string, query: any) => {
         deliveryInfo: {
           status: '$delivery.status',
           timestamps: '$delivery.timestamps',
-          // attempts: '$delivery.attempts',
         },
       },
     },
   ]);
 
-  const riderOrderHistoryQuery = new QueryBuilder(history, query)
-    .search(['receiversName', 'contact', 'pickupAddress', 'destinationAddress'])
-    .filter();
+  // Manual search, filter, sort, paginate on array 'history'
+  let filtered = [...history];
 
-  const result = riderOrderHistoryQuery.modelQuery;
-  const meta = await riderOrderHistoryQuery.getPaginationInfo();
+  // Search (case-insensitive)
+  if (query.searchTerm) {
+    const regex = new RegExp(query.searchTerm, 'i');
+    filtered = filtered.filter((item) =>
+      ['receiversName', 'contact', 'pickupAddress', 'destinationAddress'].some((field) =>
+        item[field]?.toString().match(regex)
+      )
+    );
+  }
+
+  // Filter out reserved query keys
+  const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+  const filters = { ...query };
+  excludeFields.forEach((key) => delete filters[key]);
+
+  // Apply simple filters (exact match)
+  for (const key in filters) {
+    filtered = filtered.filter((item) => item[key]?.toString() === filters[key]);
+  }
+
+  // Sorting
+  if (query.sort) {
+    const sortField = query.sort.replace('-', '');
+    const sortOrder = query.sort.startsWith('-') ? -1 : 1;
+    filtered.sort((a, b) => (a[sortField] > b[sortField] ? 1 : -1) * sortOrder);
+  }
+
+  // Pagination
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const paginated = filtered.slice(skip, skip + limit);
+
+  const meta = {
+    page,
+    limit,
+    total: filtered.length,
+    totalPage: Math.ceil(filtered.length / limit),
+  };
 
   return {
-    data: result,
+    data: paginated,
     meta,
   };
 };
+
 
 const getUserOrderDetailsById = async (orderId: string, email: string) => {
   // 1. Prothome user er id ber koren email diye

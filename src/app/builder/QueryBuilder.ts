@@ -1,232 +1,89 @@
-// import { FilterQuery, Query } from 'mongoose';
-
-// class QueryBuilder<T> {
-//   public modelQuery: Query<T[], T>;
-//   public query: Record<string, unknown>;
-
-//   constructor(modelQuery: Query<T[], T>, query: Record<string, unknown>) {
-//     this.modelQuery = modelQuery;
-//     this.query = query;
-//   }
-
-//   //searching
-//   search(searchableFields: string[]) {
-//     if (this?.query?.searchTerm) {
-//       this.modelQuery = this.modelQuery.find({
-//         $or: searchableFields.map(
-//           field =>
-//             ({
-//               [field]: {
-//                 $regex: this.query.searchTerm,
-//                 $options: 'i',
-//               },
-//             }) as FilterQuery<T>,
-//         ),
-//       });
-//     }
-//     return this;
-//   }
-
-//   //filtering
-//   filter() {
-//     const queryObj = { ...this.query };
-//     const excludeFields = ['searchTerm', 'sort', 'page', 'limit', 'fields'];
-//     excludeFields.forEach(el => delete queryObj[el]);
-
-//     this.modelQuery = this.modelQuery.find(queryObj as FilterQuery<T>);
-//     return this;
-//   }
-
-//   //sorting
-//   sort() {
-//     let sort = (this?.query?.sort as string) || '-createdAt';
-//     this.modelQuery = this.modelQuery.sort(sort);
-
-//     return this;
-//   }
-
-//   //pagination
-//   paginate() {
-//     let limit = Number(this?.query?.limit) || 10;
-//     let page = Number(this?.query?.page) || 1;
-//     let skip = (page - 1) * limit;
-
-//     this.modelQuery = this.modelQuery.skip(skip).limit(limit);
-
-//     return this;
-//   }
-
-//   //fields filtering
-//   fields() {
-//     let fields =
-//       (this?.query?.fields as string)?.split(',').join(' ') || '-__v';
-//     this.modelQuery = this.modelQuery.select(fields);
-
-//     return this;
-//   }
-
-//   //populating
-//   populate(populateFields: string[], selectFields: Record<string, unknown>) {
-//     this.modelQuery = this.modelQuery.populate(
-//       populateFields.map(field => ({
-//         path: field,
-//         select: selectFields[field],
-//       })),
-//     );
-//     return this;
-//   }
-
-//   //pagination information
-//   async getPaginationInfo() {
-//     const total = await this.modelQuery.model.countDocuments(
-//       this.modelQuery.getFilter(),
-//     );
-//     const limit = Number(this?.query?.limit) || 10;
-//     const page = Number(this?.query?.page) || 1;
-//     const totalPage = Math.ceil(total / limit);
-
-//     return {
-//       total,
-//       limit,
-//       page,
-//       totalPage,
-//     };
-//   }
-// }
-
-// export default QueryBuilder;
-
+import { StatusCodes } from 'http-status-codes';
 import { FilterQuery, Query } from 'mongoose';
+import ApiError from '../../errors/ApiError';
 
 class QueryBuilder<T> {
-  public modelQuery: any;
-  public query: Record<string, any>;
+  public modelQuery: Query<T[], T>;
+  public query: Record<string, unknown>;
 
-  constructor(modelQuery: Query<T[], T> | T[], query: Record<string, any>) {
+  constructor(modelQuery: Query<T[], T>, query: Record<string, unknown>) {
     this.modelQuery = modelQuery;
     this.query = query;
   }
 
-  // Searching
   search(searchableFields: string[]) {
-    if (this.query?.searchTerm) {
-      const term = this.query.searchTerm.toLowerCase();
-
-      if (Array.isArray(this.modelQuery)) {
-        this.modelQuery = this.modelQuery.filter(item =>
-          searchableFields.some(field =>
-            String(item[field])?.toLowerCase().includes(term),
-          ),
-        );
-      } else {
-        this.modelQuery = this.modelQuery.find({
-          $or: searchableFields.map(field => ({
-            [field]: {
-              $regex: term,
-              $options: 'i',
-            },
-          })),
-        });
-      }
-    }
-    return this;
-  }
-
-  // Filtering
-  filter() {
-    const queryObj = { ...this.query };
-    const excludeFields = ['searchTerm', 'sort', 'page', 'limit', 'fields'];
-    excludeFields.forEach(el => delete queryObj[el]);
-
-    if (Array.isArray(this.modelQuery)) {
-      this.modelQuery = this.modelQuery.filter(item =>
-        Object.entries(queryObj).every(([key, value]) =>
-          String(item[key])
-            ?.toLowerCase()
-            .includes(String(value).toLowerCase()),
+    const searchTerm = this.query?.searchTerm as string;
+    if (searchTerm) {
+      this.modelQuery = this.modelQuery.find({
+        $or: searchableFields.map(
+          (field) =>
+            ({
+              [field]: { $regex: searchTerm, $options: 'i' },
+            }) as FilterQuery<T>,
         ),
-      );
-    } else {
-      this.modelQuery = this.modelQuery.find(queryObj as FilterQuery<T>);
+      });
     }
-
     return this;
   }
 
-  // Sorting
+  filter() {
+    const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+    const queryObj = { ...this.query };
+    excludeFields.forEach((el) => delete queryObj[el]);
+
+    this.modelQuery = this.modelQuery.find(queryObj as FilterQuery<T>);
+    return this;
+  }
+
   sort() {
-    const sort = (this.query?.sort as string) || '-createdAt';
-
-    if (!Array.isArray(this.modelQuery)) {
-      this.modelQuery = this.modelQuery.sort(sort);
-    }
+    const sort = (this.query?.sort as string)?.split(',')?.join(' ') || '-createdAt';
+    this.modelQuery = this.modelQuery.sort(sort as string);
     return this;
   }
 
-  // Pagination
-  paginate() {
-    const limit = Number(this.query?.limit) || 10;
+  paginate(defaultLimit = 10) {
     const page = Number(this.query?.page) || 1;
+    const limit = Number(this.query?.limit) || defaultLimit;
     const skip = (page - 1) * limit;
 
-    if (Array.isArray(this.modelQuery)) {
-      this.modelQuery = this.modelQuery.slice(skip, skip + limit);
-    } else {
-      this.modelQuery = this.modelQuery.skip(skip).limit(limit);
-    }
-
+    this.modelQuery = this.modelQuery.skip(skip).limit(limit).sort();
     return this;
   }
 
-  // Fields Selection
   fields() {
-    const fields =
-      (this.query?.fields as string)?.split(',').join(' ') || '-__v';
+    const fields = (this.query?.fields as string)?.split(',')?.join(' ') || '-__v';
+    this.modelQuery = this.modelQuery.select(fields);
+    return this;
+  }
+  priceRange() {
+    const priceFilter: Record<string, unknown> = {};
+    const minPrice = this.query?.minPrice as number;
+    const maxPrice = this.query?.maxPrice as number;
+    if (minPrice !== undefined) priceFilter.$gte = minPrice;
+    if (maxPrice !== undefined) priceFilter.$lte = maxPrice;
 
-    if (!Array.isArray(this.modelQuery)) {
-      this.modelQuery = this.modelQuery.select(fields);
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      this.modelQuery = this.modelQuery.find({
+        price: priceFilter,
+      } as FilterQuery<T>);
     }
 
     return this;
   }
+  async countTotal() {
+    try {
+      const totalQueries = this.modelQuery.getFilter();
+      const total = await this.modelQuery.model.countDocuments(totalQueries);
+      const page = Number(this.query?.page) || 1;
+      const limit = Number(this.query?.limit) || 10;
+      const totalPage = Math.ceil(total / limit);
 
-  // Population
-  populate(populateFields: string[], selectFields: Record<string, unknown>) {
-    if (!Array.isArray(this.modelQuery)) {
-      this.modelQuery = this.modelQuery.populate(
-        populateFields.map(field => ({
-          path: field,
-          select: selectFields[field],
-        })),
-      );
+      return { page, limit, total, totalPage };
+    } catch (error) {
+      throw new ApiError(StatusCodes.SERVICE_UNAVAILABLE, error as string);
     }
-
-    return this;
-  }
-
-  // Pagination Meta Info
-  async getPaginationInfo() {
-    let total = 0;
-
-    if (Array.isArray(this.modelQuery)) {
-      total = this.modelQuery.length;
-    } else {
-      total = await this.modelQuery.model.countDocuments(
-        this.modelQuery.getFilter(),
-      );
-    }
-
-    const limit = Number(this.query?.limit) || 10;
-    const page = Number(this.query?.page) || 1;
-    const totalPage = Math.ceil(total / limit);
-
-    return {
-      total,
-      limit,
-      page,
-      totalPage,
-    };
   }
 }
+
 
 export default QueryBuilder;
