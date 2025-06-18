@@ -932,12 +932,25 @@ const getUserOrderHistory = async (email: string, query: any) => {
 
   // Filter by other fields (except meta)
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+
   const filterQuery = { ...query };
   excludeFields.forEach((key) => delete filterQuery[key]);
 
-  for (const key in filterQuery) {
+  // for (const key in filterQuery) {
+  //   filtered = filtered.filter((item) =>
+  //     item[key]?.toString() === filterQuery[key]
+  //   );
+  // }
+
+    for (const key in filterQuery) {
+    const value = filterQuery[key];
+
+    // ✅ Skip if value is empty string, null or undefined
+    if (typeof value === 'string' && value.trim() === '') continue;
+    if (value === null || value === undefined) continue;
+
     filtered = filtered.filter((item) =>
-      item[key]?.toString() === filterQuery[key]
+      item[key]?.toString() === value
     );
   }
 
@@ -1070,24 +1083,36 @@ const getRiderOrderHistory = async (email: string, query: any) => {
   // Manual search, filter, sort, paginate on array 'history'
   let filtered = [...history];
 
-  // Search (case-insensitive)
+   // Search on specific fields (case-insensitive)
   if (query.searchTerm) {
-    const regex = new RegExp(query.searchTerm, 'i');
+    const searchRegex = new RegExp(query.searchTerm, 'i');
     filtered = filtered.filter((item) =>
-      ['receiversName', 'contact', 'pickupAddress', 'destinationAddress'].some((field) =>
-        item[field]?.toString().match(regex)
+      ['receiversName', 'contact', 'pickupAddress', 'destinationAddress', 'orderId'].some((field) =>
+        item[field]?.toString().match(searchRegex)
       )
     );
   }
 
   // Filter out reserved query keys
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
-  const filters = { ...query };
-  excludeFields.forEach((key) => delete filters[key]);
+  const filterQuery = { ...query };
+  excludeFields.forEach((key) => delete filterQuery[key]);
 
-  // Apply simple filters (exact match)
-  for (const key in filters) {
-    filtered = filtered.filter((item) => item[key]?.toString() === filters[key]);
+  // // Apply simple filters (exact match)
+  // for (const key in filters) {
+  //   filtered = filtered.filter((item) => item[key]?.toString() === filters[key]);
+  // }
+
+    for (const key in filterQuery) {
+    const value = filterQuery[key];
+
+    // ✅ Skip if value is empty string, null or undefined
+    if (typeof value === 'string' && value.trim() === '') continue;
+    if (value === null || value === undefined) continue;
+
+    filtered = filtered.filter((item) =>
+      item[key]?.toString() === value
+    );
   }
 
   // Sorting
