@@ -162,7 +162,7 @@ const getRiderWeeklyEarnings = catchAsync(async (req, res) => {
 });
 
 const getBalanceTransactions = catchAsync(async (req, res) => {
-  const result = await ReportServices.getBalanceTransactions();
+  const result = await ReportServices.getBalanceTransactions(req.query);
   sendResponse(res, {
     success: true,
     statusCode: 200,

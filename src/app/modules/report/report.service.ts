@@ -103,6 +103,8 @@ const userReport = async (query: any) => {
     {
       $project: {
         name: 1,
+        email:1,
+        contact:1,
         status: 1,
         joiningDate: '$createdAt',
         parcelSent: {
@@ -202,6 +204,10 @@ const riderReport = async (query: any) => {
     {
       $project: {
         name: 1,
+        email:1,
+        contact:1,
+        nid:1,
+        registrationNumber:1,
         status: 1,
         joiningDate: '$createdAt',
         parcelDelivered: {
@@ -709,8 +715,80 @@ const revenueAnalyticsReport = async (year: any) => {
   return monthlyData;
 };
 
-const getBalanceTransactions = async () => {
-  const result = await Payment.aggregate([
+// const getBalanceTransactions = async () => {
+//   const result = await Payment.aggregate([
+//     {
+//       $addFields: {
+//         deliveryObjectId: { $toObjectId: '$deliveryId' },
+//       },
+//     },
+//     {
+//       $lookup: {
+//         from: 'deliveries',
+//         localField: 'deliveryObjectId',
+//         foreignField: '_id',
+//         as: 'delivery',
+//       },
+//     },
+//     {
+//       $unwind: '$delivery',
+//     },
+//     {
+//       $match: {
+//         'delivery.status': 'DELIVERED',
+//       },
+//     },
+//     {
+//       $project: {
+//         transactionId: 1,
+//         deliveryId: 1,
+//         userId: 1,
+//         amountPaid: 1,
+//         paidAt: 1,
+//         status: 1,
+//         refunded: 1,
+//         refundId: 1,
+//         commissionAmount: 1,
+//         riderAmount: 1,
+//         isTransferred: 1,
+//       },
+//     },
+//   ]);
+//   return result;
+// };
+
+const getBalanceTransactions = async (query: any) => {
+  const {
+    page = 1,
+    limit = 10,
+    searchTerm = '',
+    status,
+    isTransferred,
+    refunded,
+  } = query;
+
+  const currentPage = parseInt(page);
+  const perPage = parseInt(limit);
+  const skip = (currentPage - 1) * perPage;
+
+  const matchStage: any = {
+    'delivery.status': 'DELIVERED',
+  };
+
+  if (status) matchStage.status = status;
+  if (isTransferred !== undefined) matchStage.isTransferred = isTransferred === 'true';
+  if (refunded !== undefined) matchStage.refunded = refunded === 'true';
+
+  const searchStage =
+    searchTerm?.trim() !== ''
+      ? {
+          $or: [
+            { transactionId: { $regex: searchTerm, $options: 'i' } }
+          ],
+        }
+      : {};
+
+  const pipeline = [
     {
       $addFields: {
         deliveryObjectId: { $toObjectId: '$deliveryId' },
@@ -724,14 +802,8 @@ const getBalanceTransactions = async () => {
         as: 'delivery',
       },
     },
-    {
-      $unwind: '$delivery',
-    },
-    {
-      $match: {
-        'delivery.status': 'DELIVERED',
-      },
-    },
+    { $unwind: '$delivery' },
+    { $match: { ...matchStage, ...searchStage } },
     {
       $project: {
         transactionId: 1,
@@ -747,8 +819,30 @@ const getBalanceTransactions = async () => {
         isTransferred: 1,
       },
     },
+  ];
+
+  const data = await Payment.aggregate([
+    ...pipeline,
+    { $sort: { paidAt: -1 } },
+    { $skip: skip },
+    { $limit: perPage },
   ]);
-  return result;
+
+  const countResult = await Payment.aggregate([
+    ...pipeline,
+    { $count: 'total' },
+  ]);
+
+  const total = countResult[0]?.total || 0;
+
+  return {
+    meta: {
+      page: currentPage,
+      limit: perPage,
+      total,
+    },
+    data,
+  };
 };
 
 const getUserOrderHistory = async (email: string, query: any) => {

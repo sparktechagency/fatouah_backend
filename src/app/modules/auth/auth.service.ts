@@ -50,6 +50,12 @@ const loginUserFromDB = async (payload: ILoginData) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Password is incorrect!');
   }
 
+  // 🔍 Check stripe account (for riders only)
+  let hasStripeAccount = false;
+  if (isExistUser.role === 'RIDER') {
+    hasStripeAccount = !!isExistUser.stripeAccountId;
+  }
+
   //create token
   const createToken = jwtHelper.createToken(
     { id: isExistUser._id, role: isExistUser.role, email: isExistUser.email },
@@ -60,6 +66,7 @@ const loginUserFromDB = async (payload: ILoginData) => {
   return {
     token: createToken,
     user: isExistUser,
+    hasStripeAccount
   };
 };
 
@@ -74,7 +81,7 @@ const forgetPasswordToDB = async (email: string) => {
   const otp = generateOTP();
   const value = {
     otp,
-    email: isExistUser.email, 
+    email: isExistUser.email,
   };
   const forgetPassword = emailTemplate.resetPassword(value);
   emailHelper.sendEmail(forgetPassword);
