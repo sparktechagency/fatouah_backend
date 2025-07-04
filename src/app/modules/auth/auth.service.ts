@@ -66,7 +66,7 @@ const loginUserFromDB = async (payload: ILoginData) => {
   return {
     token: createToken,
     user: isExistUser,
-    hasStripeAccount
+    hasStripeAccount,
   };
 };
 

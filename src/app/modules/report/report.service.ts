@@ -4,7 +4,6 @@ import { Payment } from '../payment/payment.model';
 import { User } from '../user/user.model';
 import { startOfDay, endOfDay, subDays } from 'date-fns';
 import { Order } from '../order/order.model';
-import QueryBuilder from '../../builder/QueryBuilder';
 import { userSearchableFields } from './report.constant';
 import mongoose from 'mongoose';
 import { Delivery } from '../delivery/delivery.model';
@@ -92,7 +91,13 @@ const userReport = async (query: any) => {
           {
             $match: {
               'delivery.status': {
-                $in: ['ACCEPTED', "ARRIVED_PICKED_UP", 'STARTED', "ARRIVED_DESTINATION", 'DELIVERED'],
+                $in: [
+                  'ACCEPTED',
+                  'ARRIVED_PICKED_UP',
+                  'STARTED',
+                  'ARRIVED_DESTINATION',
+                  'DELIVERED',
+                ],
               },
             },
           },
@@ -103,8 +108,8 @@ const userReport = async (query: any) => {
     {
       $project: {
         name: 1,
-        email:1,
-        contact:1,
+        email: 1,
+        contact: 1,
         status: 1,
         joiningDate: '$createdAt',
         parcelSent: {
@@ -126,15 +131,15 @@ const userReport = async (query: any) => {
     const searchRegex = new RegExp(query.searchTerm, 'i');
     filteredUsers = filteredUsers.filter(user =>
       userSearchableFields.some(field =>
-        user[field]?.toString().match(searchRegex)
-      )
+        user[field]?.toString().match(searchRegex),
+      ),
     );
   }
 
   // Basic filter (if you want to support any additional filters)
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
   const filterQuery = { ...query };
-  excludeFields.forEach((key) => delete filterQuery[key]);
+  excludeFields.forEach(key => delete filterQuery[key]);
 
   for (const key in filterQuery) {
     filteredUsers = filteredUsers.filter(user => user[key] == filterQuery[key]);
@@ -144,8 +149,8 @@ const userReport = async (query: any) => {
   if (query.sort) {
     const sortField = query.sort.replace('-', '');
     const sortOrder = query.sort.startsWith('-') ? -1 : 1;
-    filteredUsers.sort((a, b) =>
-      (a[sortField] > b[sortField] ? 1 : -1) * sortOrder
+    filteredUsers.sort(
+      (a, b) => (a[sortField] > b[sortField] ? 1 : -1) * sortOrder,
     );
   }
 
@@ -167,7 +172,6 @@ const userReport = async (query: any) => {
     meta,
   };
 };
-
 
 const riderReport = async (query: any) => {
   const riders = await User.aggregate([
@@ -204,10 +208,10 @@ const riderReport = async (query: any) => {
     {
       $project: {
         name: 1,
-        email:1,
-        contact:1,
-        nid:1,
-        registrationNumber:1,
+        email: 1,
+        contact: 1,
+        nid: 1,
+        registrationNumber: 1,
         status: 1,
         joiningDate: '$createdAt',
         parcelDelivered: {
@@ -229,8 +233,8 @@ const riderReport = async (query: any) => {
     const searchRegex = new RegExp(query.searchTerm, 'i');
     filteredRiders = filteredRiders.filter(rider =>
       userSearchableFields.some(field =>
-        rider[field]?.toString().match(searchRegex)
-      )
+        rider[field]?.toString().match(searchRegex),
+      ),
     );
   }
 
@@ -240,8 +244,8 @@ const riderReport = async (query: any) => {
   excludeFields.forEach(field => delete filterQuery[field]);
 
   for (const key in filterQuery) {
-    filteredRiders = filteredRiders.filter(rider =>
-      rider[key]?.toString() === filterQuery[key]
+    filteredRiders = filteredRiders.filter(
+      rider => rider[key]?.toString() === filterQuery[key],
     );
   }
 
@@ -249,8 +253,8 @@ const riderReport = async (query: any) => {
   if (query.sort) {
     const sortField = query.sort.replace('-', '');
     const sortOrder = query.sort.startsWith('-') ? -1 : 1;
-    filteredRiders.sort((a, b) =>
-      (a[sortField] > b[sortField] ? 1 : -1) * sortOrder
+    filteredRiders.sort(
+      (a, b) => (a[sortField] > b[sortField] ? 1 : -1) * sortOrder,
     );
   }
 
@@ -276,7 +280,6 @@ const riderReport = async (query: any) => {
   };
 };
 
-
 const parcelReport = async (query: any) => {
   const parcel = await Payment.aggregate([
     { $addFields: { deliveryId: { $toObjectId: '$deliveryId' } } },
@@ -292,7 +295,13 @@ const parcelReport = async (query: any) => {
     {
       $match: {
         'delivery.status': {
-          $in: ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION', 'DELIVERED'],
+          $in: [
+            'ACCEPTED',
+            'ARRIVED_PICKED_UP',
+            'STARTED',
+            'ARRIVED_DESTINATION',
+            'DELIVERED',
+          ],
         },
       },
     },
@@ -360,21 +369,21 @@ const parcelReport = async (query: any) => {
   // Search (case-insensitive)
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm, 'i');
-    filteredParcels = filteredParcels.filter((item) =>
-      ['orderId', 'senderName', 'receiverName', 'riderName'].some((field) =>
-        item[field]?.toString().match(searchRegex)
-      )
+    filteredParcels = filteredParcels.filter(item =>
+      ['orderId', 'senderName', 'receiverName', 'riderName'].some(field =>
+        item[field]?.toString().match(searchRegex),
+      ),
     );
   }
 
   // Basic filters (excluding some meta fields)
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
   const filterQuery = { ...query };
-  excludeFields.forEach((key) => delete filterQuery[key]);
+  excludeFields.forEach(key => delete filterQuery[key]);
 
   for (const key in filterQuery) {
-    filteredParcels = filteredParcels.filter((item) =>
-      item[key]?.toString() === filterQuery[key]
+    filteredParcels = filteredParcels.filter(
+      item => item[key]?.toString() === filterQuery[key],
     );
   }
 
@@ -382,8 +391,8 @@ const parcelReport = async (query: any) => {
   if (query.sort) {
     const sortField = query.sort.replace('-', '');
     const sortOrder = query.sort.startsWith('-') ? -1 : 1;
-    filteredParcels.sort((a, b) =>
-      (a[sortField] > b[sortField] ? 1 : -1) * sortOrder
+    filteredParcels.sort(
+      (a, b) => (a[sortField] > b[sortField] ? 1 : -1) * sortOrder,
     );
   }
 
@@ -408,7 +417,6 @@ const parcelReport = async (query: any) => {
     meta,
   };
 };
-
 
 const totalUsers = async (): Promise<number> => {
   return await User.countDocuments({
@@ -776,15 +784,14 @@ const getBalanceTransactions = async (query: any) => {
   };
 
   if (status) matchStage.status = status;
-  if (isTransferred !== undefined) matchStage.isTransferred = isTransferred === 'true';
+  if (isTransferred !== undefined)
+    matchStage.isTransferred = isTransferred === 'true';
   if (refunded !== undefined) matchStage.refunded = refunded === 'true';
 
   const searchStage =
     searchTerm?.trim() !== ''
       ? {
-          $or: [
-            { transactionId: { $regex: searchTerm, $options: 'i' } }
-          ],
+          $or: [{ transactionId: { $regex: searchTerm, $options: 'i' } }],
         }
       : {};
 
@@ -931,7 +938,9 @@ const getUserOrderHistory = async (email: string, query: any) => {
     },
     {
       $addFields: {
-        'rider.trips': { $ifNull: [{ $arrayElemAt: ['$completedTrips.count', 0] }, 0] },
+        'rider.trips': {
+          $ifNull: [{ $arrayElemAt: ['$completedTrips.count', 0] }, 0],
+        },
       },
     },
 
@@ -953,7 +962,12 @@ const getUserOrderHistory = async (email: string, query: any) => {
                 case: {
                   $in: [
                     '$delivery.status',
-                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                    [
+                      'ACCEPTED',
+                      'ARRIVED_PICKED_UP',
+                      'STARTED',
+                      'ARRIVED_DESTINATION',
+                    ],
                   ],
                 },
                 then: 'inprogress',
@@ -983,7 +997,9 @@ const getUserOrderHistory = async (email: string, query: any) => {
         pickupLocation: 1,
         destinationLocation: 1,
         status: 1,
-        createdAt: { $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'] },
+        createdAt: {
+          $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'],
+        },
         pickupAddress: '$pickupLocation.address',
         destinationAddress: '$destinationLocation.address',
         payment: {
@@ -1017,10 +1033,14 @@ const getUserOrderHistory = async (email: string, query: any) => {
   // Search on specific fields (case-insensitive)
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm, 'i');
-    filtered = filtered.filter((item) =>
-      ['receiversName', 'contact', 'pickupAddress', 'destinationAddress', 'orderId'].some((field) =>
-        item[field]?.toString().match(searchRegex)
-      )
+    filtered = filtered.filter(item =>
+      [
+        'receiversName',
+        'contact',
+        'pickupAddress',
+        'destinationAddress',
+        'orderId',
+      ].some(field => item[field]?.toString().match(searchRegex)),
     );
   }
 
@@ -1028,7 +1048,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
 
   const filterQuery = { ...query };
-  excludeFields.forEach((key) => delete filterQuery[key]);
+  excludeFields.forEach(key => delete filterQuery[key]);
 
   // for (const key in filterQuery) {
   //   filtered = filtered.filter((item) =>
@@ -1036,25 +1056,21 @@ const getUserOrderHistory = async (email: string, query: any) => {
   //   );
   // }
 
-    for (const key in filterQuery) {
+  for (const key in filterQuery) {
     const value = filterQuery[key];
 
     // ✅ Skip if value is empty string, null or undefined
     if (typeof value === 'string' && value.trim() === '') continue;
     if (value === null || value === undefined) continue;
 
-    filtered = filtered.filter((item) =>
-      item[key]?.toString() === value
-    );
+    filtered = filtered.filter(item => item[key]?.toString() === value);
   }
 
   // Sorting
   if (query.sort) {
     const sortField = query.sort.replace('-', '');
     const sortOrder = query.sort.startsWith('-') ? -1 : 1;
-    filtered.sort((a, b) =>
-      (a[sortField] > b[sortField] ? 1 : -1) * sortOrder
-    );
+    filtered.sort((a, b) => (a[sortField] > b[sortField] ? 1 : -1) * sortOrder);
   }
 
   // Pagination
@@ -1075,7 +1091,6 @@ const getUserOrderHistory = async (email: string, query: any) => {
     meta,
   };
 };
-
 
 const getRiderOrderHistory = async (email: string, query: any) => {
   // Step 1: Find Rider ID from email
@@ -1125,12 +1140,20 @@ const getRiderOrderHistory = async (email: string, query: any) => {
           $switch: {
             branches: [
               { case: { $eq: ['$payment.refunded', true] }, then: 'returned' },
-              { case: { $eq: ['$delivery.status', 'DELIVERED'] }, then: 'completed' },
+              {
+                case: { $eq: ['$delivery.status', 'DELIVERED'] },
+                then: 'completed',
+              },
               {
                 case: {
                   $in: [
                     '$delivery.status',
-                    ['ACCEPTED', 'ARRIVED_PICKED_UP', 'STARTED', 'ARRIVED_DESTINATION'],
+                    [
+                      'ACCEPTED',
+                      'ARRIVED_PICKED_UP',
+                      'STARTED',
+                      'ARRIVED_DESTINATION',
+                    ],
                   ],
                 },
                 then: 'inprogress',
@@ -1157,7 +1180,9 @@ const getRiderOrderHistory = async (email: string, query: any) => {
         riderAmount: 1,
         pickupLocation: 1,
         destinationLocation: 1,
-        createdAt: { $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'] },
+        createdAt: {
+          $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'],
+        },
         pickupAddress: '$pickupLocation.address',
         destinationAddress: '$destinationLocation.address',
         status: 1,
@@ -1177,36 +1202,38 @@ const getRiderOrderHistory = async (email: string, query: any) => {
   // Manual search, filter, sort, paginate on array 'history'
   let filtered = [...history];
 
-   // Search on specific fields (case-insensitive)
+  // Search on specific fields (case-insensitive)
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm, 'i');
-    filtered = filtered.filter((item) =>
-      ['receiversName', 'contact', 'pickupAddress', 'destinationAddress', 'orderId'].some((field) =>
-        item[field]?.toString().match(searchRegex)
-      )
+    filtered = filtered.filter(item =>
+      [
+        'receiversName',
+        'contact',
+        'pickupAddress',
+        'destinationAddress',
+        'orderId',
+      ].some(field => item[field]?.toString().match(searchRegex)),
     );
   }
 
   // Filter out reserved query keys
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
   const filterQuery = { ...query };
-  excludeFields.forEach((key) => delete filterQuery[key]);
+  excludeFields.forEach(key => delete filterQuery[key]);
 
   // // Apply simple filters (exact match)
   // for (const key in filters) {
   //   filtered = filtered.filter((item) => item[key]?.toString() === filters[key]);
   // }
 
-    for (const key in filterQuery) {
+  for (const key in filterQuery) {
     const value = filterQuery[key];
 
     // ✅ Skip if value is empty string, null or undefined
     if (typeof value === 'string' && value.trim() === '') continue;
     if (value === null || value === undefined) continue;
 
-    filtered = filtered.filter((item) =>
-      item[key]?.toString() === value
-    );
+    filtered = filtered.filter(item => item[key]?.toString() === value);
   }
 
   // Sorting
@@ -1234,7 +1261,6 @@ const getRiderOrderHistory = async (email: string, query: any) => {
     meta,
   };
 };
-
 
 const getUserOrderDetailsById = async (orderId: string, email: string) => {
   // 1. Prothome user er id ber koren email diye
@@ -1330,7 +1356,9 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
     },
     {
       $addFields: {
-        'rider.trips': { $ifNull: [{ $arrayElemAt: ['$completedTrips.count', 0] }, 0] },
+        'rider.trips': {
+          $ifNull: [{ $arrayElemAt: ['$completedTrips.count', 0] }, 0],
+        },
       },
     },
 
@@ -1380,7 +1408,9 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
         pickupLocation: 1,
         destinationLocation: 1,
         status: 1,
-        createdAt: { $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'] },
+        createdAt: {
+          $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'],
+        },
         payment: {
           amountPaid: '$payment.amountPaid',
           status: '$payment.status',
@@ -1395,7 +1425,7 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
           name: '$riderInfo.name',
           email: '$riderInfo.email',
           phone: '$riderInfo.phone',
-          image: "$riderInfo.image",
+          image: '$riderInfo.image',
           rating: {
             average: { $round: ['$riderRating.averageRating', 1] },
             total: '$riderRating.totalReviews',
@@ -1501,7 +1531,9 @@ const getRiderOrderDetailsById = async (orderId: string, email: string) => {
         pickupLocation: 1,
         destinationLocation: 1,
         status: 1,
-        createdAt: { $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'] },
+        createdAt: {
+          $ifNull: ['$delivery.timestamps.createdAt', '$createdAt'],
+        },
         payment: {
           amountPaid: '$payment.amountPaid',
           status: '$payment.status',

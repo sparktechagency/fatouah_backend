@@ -72,11 +72,11 @@ const orderSchema = new Schema<IOrder>(
     // },
     minParcelWeight: {
       type: Number,
-      required:true,
+      required: true,
     },
     maxParcelWeight: {
       type: Number,
-      required:true,
+      required: true,
     },
     ride: {
       type: String,

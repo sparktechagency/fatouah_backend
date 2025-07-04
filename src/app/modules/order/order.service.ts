@@ -33,9 +33,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-    Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -139,16 +139,21 @@ export const createParcelOrderToDB = async (
 
 // --------------------
 const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
-  const distance = Math.round(getDistanceFromLatLonInKm(
-    payload.pickupLocation.coordinates,
-    payload.destinationLocation.coordinates,
-  ) * 100) / 100;
+  const distance =
+    Math.round(
+      getDistanceFromLatLonInKm(
+        payload.pickupLocation.coordinates,
+        payload.destinationLocation.coordinates,
+      ) * 100,
+    ) / 100;
 
   const ratePerKm = getRatePerKm(payload.ride);
   const deliveryCharge = Math.round(distance * ratePerKm * 100) / 100;
   const commissionRate = 0.1; // 10% commision
-  const commissionAmount = Math.round(deliveryCharge * commissionRate * 100) / 100;
-  const riderAmount = Math.round((deliveryCharge - commissionAmount) * 100) / 100;
+  const commissionAmount =
+    Math.round(deliveryCharge * commissionRate * 100) / 100;
+  const riderAmount =
+    Math.round((deliveryCharge - commissionAmount) * 100) / 100;
   const orderId = await generateOrderId();
 
   const session = await stripe.checkout.sessions.create({
@@ -167,7 +172,8 @@ const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
         quantity: 1,
       },
     ],
-    success_url: 'http://10.0.60.210:5000/api/v1/order/success?session_id={CHECKOUT_SESSION_ID}',
+    success_url:
+      'http://10.0.60.210:5000/api/v1/order/success?session_id={CHECKOUT_SESSION_ID}',
     cancel_url: 'http://10.0.60.210:5000/api/v1/order/cancel',
     payment_intent_data: {
       metadata: {
@@ -206,7 +212,9 @@ const getSuccessOrderDetails = async (sessionId: string) => {
   }
 
   // 4️⃣ Delivery ও তার মধ্যে থাকা Order আনো
-  const delivery = await Delivery.findById(payment.deliveryId).populate('order');
+  const delivery = await Delivery.findById(payment.deliveryId).populate(
+    'order',
+  );
 
   return {
     // order: delivery?.order,
@@ -215,10 +223,9 @@ const getSuccessOrderDetails = async (sessionId: string) => {
   };
 };
 
-
 export const OrderServices = {
   createParcelOrderToDB,
   createStripeSessionOnly,
   successMessage,
-  getSuccessOrderDetails
+  getSuccessOrderDetails,
 };

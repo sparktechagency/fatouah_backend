@@ -43,51 +43,53 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
   }
 
   if (event.type === 'payment_intent.succeeded') {
-  const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
-  const payload: IOrder = JSON.parse(paymentIntent.metadata.jsonOrder);
-  const userId = paymentIntent.metadata.userId;
-  const distance = parseFloat(paymentIntent.metadata.distance);
-  const deliveryCharge = parseFloat(paymentIntent.metadata.deliveryCharge);
-  const commissionAmount = parseFloat(paymentIntent.metadata.commissionAmount);
-  const riderAmount = parseFloat(paymentIntent.metadata.riderAmount);
+    const payload: IOrder = JSON.parse(paymentIntent.metadata.jsonOrder);
+    const userId = paymentIntent.metadata.userId;
+    const distance = parseFloat(paymentIntent.metadata.distance);
+    const deliveryCharge = parseFloat(paymentIntent.metadata.deliveryCharge);
+    const commissionAmount = parseFloat(
+      paymentIntent.metadata.commissionAmount,
+    );
+    const riderAmount = parseFloat(paymentIntent.metadata.riderAmount);
 
-  const orderId = await generateOrderId();
+    const orderId = await generateOrderId();
 
-  const order = await Order.create({
-    ...payload,
-    orderId,
-    user: userId,
-    distance,
-    deliveryCharge,
-    commissionAmount,
-    riderAmount,
-  });
+    const order = await Order.create({
+      ...payload,
+      orderId,
+      user: userId,
+      distance,
+      deliveryCharge,
+      commissionAmount,
+      riderAmount,
+    });
 
-  const delivery = await Delivery.create({
-    order: order._id,
-    status: 'REQUESTED',
-  });
+    const delivery = await Delivery.create({
+      order: order._id,
+      status: 'REQUESTED',
+    });
 
-  const paymentData: IPayment = {
-    transactionId: paymentIntent.id,
-    paymentIntentId: paymentIntent.id,
-    refunded: false,
-    refundId: '',
-    amountPaid: paymentIntent.amount / 100,
-    paidAt: new Date(paymentIntent.created * 1000),
-    deliveryId: delivery._id as any,
-    userId: userId,
-    status: paymentIntent.status,
-    commissionAmount,
-    riderAmount,
-    isTransferred: false,
-  };
+    const paymentData: IPayment = {
+      transactionId: paymentIntent.id,
+      paymentIntentId: paymentIntent.id,
+      refunded: false,
+      refundId: '',
+      amountPaid: paymentIntent.amount / 100,
+      paidAt: new Date(paymentIntent.created * 1000),
+      deliveryId: delivery._id as any,
+      userId: userId,
+      status: paymentIntent.status,
+      commissionAmount,
+      riderAmount,
+      isTransferred: false,
+    };
 
-  await savePaymentInfo(paymentData);
+    await savePaymentInfo(paymentData);
 
-  return { orderCreated: order._id };
-}
+    return { orderCreated: order._id };
+  }
 
   // Ignore other event types
   return { ignored: true };

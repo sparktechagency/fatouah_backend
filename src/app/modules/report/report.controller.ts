@@ -182,7 +182,6 @@ const getRiderTransactionHistory = catchAsync(async (req, res) => {
   });
 });
 
-
 const getRiderTrips = catchAsync(async (req, res) => {
   const { riderId } = req.params;
   const result = await ReportServices.getRiderTrips(riderId);

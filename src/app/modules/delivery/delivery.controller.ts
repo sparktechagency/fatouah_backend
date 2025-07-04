@@ -14,8 +14,6 @@ const findNearestOnlineRiders = catchAsync(async (req, res) => {
   });
 });
 
-
-
 const assignRiderWithTimeout = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
   const result = await DeliveryServices.assignRiderWithTimeout(deliveryId);

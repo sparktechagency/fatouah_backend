@@ -2,21 +2,6 @@ import { JwtPayload } from 'jsonwebtoken';
 import { INotification } from './notification.interface';
 import { Notification } from './notification.model';
 
-// save notification
-// const sendNotificationToDB = async (payload: INotification) => {
-
-//     const response = await Notification.create(payload);
-
-//     // @ts-ignore
-//     const io = global.io;
-//     if (io) {
-//         io.emit(`getNotification::${payload.receiver}`, {
-//             notification: response
-//         });
-//     }
-//     return response;
-// }
-
 const sendNotificationToDB = async (payload: INotification) => {
   const response = await Notification.create(payload);
 
@@ -29,7 +14,7 @@ const sendNotificationToDB = async (payload: INotification) => {
       delivery: payload.delivery, // include full delivery
     });
 
-    // If rider exists, notify separately
+    // if rider exists, notify separately
     if (payload.riderId) {
       io.emit(`getNotification::${payload.riderId}`, {
         notification: response,

@@ -18,7 +18,7 @@ export const createParcelOrder = catchAsync(async (req, res) => {
   });
 });
 
- const createStripeSessionOnly = catchAsync(async (req, res) => {
+const createStripeSessionOnly = catchAsync(async (req, res) => {
   const user = req.user;
   const parcelOrderData = req.body;
   const result = await OrderServices.createStripeSessionOnly(
@@ -34,36 +34,33 @@ export const createParcelOrder = catchAsync(async (req, res) => {
   });
 });
 
-
 const orderSuccess = catchAsync(async (req, res) => {
   const sessionId = req.query.session_id as string;
   const session = await OrderServices.successMessage(sessionId);
 
-  sendResponse(res,{
-    success:true,
-    statusCode:200,
-    message:"Order created successfully",
-    data:session.id
-  })
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Order created successfully',
+    data: session.id,
+  });
 });
-
 
 const orderCancel = catchAsync(async (req, res) => {
   res.render('cancel');
 });
 
- const getOrderSuccessDetails = catchAsync(async (req, res) => {
-  
- const sessionId = req.query.session_id as string;
+const getOrderSuccessDetails = catchAsync(async (req, res) => {
+  const sessionId = req.query.session_id as string;
 
   const result = await OrderServices.getSuccessOrderDetails(sessionId);
 
-  sendResponse(res,{
-    success:true,
-    statusCode:200,
-    message:"Success order details data retrieved successfully",
-    data:result,
-  })
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Success order details data retrieved successfully',
+    data: result,
+  });
 });
 
 export const OrderControllers = {
@@ -71,5 +68,5 @@ export const OrderControllers = {
   createStripeSessionOnly,
   orderSuccess,
   orderCancel,
-  getOrderSuccessDetails
+  getOrderSuccessDetails,
 };

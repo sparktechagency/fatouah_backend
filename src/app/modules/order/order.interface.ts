@@ -21,8 +21,8 @@ export type IOrder = {
   parcelType: Parcel_Types;
   parcelValue: number;
   // parcelWeight: number;
-  minParcelWeight:number;
-  maxParcelWeight:number;
+  minParcelWeight: number;
+  maxParcelWeight: number;
   ride: RIDES;
   distance: number;
   deliveryCharge: number;

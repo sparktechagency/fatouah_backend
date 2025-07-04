@@ -23,7 +23,7 @@ const createPrivacyPolicyToDB = async (payload: IRule) => {
 
 const getPrivacyPolicyFromDB = async () => {
   const result = await Rule.findOne({ type: 'privacy' });
-  
+
   return result;
 };
 
@@ -46,7 +46,7 @@ const createTermsAndConditionToDB = async (payload: IRule) => {
 
 const getTermsAndConditionFromDB = async () => {
   const result = await Rule.findOne({ type: 'terms' });
-  
+
   return result;
 };
 
@@ -70,7 +70,7 @@ const createAboutToDB = async (payload: IRule) => {
 
 const getAboutFromDB = async () => {
   const result = await Rule.findOne({ type: 'about' });
-  
+
   return result;
 };
 

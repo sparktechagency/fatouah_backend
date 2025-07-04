@@ -54,15 +54,19 @@ export async function createStripeOnboardingLink(
   return accountLink.url;
 }
 
-
 export const getStripeLoginLinkForRider = async (user: JwtPayload) => {
   const rider = await User.findById(user.id);
 
   if (!rider || !rider.stripeAccountId) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Rider or Stripe account not found');
+    throw new ApiError(
+      StatusCodes.NOT_FOUND,
+      'Rider or Stripe account not found',
+    );
   }
 
-  const loginLink = await stripe.accounts.createLoginLink(rider.stripeAccountId);
+  const loginLink = await stripe.accounts.createLoginLink(
+    rider.stripeAccountId,
+  );
   return loginLink.url;
 };
 

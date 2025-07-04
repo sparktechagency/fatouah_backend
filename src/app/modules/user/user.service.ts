@@ -229,7 +229,7 @@ const deleteUserFromDB = async (id: string) => {
   }
   return result;
 };
- 
+
 export const UserService = {
   createUserToDB,
   getUsersFromDB,
