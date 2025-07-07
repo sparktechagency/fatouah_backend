@@ -1,4 +1,3 @@
-import colors from 'colors';
 import { Server } from 'socket.io';
 import { logger } from '../shared/logger';
 import { User } from '../app/modules/user/user.model';
@@ -45,6 +44,14 @@ const socket = (io: Server) => {
           console.log(`USER disconnected: ${userId}`);
         });
       }
+      else if (user.role === 'ADMIN') {
+        console.log(`ADMIN connected: ${userId}`);
+
+        socket.on('disconnect', () => {
+          console.log(`ADMIN disconnected: ${userId}`);
+        });
+      }
+
     } catch (err) {
       logger.error(`Socket connection error for ${userId}: ${err}`);
     }

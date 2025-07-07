@@ -1,6 +1,8 @@
 import { JwtPayload } from 'jsonwebtoken';
 import { INotification } from './notification.interface';
 import { Notification } from './notification.model';
+import { User } from '../user/user.model';
+import { USER_ROLES } from '../../../enums/user';
 
 const sendNotificationToDB = async (payload: INotification) => {
   const response = await Notification.create(payload);
@@ -22,6 +24,16 @@ const sendNotificationToDB = async (payload: INotification) => {
       });
     }
   }
+
+  // if admin exists, notify separately
+  const admins = await User.find({ role: USER_ROLES.ADMIN }).select('_id');
+
+  admins.forEach((admin) => {
+    io.emit(`getNotification::${admin._id}`, {
+      notification: response,
+      delivery: payload.delivery,
+    })
+  })
 
   return response;
 };
