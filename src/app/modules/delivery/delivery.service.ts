@@ -12,6 +12,7 @@ import { transferToRider } from '../../../util/stripeWebHooksHandler';
 import stripe from '../../../config/stripe';
 import { refundIfNeeded } from '../payment/payment.service';
 import { NotificationServices } from '../notification/notification.service';
+import { sendNotifications } from '../../../helpers/notificationHelper';
 
 // find nearest riders
 const findNearestOnlineRiders = async (location: {
@@ -256,20 +257,34 @@ const updateStatus = async ({
     .populate('rider')
     .populate<{ order: IOrder }>('order');
 
-  if (riderId && updatedDelivery) {
-    const payload = {
+
+  // Step: Notification after successful status change
+  if (updatedDelivery) {
+    const { order, rider } = updatedDelivery;
+
+    const notifyPayload = {
       title: `Delivery ${status}`,
-      receiver: new Types.ObjectId(
-        (updatedDelivery.order as IOrder).user.toString(),
-      ),
-      sender: new Types.ObjectId(riderId),
-      riderId: riderId!,
-      orderId: updatedDelivery.order._id.toString(),
-      read: false,
-      delivery: updatedDelivery,
+      message: `Your delivery status has been updated to ${status}`,
+      delivery: updatedDelivery._id,
     };
-    await NotificationServices.sendNotificationToDB(payload);
+
+    // Notify User
+    if (order?.user) {
+      await sendNotifications({
+        ...notifyPayload,
+        receiver: order.user.toString(),
+      });
+    }
+
+    // Notify Rider
+    if (rider?._id) {
+      await sendNotifications({
+        ...notifyPayload,
+        receiver: rider._id.toString(),
+      });
+    }
   }
+
 
   return updatedDelivery;
 };

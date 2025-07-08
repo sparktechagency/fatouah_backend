@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Socket.IO Rider Online Auto Emit</title>
+</head>
+
+<body>
+  <h2>🔌 Socket.IO Rider Online Auto Emit Test</h2>
+  <p id="status">Status: Not connected</p>
+
+  <!-- Socket.IO client CDN -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    const socket = io('10.10.7.111:5000'); 
+
+    // rider ID
+    const riderId = '6852a9d2f12b19e19f5380ec'; 
+
+    socket.on('connect', () => {
+      document.getElementById('status').innerText = 'Status: ✅ Connected';
+      console.log('✅ Connected to server');
+
+      // স্টার্টেই rider::online ইভেন্ট পাঠাচ্ছি
+      socket.emit('rider::online', riderId);
+      console.log(`📤 Emitted rider::online with riderId: ${riderId}`);
+    });
+
+    socket.on('disconnect', () => {
+      document.getElementById('status').innerText = 'Status: ❌ Disconnected';
+      console.log('❌ Disconnected from server');
+    });
+  </script>
+</body>
+
+</html>

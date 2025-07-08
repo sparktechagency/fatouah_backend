@@ -1,11 +1,11 @@
 import { Types } from 'mongoose';
 
-export type INotification = {
+export type TNotification = {
   title?: string;
-  receiver?: Types.ObjectId;
+  message: string;
+  receiver: Types.ObjectId;
   read: boolean;
-  riderId: string;
-  orderId: string;
-  sender: Types.ObjectId;
   delivery?: any;
+  type?: 'ADMIN' | 'SYSTEM' | 'PAYMENT' | 'MESSAGE' | 'ALERT';
 };
+

@@ -1,8 +1,24 @@
 import { Schema, model, Types } from 'mongoose';
 
-const NotificationSchema = new Schema(
+
+enum NotificationType {
+  ADMIN = 'ADMIN',
+  SYSTEM = 'SYSTEM',
+  PAYMENT = 'PAYMENT',
+  MESSAGE = 'MESSAGE',
+  REFUND = 'REFUND',
+  ALERT = 'ALERT',
+  ORDER = 'ORDER',
+  DELIVERY = 'DELIVERY',
+  CANCELLED = 'CANCELLED',
+}
+
+const notificationSchema = new Schema(
   {
     title: {
+      type: String,
+    },
+    message: {
       type: String,
     },
     receiver: {
@@ -14,20 +30,11 @@ const NotificationSchema = new Schema(
       required: true,
       default: false,
     },
-    riderId: {
-      type: String,
-      required: true,
-    },
-    orderId: {
-      type: String,
-      required: true,
-    },
-    sender: {
-      type: Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
     delivery: { type: Schema.Types.Mixed },
+    type: {
+      type: String,
+      enum: Object.values(NotificationType)
+    }
   },
   {
     timestamps: true,
@@ -35,6 +42,6 @@ const NotificationSchema = new Schema(
   },
 );
 
-NotificationSchema.index({ 'geoLocation.geoLocation': '2dsphere' });
+notificationSchema.index({ 'geoLocation.geoLocation': '2dsphere' });
 
-export const Notification = model('Notification', NotificationSchema);
+export const Notification = model('Notification', notificationSchema);

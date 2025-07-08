@@ -19,32 +19,6 @@ import path from 'path';
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// ✅ Stripe webhook endpoint
-// app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
-//   try {
-//     const sig = req.headers['stripe-signature'];
-//     if (!sig) {
-//       return res.status(400)
-//     }
-//     const event = stripe.webhooks.constructEvent(req.body, sig, config.stripe_webhook_secret!)
-//     if (event.type === "payment_intent.succeeded") {
-//       const intent = event.data.object;
-//       console.log("✅ Payment Intent succeeded with ID:", intent.id);
-//     }
-//     if (event.type === "customer.created") {
-//       const customer = await stripe.customers.retrieve(event.data.object.id);
-//       console.log(customer, "customer")
-
-//     } else {
-//       console.log("unhandled event", event.type)
-//     }
-//     return res.sendStatus(200)
-
-//   } catch (err) {
-//     console.log("Error handling event", err)
-//     return res.sendStatus(400)
-//   }
-// })
 app.post(
   '/webhook',
   express.raw({ type: 'application/json' }),

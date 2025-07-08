@@ -1,72 +1,44 @@
-import { JwtPayload } from 'jsonwebtoken';
-import { INotification } from './notification.interface';
-import { Notification } from './notification.model';
-import { User } from '../user/user.model';
-import { USER_ROLES } from '../../../enums/user';
+import { JwtPayload } from "jsonwebtoken";
+import { Notification } from "./notification.model";
 
-const sendNotificationToDB = async (payload: INotification) => {
-  const response = await Notification.create(payload);
 
-  // @ts-ignore
-  const io = global.io;
-  if (io) {
-    // Emit to specific user
-    io.emit(`getNotification::${payload.receiver}`, {
-      notification: response,
-      delivery: payload.delivery, // include full delivery
-    });
-
-    // if rider exists, notify separately
-    if (payload.riderId) {
-      io.emit(`getNotification::${payload.riderId}`, {
-        notification: response,
-        delivery: payload.delivery,
-      });
-    }
-  }
-
-  // if admin exists, notify separately
-  const admins = await User.find({ role: USER_ROLES.ADMIN }).select('_id');
-
-  admins.forEach((admin) => {
-    io.emit(`getNotification::${admin._id}`, {
-      notification: response,
-      delivery: payload.delivery,
-    })
-  })
-
-  return response;
-};
-
-// get notifications
 const getNotificationFromDB = async (user: JwtPayload) => {
-  console.log(user.id, 'User ID');
-  const result = await Notification.find({ receiver: user.id }).populate({
-    path: 'sender',
-    select: 'name email',
-  });
-  const unreadCount = await Notification.countDocuments({
-    receiver: user.id,
-    read: false,
-  });
-  const data = {
-    result,
-    unreadCount,
-  };
-  return data;
+     const result = await Notification.find({ receiver: user._id });
+
+     const unreadCount = await Notification.countDocuments({
+          receiver: user.id,
+          read: false,
+     });
+
+     const data = {
+          result,
+          unreadCount,
+     };
+
+     return data;
 };
 
 // read notifications only for user
 const readNotificationToDB = async (user: JwtPayload) => {
-  const result = await Notification.updateMany(
-    { receiver: user.id, read: false },
-    { $set: { read: true } },
-  );
-  return result;
+     const result = await Notification.updateMany({ receiver: user._id, read: false }, { $set: { read: true } });
+     return result;
+};
+
+// get notifications for admin
+const adminNotificationFromDB = async () => {
+     const result = await Notification.find();
+     return result;
+};
+
+// read notifications only for admin
+const adminReadNotificationToDB = async () => {
+     const result = await Notification.updateMany({ read: false }, { $set: { read: true } }, { new: true });
+     return result;
 };
 
 export const NotificationServices = {
-  sendNotificationToDB,
-  getNotificationFromDB,
-  readNotificationToDB,
-};
+     getNotificationFromDB,
+     readNotificationToDB,
+     adminNotificationFromDB,
+     adminReadNotificationToDB,
+}
