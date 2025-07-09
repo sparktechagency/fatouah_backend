@@ -307,7 +307,19 @@ const updateStatus = async ({
         receiver: rider._id.toString(),
       });
     }
+
+    // real time send data user, and rider
+    // @ts-ignore
+    const socketIo = global.io;
+    socketIo.emit(order.user.toString()).emit(`delivery::status::${order.user.toString()}`, updatedDelivery);
+
+    if (rider?._id) {
+      socketIo(rider._id.toString()).emit(`delivery::status::${rider._id}`, updatedDelivery);
+    }
   }
+
+
+
 
   return updatedDelivery;
 };

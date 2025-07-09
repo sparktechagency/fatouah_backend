@@ -33,111 +33,123 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
-export const createParcelOrderToDB = async (
-  user: JwtPayload,
-  payload: IOrder,
-) => {
-  // calculate distance  using pickupLocation and destinationLocation coordinates
-  const distance =
-    Math.round(
-      getDistanceFromLatLonInKm(
-        payload.pickupLocation.coordinates,
-        payload.destinationLocation.coordinates,
-      ) * 100,
-    ) / 100;
+// export const createParcelOrderToDB = async (
+//   user: JwtPayload,
+//   payload: IOrder,
+// ) => {
+//   // calculate distance  using pickupLocation and destinationLocation coordinates
+//   const distance =
+//     Math.round(
+//       getDistanceFromLatLonInKm(
+//         payload.pickupLocation.coordinates,
+//         payload.destinationLocation.coordinates,
+//       ) * 100,
+//     ) / 100;
 
-  // get rate per km based on ride type
-  const ratePerKm = getRatePerKm(payload.ride);
+//   // get rate per km based on ride type
+//   const ratePerKm = getRatePerKm(payload.ride);
 
-  // calculate delivery charge based on distance and ride type
-  const deliveryCharge = Math.round(distance * ratePerKm * 100) / 100;
+//   // calculate delivery charge based on distance and ride type
+//   const deliveryCharge = Math.round(distance * ratePerKm * 100) / 100;
 
-  // commission system
-  const commissionRate = 0.1; // 10%
-  const commissionAmount =
-    Math.round(deliveryCharge * commissionRate * 100) / 100;
-  const riderAmount =
-    Math.round((deliveryCharge - commissionAmount) * 100) / 100;
+//   // commission system
+//   const commissionRate = 0.1; // 10%
+//   const commissionAmount =
+//     Math.round(deliveryCharge * commissionRate * 100) / 100;
+//   const riderAmount =
+//     Math.round((deliveryCharge - commissionAmount) * 100) / 100;
 
-  // generate orderID
-  const orderId = await generateOrderId();
+//   // generate orderID
+//   const orderId = await generateOrderId();
 
-  // create order with calculated distance and deliveryCharge
-  const order = await Order.create({
-    ...payload,
-    orderId,
-    user: user.id,
-    distance,
-    deliveryCharge,
-    commissionAmount,
-    riderAmount,
-  });
+//   // create order with calculated distance and deliveryCharge
+//   const order = await Order.create({
+//     ...payload,
+//     orderId,
+//     user: user.id,
+//     distance,
+//     deliveryCharge,
+//     commissionAmount,
+//     riderAmount,
+//   });
 
-  const delivery = await Delivery.create({
-    order: order._id,
-    status: 'REQUESTED',
-  });
+//   const delivery = await Delivery.create({
+//     order: order._id,
+//     status: 'REQUESTED',
+//   });
 
-  // 5. Create Stripe checkout session
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    mode: 'payment',
-    line_items: [
-      {
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: `Parcel Delivery to ${payload.destinationLocation.address}`,
-            description: `Type: ${payload.parcelType}, Minimum Weight: ${payload.minParcelWeight}kg & Maximum Weight ${payload.maxParcelWeight}`,
-            metadata: {
-              pickupAddress: payload.pickupLocation.address,
-              destinationAddress: payload.destinationLocation.address,
-              parcelType: payload.parcelType,
-              ride: payload.ride,
-            },
-          },
-          unit_amount: Math.round(deliveryCharge * 100), // in cents
-        },
-        quantity: 1,
-      },
-    ],
-    success_url: `https://yourdomain.com/payment-success?orderId=${order._id}`,
-    cancel_url: `https://yourdomain.com/payment-cancel?orderId=${order._id}`,
-    payment_intent_data: {
-      // capture_method: 'manual', // capture payment
-      metadata: {
-        orderId: order._id.toString(),
-        userId: user.id,
-        deliveryId: delivery.id,
-        receiversName: payload.receiversName,
-        contact: payload.contact,
-        parcelType: payload.parcelType,
-        minParcelWeight: payload.minParcelWeight.toString(),
-        maxParcelWeight: payload.maxParcelWeight.toString(),
-        parcelValue: payload.parcelValue.toString(),
-        ride: payload.ride,
-        commissionAmount: commissionAmount.toString(),
-        riderAmount: riderAmount.toString(),
-      },
-    },
-    customer_email: user.email,
-  });
+//   // 5. Create Stripe checkout session
+//   const session = await stripe.checkout.sessions.create({
+//     payment_method_types: ['card'],
+//     mode: 'payment',
+//     line_items: [
+//       {
+//         price_data: {
+//           currency: 'usd',
+//           product_data: {
+//             name: `Parcel Delivery to ${payload.destinationLocation.address}`,
+//             description: `Type: ${payload.parcelType}, Minimum Weight: ${payload.minParcelWeight}kg & Maximum Weight ${payload.maxParcelWeight}`,
+//             metadata: {
+//               pickupAddress: payload.pickupLocation.address,
+//               destinationAddress: payload.destinationLocation.address,
+//               parcelType: payload.parcelType,
+//               ride: payload.ride,
+//             },
+//           },
+//           unit_amount: Math.round(deliveryCharge * 100), // in cents
+//         },
+//         quantity: 1,
+//       },
+//     ],
+//     success_url: `https://yourdomain.com/payment-success?orderId=${order._id}`,
+//     cancel_url: `https://yourdomain.com/payment-cancel?orderId=${order._id}`,
+//     payment_intent_data: {
+//       // capture_method: 'manual', // capture payment
+//       metadata: {
+//         orderId: order._id.toString(),
+//         userId: user.id,
+//         deliveryId: delivery.id,
+//         receiversName: payload.receiversName,
+//         contact: payload.contact,
+//         parcelType: payload.parcelType,
+//         minParcelWeight: payload.minParcelWeight.toString(),
+//         maxParcelWeight: payload.maxParcelWeight.toString(),
+//         parcelValue: payload.parcelValue.toString(),
+//         ride: payload.ride,
+//         commissionAmount: commissionAmount.toString(),
+//         riderAmount: riderAmount.toString(),
+//       },
+//     },
+//     customer_email: user.email,
+//   });
 
-  console.log(session);
+//   console.log(session);
 
-  return { order, delivery, redirectUrl: session.url };
+//   return { order, delivery, redirectUrl: session.url };
 
-  // return { order, delivery };
-};
+//   // return { order, delivery };
+// };
 
 // --------------------
+
+
+
+
+
+
+
+
+
+
+
+
 const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
   const distance =
     Math.round(
@@ -173,8 +185,8 @@ const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
       },
     ],
     success_url:
-      'http://10.0.60.210:5000/api/v1/order/success?session_id={CHECKOUT_SESSION_ID}',
-    cancel_url: 'http://10.0.60.210:5000/api/v1/order/cancel',
+      'http://10.10.7.111:5000/api/v1/order/success?session_id={CHECKOUT_SESSION_ID}',
+    cancel_url: 'http://10.10.7.111:5000/api/v1/order/cancel',
     payment_intent_data: {
       metadata: {
         orderId: orderId,
@@ -224,7 +236,7 @@ const getSuccessOrderDetails = async (sessionId: string) => {
 };
 
 export const OrderServices = {
-  createParcelOrderToDB,
+  // createParcelOrderToDB,
   createStripeSessionOnly,
   successMessage,
   getSuccessOrderDetails,

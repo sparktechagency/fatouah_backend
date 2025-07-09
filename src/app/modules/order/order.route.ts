@@ -5,10 +5,16 @@ import { OrderControllers } from './order.controller';
 
 const router = express.Router();
 
-router.post('/', auth(USER_ROLES.USER), OrderControllers.createParcelOrder);
+// router.post('/', auth(USER_ROLES.USER), OrderControllers.createParcelOrder);
+
+// router.post(
+//   '/create-checkout-session',
+//   auth(USER_ROLES.USER),
+//   OrderControllers.createStripeSessionOnly,
+// );
 
 router.post(
-  '/create-checkout-session',
+  '/',
   auth(USER_ROLES.USER),
   OrderControllers.createStripeSessionOnly,
 );
