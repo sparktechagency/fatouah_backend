@@ -9,15 +9,42 @@ const socket = (io: Server) => {
     logger.info(colors.blue('A user connected'));
 
     // Rider sends riderId after connection
+    // socket.on('rider::online', async (riderId: string) => {
+    //   try {
+    //     socket.data.riderId = riderId;
+    //     await User.findByIdAndUpdate(riderId, { isOnline: true });
+    //     logger.info(colors.green(`Rider ${riderId} is now online`));
+    //   } catch (err) {
+    //     logger.error(colors.red(`Failed to mark rider online: ${err}`));
+    //   }
+    // });
+
     socket.on('rider::online', async (riderId: string) => {
       try {
         socket.data.riderId = riderId;
+
         await User.findByIdAndUpdate(riderId, { isOnline: true });
+
         logger.info(colors.green(`Rider ${riderId} is now online`));
+
+        // Send confirmation back to the rider
+        socket.emit('rider::online::ack', {
+          success: true,
+          message: 'You are now online',
+          riderId,
+        });
       } catch (err) {
         logger.error(colors.red(`Failed to mark rider online: ${err}`));
+
+        // Send error response to the rider
+        socket.emit('rider::online::ack', {
+          success: false,
+          message: 'Failed to mark rider as online',
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     });
+
 
     // update rider location
     socket.on(
