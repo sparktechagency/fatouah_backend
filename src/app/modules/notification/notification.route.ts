@@ -9,8 +9,11 @@ router.route("/")
   .get(auth(USER_ROLES.USER, USER_ROLES.RIDER), NotificationControllers.getNotificationFromDB)
   .patch(auth(USER_ROLES.USER, USER_ROLES.RIDER), NotificationControllers.readNotification)
 
+
 router.route("/admin")
   .get(auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN), NotificationControllers.adminNotificationFromDB)
   .patch(auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN), NotificationControllers.adminReadNotification)
+
+router.patch("/admin/:id", auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN), NotificationControllers.adminReadNotificationById)
 
 export const NotificationRoutes = router;

@@ -276,6 +276,14 @@ const updateStatus = async ({
       });
     }
 
+    if (order?.user) {
+      await sendNotifications({
+        ...notifyPayload,
+        type: "ADMIN",
+        receiver: order.user.toString(),
+      });
+    }
+
     // Notify Rider
     if (rider?._id) {
       await sendNotifications({
@@ -283,6 +291,7 @@ const updateStatus = async ({
         receiver: rider._id.toString(),
       });
     }
+
   }
 
 
