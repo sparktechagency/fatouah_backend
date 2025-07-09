@@ -242,6 +242,23 @@ const updateStatus = async ({
     delivery.rider = undefined;
   }
 
+  // set isActive based on status
+  if (
+    [
+      'ASSIGNED',
+      'ACCEPTED',
+      'ARRIVED_PICKED_UP',
+      'STARTED',
+      'ARRIVED_DESTINATION',
+    ].includes(status)
+  ) {
+    delivery.isActive = true;
+  } else if (
+    ['DELIVERED', 'REJECTED', 'CANCELLED', 'FAILED'].includes(status)
+  ) {
+    delivery.isActive = false;
+  }
+
   // Set the new status
   delivery.status = status;
 
@@ -256,7 +273,6 @@ const updateStatus = async ({
   const updatedDelivery = await Delivery.findById(delivery._id)
     .populate('rider')
     .populate<{ order: IOrder }>('order');
-
 
   // Step: Notification after successful status change
   if (updatedDelivery) {
@@ -279,7 +295,7 @@ const updateStatus = async ({
     if (order?.user) {
       await sendNotifications({
         ...notifyPayload,
-        type: "ADMIN",
+        type: 'ADMIN',
         receiver: order.user.toString(),
       });
     }
@@ -291,9 +307,7 @@ const updateStatus = async ({
         receiver: rider._id.toString(),
       });
     }
-
   }
-
 
   return updatedDelivery;
 };

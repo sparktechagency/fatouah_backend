@@ -1,6 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
 
-
 enum NotificationType {
   ADMIN = 'ADMIN',
   SYSTEM = 'SYSTEM',
@@ -33,8 +32,8 @@ const notificationSchema = new Schema(
     delivery: { type: Schema.Types.Mixed },
     type: {
       type: String,
-      enum: Object.values(NotificationType)
-    }
+      enum: Object.values(NotificationType),
+    },
   },
   {
     timestamps: true,

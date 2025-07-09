@@ -38,6 +38,9 @@ const deliverySchema = new Schema<IDelivery>(
         attemptedAt: { type: Date, default: Date.now },
       },
     ],
+    isActive: {
+      type: Boolean,
+    },
   },
   {
     timestamps: true,

@@ -32,6 +32,7 @@ export interface IDelivery {
     failedAt?: Date;
   };
   attempts: DeliveryAttempt[];
+  isActive?: boolean;
 }
 
 // Delivery status types

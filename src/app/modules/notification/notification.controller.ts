@@ -1,6 +1,6 @@
-import catchAsync from "../../../shared/catchAsync";
-import sendResponse from "../../../shared/sendResponse";
-import { NotificationServices } from "./notification.service";
+import catchAsync from '../../../shared/catchAsync';
+import sendResponse from '../../../shared/sendResponse';
+import { NotificationServices } from './notification.service';
 
 const getNotificationFromDB = catchAsync(async (req, res) => {
   const user: any = req.user;
@@ -13,7 +13,6 @@ const getNotificationFromDB = catchAsync(async (req, res) => {
     data: result,
   });
 });
-
 
 const readNotification = catchAsync(async (req, res) => {
   const user = req.user;
@@ -67,4 +66,4 @@ export const NotificationControllers = {
   adminNotificationFromDB,
   adminReadNotification,
   adminReadNotificationById,
-}
+};

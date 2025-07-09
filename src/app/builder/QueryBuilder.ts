@@ -89,7 +89,6 @@
 
 // export default QueryBuilder;
 
-
 import { FilterQuery, Query } from 'mongoose';
 
 class QueryBuilder<T> {
@@ -187,4 +186,3 @@ class QueryBuilder<T> {
 }
 
 export default QueryBuilder;
-

@@ -8,4 +8,3 @@ export type TNotification = {
   delivery?: any;
   type?: 'ADMIN' | 'SYSTEM' | 'PAYMENT' | 'MESSAGE' | 'ALERT';
 };
-

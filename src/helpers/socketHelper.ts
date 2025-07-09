@@ -20,15 +20,24 @@ const socket = (io: Server) => {
     });
 
     // update rider location
-    socket.on('rider::location_update', async (payload: { riderId: string, coordinates: [number, number] }) => {
-      try {
-        const { riderId, coordinates } = payload;
-        await DeliveryServices.updateRiderLocation(riderId, coordinates);
-        logger.info(colors.cyan(`📍 Updated location for rider ${riderId} => ${coordinates}`));
-      } catch (error: any) {
-        logger.error(colors.red(`❌ Location update failed: ${error.message}`));
-      }
-    });
+    socket.on(
+      'rider::location_update',
+      async (payload: { riderId: string; coordinates: [number, number] }) => {
+        try {
+          const { riderId, coordinates } = payload;
+          await DeliveryServices.updateRiderLocation(riderId, coordinates);
+          logger.info(
+            colors.cyan(
+              `📍 Updated location for rider ${riderId} => ${coordinates}`,
+            ),
+          );
+        } catch (error: any) {
+          logger.error(
+            colors.red(`❌ Location update failed: ${error.message}`),
+          );
+        }
+      },
+    );
 
     // Disconnect handler
     socket.on('disconnect', async () => {
