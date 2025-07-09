@@ -335,6 +335,26 @@ const updateRiderLocation = async (
     await user.save();
   }
 
+  // ==========================New Code=============================
+
+  // Step 2: Find active delivery of this rider
+  const activeDelivery = await Delivery.findOne({
+    rider: riderId,
+    isActive: true, // এই flag আগেই implement করা উচিত
+  }).populate<{ order: IOrder & Document }>('order');
+
+  // Step 3: Emit real-time location to the user
+  if (activeDelivery?.order?.user) {
+    const userId = activeDelivery.order.user.toString();
+    // @ts-ignore
+    const socketIo = global.io;
+    socketIo.emit(`user::rider_location::${userId}`, {
+      deliveryId: activeDelivery._id,
+      riderId,
+      coordinates,
+    });
+  }
+
   return user;
 };
 
