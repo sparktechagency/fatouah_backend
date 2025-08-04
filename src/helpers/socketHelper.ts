@@ -8,17 +8,6 @@ const socket = (io: Server) => {
   io.on('connection', socket => {
     logger.info(colors.blue('A user connected'));
 
-    // Rider sends riderId after connection
-    // socket.on('rider::online', async (riderId: string) => {
-    //   try {
-    //     socket.data.riderId = riderId;
-    //     await User.findByIdAndUpdate(riderId, { isOnline: true });
-    //     logger.info(colors.green(`Rider ${riderId} is now online`));
-    //   } catch (err) {
-    //     logger.error(colors.red(`Failed to mark rider online: ${err}`));
-    //   }
-    // });
-
     socket.on('rider::online', async (riderId: string) => {
       try {
         socket.data.riderId = riderId;
@@ -46,25 +35,52 @@ const socket = (io: Server) => {
     });
 
 
-    // update rider location
     socket.on(
       'rider::location_update',
-      async (payload: { riderId: string; coordinates: [number, number] }) => {
+      async (
+        payload: { riderId: string; coordinates: [number, number] },
+        callback: (response: {
+          success: boolean;
+          message: string;
+          riderId?: string;
+          coordinates?: [number, number];
+          error?: string;
+        }) => void,
+      ) => {
         try {
           const { riderId, coordinates } = payload;
+
           await DeliveryServices.updateRiderLocation(riderId, coordinates);
+
           logger.info(
             colors.cyan(
               `📍 Updated location for rider ${riderId} => ${coordinates}`,
             ),
           );
+
+          // ✅ Success response via callback
+          callback({
+            success: true,
+            message: 'Location updated successfully',
+            riderId,
+            coordinates,
+          });
         } catch (error: any) {
           logger.error(
             colors.red(`❌ Location update failed: ${error.message}`),
           );
+
+          // ❌ Error response via callback
+          callback({
+            success: false,
+            message: 'Location update failed',
+            error: error.message,
+          });
         }
       },
     );
+
+
 
     // Disconnect handler
     socket.on('disconnect', async () => {

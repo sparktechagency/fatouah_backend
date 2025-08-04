@@ -7,6 +7,7 @@ export interface DeliveryAttempt {
 
 export interface IDelivery {
   order: Types.ObjectId;
+  orderId?:string;
   rider?: Types.ObjectId;
   status:
     | 'REQUESTED'

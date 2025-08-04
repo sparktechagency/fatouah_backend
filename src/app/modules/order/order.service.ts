@@ -202,8 +202,17 @@ const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
     customer_email: user.email,
   });
 
-  return { redirectUrl: session.url };
+  return {
+    redirectUrl: session.url,
+    orderId,
+    distance,
+    deliveryCharge,
+    commissionAmount,
+    riderAmount,
+  };
 };
+
+
 
 const successMessage = async (id: string) => {
   const session = await stripe.checkout.sessions.retrieve(id);
@@ -235,9 +244,27 @@ const getSuccessOrderDetails = async (sessionId: string) => {
   };
 };
 
+const getOrderDetailsByOrderId = async (orderId: string) => {
+  const delivery = await Delivery.findOne({ orderId: orderId }).populate({ path: "order" });
+  console.log(delivery, "Delivery")
+  if (!delivery) {
+    throw new Error("Delivery not found for this orderId");
+  }
+
+  const payment = await Payment.findOne({ deliveryId: delivery._id });
+  if (!payment) {
+    throw new Error("Payment not found for this delivery");
+  }
+
+  return { delivery, payment };
+};
+
+
+
 export const OrderServices = {
   // createParcelOrderToDB,
   createStripeSessionOnly,
   successMessage,
   getSuccessOrderDetails,
+  getOrderDetailsByOrderId,
 };

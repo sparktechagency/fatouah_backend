@@ -68,6 +68,7 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
 
     const delivery = await Delivery.create({
       order: order._id,
+      orderId,
       status: 'REQUESTED',
     });
 

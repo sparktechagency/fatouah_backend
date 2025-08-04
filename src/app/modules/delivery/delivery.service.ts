@@ -35,7 +35,7 @@ const findNearestOnlineRiders = async (location: {
           type: 'Point',
           coordinates: location.coordinates,
         },
-        $maxDistance: 5000, // 5 km radius
+        $maxDistance: 20000000, // 20k km 5 km radius
       },
     },
   });
@@ -274,6 +274,8 @@ const updateStatus = async ({
     .populate('rider')
     .populate<{ order: IOrder }>('order');
 
+    console.log(updatedDelivery,"updated delivery")
+
   // Step: Notification after successful status change
   if (updatedDelivery) {
     const { order, rider } = updatedDelivery;
@@ -322,6 +324,57 @@ const updateStatus = async ({
   return updatedDelivery;
 };
 
+// const updateRiderLocation = async (
+//   riderId: string,
+//   coordinates: [number, number],
+// ) => {
+//   if (!riderId) throw new Error('Rider ID is required');
+//   if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
+//     throw new Error('Invalid coordinates');
+//   }
+
+//   const user = await User.findById(riderId);
+//   if (!user) throw new Error('Rider not found');
+
+//   const currentCoords = user.geoLocation?.coordinates || [];
+//   const [lon, lat] = coordinates;
+
+//   if (currentCoords[0] !== lon || currentCoords[1] !== lat) {
+//     user.geoLocation = {
+//       type: 'Point',
+//       coordinates,
+//     };
+//     await user.save();
+//   }
+
+//   // ==========================New Code=============================
+
+//   // Step 2: Find active delivery of this rider
+//   const activeDelivery = await Delivery.findOne({
+//     rider: riderId,
+//     isActive: true, // এই flag আগেই implement করা উচিত
+//   }).populate<{ order: IOrder & Document }>('order');
+
+//   // Step 3: Emit real-time location to the user
+//   if (activeDelivery?.order?.user) {
+//     const userId = activeDelivery.order.user.toString();
+//     // @ts-ignore
+//     const socketIo = global.io;
+//     socketIo.emit(`user::rider_location::${userId}`, {
+//       deliveryId: activeDelivery._id,
+//       riderId,
+//       coordinates,
+//     });
+//   }
+
+//   return user;
+// };
+
+
+
+
+
+
 const updateRiderLocation = async (
   riderId: string,
   coordinates: [number, number],
@@ -331,26 +384,18 @@ const updateRiderLocation = async (
     throw new Error('Invalid coordinates');
   }
 
-  const user = await User.findById(riderId);
-  if (!user) throw new Error('Rider not found');
-
-  const currentCoords = user.geoLocation?.coordinates || [];
-  const [lon, lat] = coordinates;
-
-  if (currentCoords[0] !== lon || currentCoords[1] !== lat) {
-    user.geoLocation = {
+  // Step 1: Update rider's geoLocation
+  await User.findByIdAndUpdate(riderId, {
+    geoLocation: {
       type: 'Point',
       coordinates,
-    };
-    await user.save();
-  }
-
-  // ==========================New Code=============================
+    },
+  });
 
   // Step 2: Find active delivery of this rider
   const activeDelivery = await Delivery.findOne({
     rider: riderId,
-    isActive: true, // এই flag আগেই implement করা উচিত
+    isActive: true,
   }).populate<{ order: IOrder & Document }>('order');
 
   // Step 3: Emit real-time location to the user
@@ -365,8 +410,16 @@ const updateRiderLocation = async (
     });
   }
 
-  return user;
+  return { riderId, coordinates };
 };
+
+
+
+
+
+
+
+
 
 const assignRiderWithTimeout = async (deliveryId: string) => {
   const delivery = await Delivery.findById(deliveryId).populate<{
@@ -424,7 +477,7 @@ const assignRiderWithTimeout = async (deliveryId: string) => {
         errorLogger.error('🚨 Error during rider reassignment:', err);
       }
     })();
-  }, 600000); // 1 minute  60000
+  }, 3600000); // 1hour,   1 minute  60000
 
   return delivery;
 };

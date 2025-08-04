@@ -4,6 +4,9 @@ import { IDelivery } from './delivery.interface';
 const deliverySchema = new Schema<IDelivery>(
   {
     order: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
+    orderId: {
+      type: String,
+    },
     rider: { type: Schema.Types.ObjectId, ref: 'User' },
     status: {
       type: String,

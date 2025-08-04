@@ -63,10 +63,22 @@ const getOrderSuccessDetails = catchAsync(async (req, res) => {
   });
 });
 
+const getOrderDetailsByOrderId = catchAsync(async (req, res) => {
+  const { orderId } = req.params;
+  const result = await OrderServices.getOrderDetailsByOrderId(orderId);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Order data is retrieved successfully",
+    data: result,
+  })
+})
+
 export const OrderControllers = {
   // createParcelOrder,
   createStripeSessionOnly,
   orderSuccess,
   orderCancel,
   getOrderSuccessDetails,
+  getOrderDetailsByOrderId,
 };

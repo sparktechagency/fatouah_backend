@@ -23,6 +23,8 @@ router.get('/success', OrderControllers.orderSuccess);
 
 router.get('/success-order-details', OrderControllers.getOrderSuccessDetails);
 
+router.get("/:orderId", OrderControllers.getOrderDetailsByOrderId)
+
 router.get('/cancel', OrderControllers.orderCancel);
 
 export const OrderRoutes = router;
