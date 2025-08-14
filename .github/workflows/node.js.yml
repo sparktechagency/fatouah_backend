@@ -30,7 +30,7 @@ jobs:
                       npm -v
  
                - name: Install Dependencies
-                 run: npm ci
+                 run: npm ci -f
                  working-directory: ${{ github.workspace }}
  
                - name: Conditionally Install PM2 Globally
