@@ -9,10 +9,11 @@
     "lint:fix": "lint . --fix",
     "prettier:check": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
     "prettier:fix": "prettier --write .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
   },
   "keywords": [],
-  "author": "",
+  "author": "Moshfiqur Rahman",
   "license": "ISC",
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
