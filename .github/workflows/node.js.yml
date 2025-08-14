@@ -1,0 +1,69 @@
+name: Fatouah Backend CI/CD
+ 
+on:
+     push:
+          branches: ['main']
+     pull_request:
+          branches: ['main']
+ 
+jobs:
+     build:
+          runs-on: self-hosted
+ 
+          strategy:
+               matrix:
+                    node-version: [22.x]
+ 
+          steps:
+               - name: Checkout Code
+                 uses: actions/checkout@v4
+ 
+               - name: Use Node.js ${{ matrix.node-version }}
+                 uses: actions/setup-node@v4
+                 with:
+                      node-version: ${{ matrix.node-version }}
+                      cache: npm
+ 
+               - name: Check Node and npm versions
+                 run: |
+                      node -v
+                      npm -v
+ 
+               - name: Install Dependencies
+                 run: npm ci
+                 working-directory: ${{ github.workspace }}
+ 
+               - name: Conditionally Install PM2 Globally
+                 run: |
+                      if ! command -v pm2 &> /dev/null; then
+                        echo "PM2 not found, installing globally..."
+                        npm install -g pm2
+                      else
+                        echo "PM2 already installed"
+                      fi
+ 
+               - name: Clean Build Folder
+                 run: rm -rf dist
+                 working-directory: ${{ github.workspace }}
+ 
+               - name: Build TypeScript
+                 run: npm run build
+                 working-directory: ${{ github.workspace }}
+ 
+               - name: Start or Reload PM2 App
+                 run: |
+                      sleep 3
+                      if pm2 list | grep -q "fatouah-backend"; then
+                        echo "App found, reloading..."
+                        pm2 reload fatouah-backend
+                      else
+                        echo "App not found, starting..."
+                        pm2 start dist/server.js --name fatouah-backend
+                      fi
+                 working-directory: ${{ github.workspace }}
+ 
+               - name: Save PM2 State
+                 run: pm2 save
+ 
+
+
