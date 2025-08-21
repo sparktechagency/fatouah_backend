@@ -9,56 +9,6 @@ import mongoose from 'mongoose';
 import { Delivery } from '../delivery/delivery.model';
 const { startOfYear, endOfYear } = require('date-fns');
 
-// const userReport = async (query: any) => {
-//   const users = await User.aggregate([
-//     {
-//       $match: { role: 'USER' },
-//     },
-//     {
-//       $lookup: {
-//         from: 'payments',
-//         let: { userIdStr: { $toString: '$_id' } },
-//         pipeline: [
-//           {
-//             $match: {
-//               $expr: {
-//                 $eq: ['$userId', '$$userIdStr'],
-//               },
-//             },
-//           },
-//         ],
-//         as: 'payments',
-//       },
-//     },
-//     {
-//       $project: {
-//         name: 1,
-//         status: 1,
-//         joiningDate: '$createdAt',
-//         parcelSent: {
-//           $cond: {
-//             if: { $isArray: '$payments' },
-//             then: { $size: '$payments' },
-//             else: 0,
-//           },
-//         },
-//       },
-//     },
-//   ]);
-
-//   const userQuery = new QueryBuilder(users, query)
-//     .search(userSearchableFields)
-//     .filter()
-//     .paginate();
-
-//   const result = userQuery.modelQuery;
-//   const meta = await userQuery.getPaginationInfo();
-
-//   return {
-//     data: result,
-//     meta,
-//   };
-// };
 
 const userReport = async (query: any) => {
   const users = await User.aggregate([
@@ -123,10 +73,10 @@ const userReport = async (query: any) => {
     },
   ]);
 
-  // Manual filtering, searching, and pagination on the resulting array
+  // manual filtering, searching, and pagination on the resulting array
   let filteredUsers = [...users];
 
-  // Search
+  // search
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm, 'i');
     filteredUsers = filteredUsers.filter(user =>
@@ -136,7 +86,7 @@ const userReport = async (query: any) => {
     );
   }
 
-  // Basic filter (if you want to support any additional filters)
+  // basic filter (if you want to support any additional filters)
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
   const filterQuery = { ...query };
   excludeFields.forEach(key => delete filterQuery[key]);
@@ -145,7 +95,7 @@ const userReport = async (query: any) => {
     filteredUsers = filteredUsers.filter(user => user[key] == filterQuery[key]);
   }
 
-  // Sort (optional)
+  // sort (optional)
   if (query.sort) {
     const sortField = query.sort.replace('-', '');
     const sortOrder = query.sort.startsWith('-') ? -1 : 1;
@@ -154,7 +104,7 @@ const userReport = async (query: any) => {
     );
   }
 
-  // Pagination
+  // pagination
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -225,10 +175,10 @@ const riderReport = async (query: any) => {
     },
   ]);
 
-  // Manual search, filter, sort, and pagination
+  // manual search, filter, sort, and pagination
   let filteredRiders = [...riders];
 
-  // Search
+  // search
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm, 'i');
     filteredRiders = filteredRiders.filter(rider =>
@@ -238,7 +188,7 @@ const riderReport = async (query: any) => {
     );
   }
 
-  // Basic filters (remove excluded query params first)
+  // basic filters (remove excluded query params first)
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
   const filterQuery = { ...query };
   excludeFields.forEach(field => delete filterQuery[field]);
@@ -249,7 +199,7 @@ const riderReport = async (query: any) => {
     );
   }
 
-  // Sort
+  // sort
   if (query.sort) {
     const sortField = query.sort.replace('-', '');
     const sortOrder = query.sort.startsWith('-') ? -1 : 1;
@@ -258,7 +208,7 @@ const riderReport = async (query: any) => {
     );
   }
 
-  // Pagination
+  // pagination
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -362,11 +312,11 @@ const parcelReport = async (query: any) => {
     },
   ]);
 
-  // === Manual Filtering, Searching, Pagination ===
+  // === manual filtering, searching, pagination ===
 
   let filteredParcels = [...parcel];
 
-  // Search (case-insensitive)
+  // search (case-insensitive)
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm, 'i');
     filteredParcels = filteredParcels.filter(item =>
@@ -376,7 +326,7 @@ const parcelReport = async (query: any) => {
     );
   }
 
-  // Basic filters (excluding some meta fields)
+  // basic filters (excluding some meta fields)
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
   const filterQuery = { ...query };
   excludeFields.forEach(key => delete filterQuery[key]);
@@ -387,7 +337,7 @@ const parcelReport = async (query: any) => {
     );
   }
 
-  // Sorting
+  // sorting
   if (query.sort) {
     const sortField = query.sort.replace('-', '');
     const sortOrder = query.sort.startsWith('-') ? -1 : 1;
@@ -396,7 +346,7 @@ const parcelReport = async (query: any) => {
     );
   }
 
-  // Pagination
+  // pagination
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -581,7 +531,7 @@ const totalAdminEarnings = async () => {
     isGrowth = percentageChange > 0;
   }
 
-  // Optional: Cap percentageChange to 100% for better UX
+
   percentageChange = Math.min(Math.abs(percentageChange), 100);
 
   return {
@@ -645,7 +595,7 @@ const totalMonthlyDeliveryReport = async (year: any) => {
     },
   ]);
 
-  // Fill missing months with zero count
+  // fill missing months with zero count
   const monthlyData = [];
   for (let m = 1; m <= 12; m++) {
     const monthData = result.find(r => r.month === m);
@@ -710,7 +660,7 @@ const revenueAnalyticsReport = async (year: any) => {
     },
   ]);
 
-  // Missing month gula 0 diye fill korbo
+  // missing month gula 0 diye fill korbo
   const monthlyData = [];
   for (let m = 1; m <= 12; m++) {
     const monthData = result.find(r => r.month === m);
@@ -722,48 +672,6 @@ const revenueAnalyticsReport = async (year: any) => {
 
   return monthlyData;
 };
-
-// const getBalanceTransactions = async () => {
-//   const result = await Payment.aggregate([
-//     {
-//       $addFields: {
-//         deliveryObjectId: { $toObjectId: '$deliveryId' },
-//       },
-//     },
-//     {
-//       $lookup: {
-//         from: 'deliveries',
-//         localField: 'deliveryObjectId',
-//         foreignField: '_id',
-//         as: 'delivery',
-//       },
-//     },
-//     {
-//       $unwind: '$delivery',
-//     },
-//     {
-//       $match: {
-//         'delivery.status': 'DELIVERED',
-//       },
-//     },
-//     {
-//       $project: {
-//         transactionId: 1,
-//         deliveryId: 1,
-//         userId: 1,
-//         amountPaid: 1,
-//         paidAt: 1,
-//         status: 1,
-//         refunded: 1,
-//         refundId: 1,
-//         commissionAmount: 1,
-//         riderAmount: 1,
-//         isTransferred: 1,
-//       },
-//     },
-//   ]);
-//   return result;
-// };
 
 const getBalanceTransactions = async (query: any) => {
   const {
@@ -853,12 +761,12 @@ const getBalanceTransactions = async (query: any) => {
 };
 
 const getUserOrderHistory = async (email: string, query: any) => {
-  // 1. Get user ID by email
+  // get user ID by email
   const user = await User.findOne({ email }).select('_id');
   if (!user) throw new Error('User not found');
   const userId = user._id;
 
-  // 2. Aggregation pipeline
+  // aggregation pipeline
   const history = await Order.aggregate([
     { $match: { user: userId } },
     {
@@ -895,7 +803,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
     },
     { $unwind: { path: '$riderInfo', preserveNullAndEmptyArrays: true } },
 
-    // Rider rating
+    // rider rating
     {
       $lookup: {
         from: 'reviews',
@@ -915,7 +823,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
     },
     { $unwind: { path: '$riderRating', preserveNullAndEmptyArrays: true } },
 
-    // Completed trips count
+    // completed trips count
     {
       $lookup: {
         from: 'deliveries',
@@ -944,7 +852,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
       },
     },
 
-    // Status logic
+    // status logic
     {
       $addFields: {
         status: {
@@ -1026,11 +934,11 @@ const getUserOrderHistory = async (email: string, query: any) => {
     },
   ]);
 
-  // === Manual search, filter, paginate ===
+  // === manual search, filter, paginate ===
 
   let filtered = [...history];
 
-  // Search on specific fields (case-insensitive)
+  // search on specific fields (case-insensitive)
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm, 'i');
     filtered = filtered.filter(item =>
@@ -1044,36 +952,32 @@ const getUserOrderHistory = async (email: string, query: any) => {
     );
   }
 
-  // Filter by other fields (except meta)
+  // filter by other fields (except meta)
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
 
   const filterQuery = { ...query };
   excludeFields.forEach(key => delete filterQuery[key]);
 
-  // for (const key in filterQuery) {
-  //   filtered = filtered.filter((item) =>
-  //     item[key]?.toString() === filterQuery[key]
-  //   );
-  // }
+
 
   for (const key in filterQuery) {
     const value = filterQuery[key];
 
-    // ✅ Skip if value is empty string, null or undefined
+    // skip if value is empty string, null or undefined
     if (typeof value === 'string' && value.trim() === '') continue;
     if (value === null || value === undefined) continue;
 
     filtered = filtered.filter(item => item[key]?.toString() === value);
   }
 
-  // Sorting
+  // sorting
   if (query.sort) {
     const sortField = query.sort.replace('-', '');
     const sortOrder = query.sort.startsWith('-') ? -1 : 1;
     filtered.sort((a, b) => (a[sortField] > b[sortField] ? 1 : -1) * sortOrder);
   }
 
-  // Pagination
+  // pagination
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -1093,12 +997,12 @@ const getUserOrderHistory = async (email: string, query: any) => {
 };
 
 const getRiderOrderHistory = async (email: string, query: any) => {
-  // Step 1: Find Rider ID from email
+  // find Rider ID from email
   const rider = await User.findOne({ email }).select('_id');
   if (!rider) throw new Error('Rider not found');
   const riderId = rider._id;
 
-  // Step 2: Aggregation to get history
+  // aggregation to get history
   const history = await Order.aggregate([
     {
       $lookup: {
@@ -1199,10 +1103,10 @@ const getRiderOrderHistory = async (email: string, query: any) => {
     },
   ]);
 
-  // Manual search, filter, sort, paginate on array 'history'
+  // manual search, filter, sort, paginate on array 'history'
   let filtered = [...history];
 
-  // Search on specific fields (case-insensitive)
+  // search on specific fields (case-insensitive)
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm, 'i');
     filtered = filtered.filter(item =>
@@ -1216,34 +1120,30 @@ const getRiderOrderHistory = async (email: string, query: any) => {
     );
   }
 
-  // Filter out reserved query keys
+  // filter out reserved query keys
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
   const filterQuery = { ...query };
   excludeFields.forEach(key => delete filterQuery[key]);
 
-  // // Apply simple filters (exact match)
-  // for (const key in filters) {
-  //   filtered = filtered.filter((item) => item[key]?.toString() === filters[key]);
-  // }
 
   for (const key in filterQuery) {
     const value = filterQuery[key];
 
-    // ✅ Skip if value is empty string, null or undefined
+    // skip if value is empty string, null or undefined
     if (typeof value === 'string' && value.trim() === '') continue;
     if (value === null || value === undefined) continue;
 
     filtered = filtered.filter(item => item[key]?.toString() === value);
   }
 
-  // Sorting
+  // sorting
   if (query.sort) {
     const sortField = query.sort.replace('-', '');
     const sortOrder = query.sort.startsWith('-') ? -1 : 1;
     filtered.sort((a, b) => (a[sortField] > b[sortField] ? 1 : -1) * sortOrder);
   }
 
-  // Pagination
+  // pagination
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -1263,7 +1163,7 @@ const getRiderOrderHistory = async (email: string, query: any) => {
 };
 
 const getUserOrderDetailsById = async (orderId: string, email: string) => {
-  // 1. Prothome user er id ber koren email diye
+ 
   const user = await User.findOne({ email: email }, { _id: 1 });
   if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
 
@@ -1419,7 +1319,6 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
         deliveryInfo: {
           status: '$delivery.status',
           timestamps: '$delivery.timestamps',
-          // attempts: '$delivery.attempts',
         },
         rider: {
           name: '$riderInfo.name',
@@ -1444,14 +1343,14 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
 };
 
 const getRiderOrderDetailsById = async (orderId: string, email: string) => {
-  // Step 1: Find Rider ID from email
+  // find Rider ID from email
   const rider = await User.findOne({ email }).select('_id');
   if (!rider) throw new Error('Rider not found');
 
   const riderId = rider._id;
   const orderObjectId = new mongoose.Types.ObjectId(orderId);
 
-  // Step 2: Aggregation pipeline
+  // aggregation pipeline
   const orderDetails = await Order.aggregate([
     {
       $match: { _id: orderObjectId },
@@ -1468,7 +1367,7 @@ const getRiderOrderDetailsById = async (orderId: string, email: string) => {
       $unwind: { path: '$delivery', preserveNullAndEmptyArrays: false },
     },
     {
-      $match: { 'delivery.rider': riderId }, // Check order belongs to rider
+      $match: { 'delivery.rider': riderId }, 
     },
     {
       $lookup: {
@@ -1563,7 +1462,7 @@ const getRiderWeeklyEarnings = async (email: string) => {
 
   const riderId = new mongoose.Types.ObjectId(rider._id);
 
-  // Date range for aggregation (in UTC)
+  // date range for aggregation (in UTC)
   const today = new Date();
   today.setHours(23, 59, 59, 999);
 
@@ -1654,7 +1553,7 @@ const getRiderWeeklyEarnings = async (email: string) => {
 };
 
 const getRiderTransactionHistory = async (email: string) => {
-  // 1. Prothome rider er user record ta ber koro email diye
+ 
   const rider = await User.findOne({ email });
   if (!rider) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Rider not found');
@@ -1662,8 +1561,6 @@ const getRiderTransactionHistory = async (email: string) => {
 
   const riderId = new mongoose.Types.ObjectId(rider._id);
 
-  // 2. Tarpor Payment collection theke rider er delivery id gulo theke transaction gula ber koro
-  // eikhane dhore nichi je rider er ID delivery document e 'rider' field e ache
   const transactions = await Payment.aggregate([
     {
       $lookup: {

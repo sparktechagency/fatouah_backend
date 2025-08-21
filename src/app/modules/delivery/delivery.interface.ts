@@ -36,7 +36,7 @@ export interface IDelivery {
   isActive?: boolean;
 }
 
-// Delivery status types
+// delivery status types
 type DeliveryStatus =
   | 'REQUESTED'
   | 'ASSIGNED'
@@ -49,7 +49,7 @@ type DeliveryStatus =
   | 'CANCELLED'
   | 'FAILED';
 
-// Timestamp keys per status for convenience
+// timestamp keys per status for convenience
 export const statusTimestampsMap: Record<
   DeliveryStatus,
   keyof IDelivery['timestamps']

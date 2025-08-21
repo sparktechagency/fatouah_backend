@@ -20,7 +20,6 @@ export type IOrder = {
   additionalInformation?: string;
   parcelType: Parcel_Types;
   parcelValue: number;
-  // parcelWeight: number;
   minParcelWeight: number;
   maxParcelWeight: number;
   ride: RIDES;

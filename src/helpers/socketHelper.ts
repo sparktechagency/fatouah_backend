@@ -16,7 +16,7 @@ const socket = (io: Server) => {
 
         logger.info(colors.green(`Rider ${riderId} is now online`));
 
-        // Send confirmation back to the rider
+        // send confirmation back to the rider
         socket.emit('rider::online::ack', {
           success: true,
           message: 'You are now online',
@@ -25,7 +25,7 @@ const socket = (io: Server) => {
       } catch (err) {
         logger.error(colors.red(`Failed to mark rider online: ${err}`));
 
-        // Send error response to the rider
+        // send error response to the rider
         socket.emit('rider::online::ack', {
           success: false,
           message: 'Failed to mark rider as online',
@@ -58,7 +58,7 @@ const socket = (io: Server) => {
             ),
           );
 
-          // ✅ Success response via callback
+          // success response via callback
           callback({
             success: true,
             message: 'Location updated successfully',
@@ -70,7 +70,7 @@ const socket = (io: Server) => {
             colors.red(`❌ Location update failed: ${error.message}`),
           );
 
-          // ❌ Error response via callback
+          // error response via callback
           callback({
             success: false,
             message: 'Location update failed',
@@ -82,7 +82,7 @@ const socket = (io: Server) => {
 
 
 
-    // Disconnect handler
+    // disconnect handler
     socket.on('disconnect', async () => {
       const riderId = socket.data.riderId;
       if (riderId) {

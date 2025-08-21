@@ -19,7 +19,7 @@ export async function savePaymentInfo(paymentData: IPayment) {
   }
 }
 
-// Create or get Stripe account
+// create or get Stripe account
 export async function createOrGetStripeAccount(
   userId: string,
 ): Promise<string> {
@@ -40,7 +40,7 @@ export async function createOrGetStripeAccount(
   return account.id;
 }
 
-// Generate Stripe onboarding link
+// generate Stripe onboarding link
 export async function createStripeOnboardingLink(
   stripeAccountId: string,
 ): Promise<string> {

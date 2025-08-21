@@ -220,19 +220,19 @@ const successMessage = async (id: string) => {
 };
 
 const getSuccessOrderDetails = async (sessionId: string) => {
-  // 1️⃣ Stripe থেকে session আনা
+
   const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-  // 2️⃣ Payment Intent ID নেওয়া
+
   const paymentIntentId = session.payment_intent as string;
 
-  // 3️⃣ Payment DB থেকে আনা
+
   const payment = await Payment.findOne({ paymentIntentId });
   if (!payment) {
     throw new Error('Payment not found');
   }
 
-  // 4️⃣ Delivery ও তার মধ্যে থাকা Order আনো
+
   const delivery = await Delivery.findById(payment.deliveryId).populate(
     'order',
   );
@@ -262,7 +262,6 @@ const getOrderDetailsByOrderId = async (orderId: string) => {
 
 
 export const OrderServices = {
-  // createParcelOrderToDB,
   createStripeSessionOnly,
   successMessage,
   getSuccessOrderDetails,

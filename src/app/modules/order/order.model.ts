@@ -66,10 +66,6 @@ const orderSchema = new Schema<IOrder>(
       type: Number,
       required: true,
     },
-    // parcelWeight: {
-    //   type: Number,
-    //   required: true,
-    // },
     minParcelWeight: {
       type: Number,
       required: true,

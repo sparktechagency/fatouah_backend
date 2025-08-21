@@ -1,6 +1,6 @@
 type IFolderName = 'image' | 'drivingLicense' | 'media' | 'doc';
 
-//single file
+// single file
 export const getSingleFilePath = (files: any, folderName: IFolderName) => {
   const fileField = files && files[folderName];
   if (fileField && Array.isArray(fileField) && fileField.length > 0) {
@@ -10,7 +10,7 @@ export const getSingleFilePath = (files: any, folderName: IFolderName) => {
   return undefined;
 };
 
-//multiple files
+// multiple files
 export const getMultipleFilesPath = (files: any, folderName: IFolderName) => {
   const folderFiles = files && files[folderName];
   if (folderFiles) {

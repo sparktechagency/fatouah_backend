@@ -35,10 +35,10 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
   let event: Stripe.Event;
 
   try {
-    // Construct event with Stripe signature
+    // construct event with Stripe signature
     event = stripe.webhooks.constructEvent(rawBody, signature, WEBHOOK_SECRET);
   } catch (err: any) {
-    // Signature verification failed
+    // signature verification failed
     throw new Error(`Webhook signature verification failed: ${err.message}`);
   }
 
@@ -92,6 +92,6 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
     return { orderCreated: order._id };
   }
 
-  // Ignore other event types
+  // ignore other event types
   return { ignored: true };
 }

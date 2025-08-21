@@ -145,7 +145,7 @@ const updateStatus = async ({
     throw new ApiError(StatusCodes.NOT_FOUND, 'Delivery not found');
   }
 
-  // Prevent updates if delivery already in a final state (excluding REJECTED)
+  // prevent updates if delivery already in a final state (excluding REJECTED)
   if (finalStatuses.includes(delivery.status)) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -153,7 +153,7 @@ const updateStatus = async ({
     );
   }
 
-  // Restrict assigned before requested
+  // restrict assigned before requested
   if (status === 'ASSIGNED' && delivery.status !== 'REQUESTED') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -161,7 +161,7 @@ const updateStatus = async ({
     );
   }
 
-  // Only accept if current status is ASSIGNED
+  // only accept if current status is ASSIGNED
   if (status === 'ACCEPTED' && delivery.status !== 'ASSIGNED') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -201,7 +201,7 @@ const updateStatus = async ({
     );
   }
 
-  // Validate permissions and extra constraints
+  // validate permissions and extra constraints
   if (status === 'ACCEPTED' || status === 'REJECTED') {
     if (!riderId || delivery.rider?.toString() !== riderId) {
       throw new ApiError(StatusCodes.FORBIDDEN, 'You are not assigned rider');
@@ -226,7 +226,7 @@ const updateStatus = async ({
     }
   }
 
-  // Set rider during assignment
+  // set rider during assignment
   if (status === 'ASSIGNED') {
     if (!riderId) {
       throw new ApiError(
@@ -237,7 +237,7 @@ const updateStatus = async ({
     delivery.rider = new Types.ObjectId(riderId);
   }
 
-  // Remove rider on certain statuses
+  // remove rider on certain statuses
   if (['REQUESTED', 'REJECTED', 'CANCELLED'].includes(status)) {
     delivery.rider = undefined;
   }
@@ -259,7 +259,7 @@ const updateStatus = async ({
     delivery.isActive = false;
   }
 
-  // Set the new status
+  // set the new status
   delivery.status = status;
 
   const tsKey = statusTimestampsMap[status];
@@ -276,7 +276,7 @@ const updateStatus = async ({
 
     console.log(updatedDelivery,"updated delivery")
 
-  // Step: Notification after successful status change
+  //  notification after successful status change
   if (updatedDelivery) {
     const { order, rider } = updatedDelivery;
 
@@ -286,7 +286,7 @@ const updateStatus = async ({
       delivery: updatedDelivery._id,
     };
 
-    // Notify User
+    // notify User
     if (order?.user) {
       await sendNotifications({
         ...notifyPayload,
@@ -302,7 +302,7 @@ const updateStatus = async ({
       });
     }
 
-    // Notify Rider
+    // notify Rider
     if (rider?._id) {
       await sendNotifications({
         ...notifyPayload,
@@ -371,10 +371,6 @@ const updateStatus = async ({
 // };
 
 
-
-
-
-
 const updateRiderLocation = async (
   riderId: string,
   coordinates: [number, number],
@@ -384,7 +380,7 @@ const updateRiderLocation = async (
     throw new Error('Invalid coordinates');
   }
 
-  // Step 1: Update rider's geoLocation
+  // update rider's geoLocation
   await User.findByIdAndUpdate(riderId, {
     geoLocation: {
       type: 'Point',
@@ -392,13 +388,13 @@ const updateRiderLocation = async (
     },
   });
 
-  // Step 2: Find active delivery of this rider
+  // find active delivery of this rider
   const activeDelivery = await Delivery.findOne({
     rider: riderId,
     isActive: true,
   }).populate<{ order: IOrder & Document }>('order');
 
-  // Step 3: Emit real-time location to the user
+  // emit real-time location to the user
   if (activeDelivery?.order?.user) {
     const userId = activeDelivery.order.user.toString();
     // @ts-ignore
@@ -412,13 +408,6 @@ const updateRiderLocation = async (
 
   return { riderId, coordinates };
 };
-
-
-
-
-
-
-
 
 
 const assignRiderWithTimeout = async (deliveryId: string) => {
@@ -517,19 +506,19 @@ const cancelDeliveryByUser = async (deliveryId: string, userId: string) => {
     userId,
   });
 
-  // Step 2: Find associated payment
+  // find associated payment
   const payment = await Payment.findOne({ deliveryId: delivery?._id });
 
   if (payment && payment.paymentIntentId) {
     try {
-      // Step 3: Process refund through Stripe
+      // process refund through Stripe
       const refund = await stripe.refunds.create({
         payment_intent: payment.paymentIntentId,
       });
 
       console.log('✅ Refund successful:', refund.id);
 
-      // (Optional) Step 4: Save refund status
+      // save refund status
       payment.refunded = true;
       payment.refundId = refund.id;
       await payment.save();

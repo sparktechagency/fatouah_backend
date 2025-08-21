@@ -10,7 +10,7 @@
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
-    // Replace with actual user ID
+    // replace with actual user ID
     const userId = "684ad7ccd465c48ea9061586";
 
     const socket = io("http://10.0.60.210:5000");
@@ -18,7 +18,7 @@
     socket.on("connect", () => {
       console.log("✅ User connected");
 
-      // Join user room
+      // join user room
       socket.emit("join", `user::${userId}`);
     });
 
