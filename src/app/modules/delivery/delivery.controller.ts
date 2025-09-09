@@ -14,16 +14,16 @@ const findNearestOnlineRiders = catchAsync(async (req, res) => {
   });
 });
 
-const assignRiderWithTimeout = catchAsync(async (req, res) => {
-  const deliveryId = req.params.deliveryId;
-  const result = await DeliveryServices.assignRiderWithTimeout(deliveryId);
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Successfully Assign Rider',
-    data: result,
-  });
-});
+// const assignRiderWithTimeout = catchAsync(async (req, res) => {
+//   const deliveryId = req.params.deliveryId;
+//   const result = await DeliveryServices.assignRiderWithTimeout(deliveryId);
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: 200,
+//     message: 'Successfully Assign Rider',
+//     data: result,
+//   });
+// });
 
 const acceptDeliveryByRider = catchAsync(async (req, res) => {
   const deliveryId = req.params.deliveryId;
@@ -159,7 +159,7 @@ const getDeliveryDetails = catchAsync(async (req, res) => {
 
 export const DeliveryControllers = {
   findNearestOnlineRiders,
-  assignRiderWithTimeout,
+  // assignRiderWithTimeout,
   rejectDeliveryByRider,
   cancelDeliveryByUser,
   getDeliveryDetails,

@@ -8,7 +8,7 @@ const router = express.Router();
 // this is just test route, i will delete this letter
 router.post('/nearest-riders', DeliveryControllers.findNearestOnlineRiders);
 
-router.post('/:deliveryId/assign', DeliveryControllers.assignRiderWithTimeout);
+// router.post('/:deliveryId/assign', DeliveryControllers.assignRiderWithTimeout);
 
 router.post(
   '/:deliveryId/cancel',
