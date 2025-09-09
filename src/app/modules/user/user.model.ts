@@ -89,6 +89,7 @@ const userSchema = new Schema<IUser, UserModal>(
     vehicleType: {
       type: String,
       enum: Object.values(VEHICLE_TYPE),
+      message: '{VALUE} is not a valid vehicle type',
     },
     vehicleModel: {
       type: String,
