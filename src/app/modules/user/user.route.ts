@@ -5,6 +5,7 @@ import fileUploadHandler from '../../middlewares/fileUploadHandler';
 import validateRequest from '../../middlewares/validateRequest';
 import { UserController } from './user.controller';
 import { UserValidation } from './user.validation';
+import parseFileData from '../../middlewares/parseFileData';
 const router = express.Router();
 
 router
@@ -26,14 +27,8 @@ router
       USER_ROLES.USER,
     ),
     fileUploadHandler(),
-    (req: Request, res: Response, next: NextFunction) => {
-      if (req.body.data) {
-        req.body = UserValidation.updateUserZodSchema.parse(
-          JSON.parse(req.body.data),
-        );
-      }
-      return UserController.updateProfile(req, res, next);
-    },
+    parseFileData("image"),
+    UserController.updateProfile
   );
 
 router

@@ -7,6 +7,7 @@ import { Order } from '../app/modules/order/order.model';
 import { Delivery } from '../app/modules/delivery/delivery.model';
 import { Payment } from '../app/modules/payment/payment.model';
 import { User } from '../app/modules/user/user.model';
+import { sendNotifications } from '../helpers/notificationHelper';
 const WEBHOOK_SECRET = config.stripe_webhook_secret!;
 
 export async function transferToRider({
@@ -213,6 +214,15 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
       riderAmount,
       isTransferred: false,
     });
+
+    // --- Send Notification here ---
+    await sendNotifications({
+      title: 'Payment Successful',
+      message: `Your payment for order ${orderId} is successful!`,
+      receiver: userId,
+      data: { orderId, amountPaid: paymentIntent.amount / 100 },
+    });
+
     console.log("✅ Payment info saved.");
 
     console.log("🎉 All done, returning orderCreated:", order._id);

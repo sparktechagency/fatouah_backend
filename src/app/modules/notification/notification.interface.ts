@@ -6,5 +6,6 @@ export type TNotification = {
   receiver: Types.ObjectId;
   read: boolean;
   delivery?: any;
+  data?:any;
   type?: 'ADMIN' | 'SYSTEM' | 'PAYMENT' | 'MESSAGE' | 'ALERT';
 };

@@ -961,6 +961,19 @@ const cancelDeliveryByUser = async (deliveryId: string, userId: string) => {
       payment.refunded = true;
       payment.refundId = refund.id;
       await payment.save();
+
+      // --- Send notification here ---
+      await sendNotifications({
+        title: 'Payment Refunded',
+        message: `Your payment for delivery ${deliveryId} has been refunded.`,
+        receiver: payment.userId,
+        data: {
+          deliveryId,
+          refundId: refund.id,
+          amountRefunded: payment.amountPaid,
+        },
+      });
+
     } catch (err: any) {
       console.error('❌ Refund failed:', err.message);
     }
@@ -1000,6 +1013,27 @@ const markDeliveryCompleted = async (deliveryId: string, riderId: string) => {
     });
 
     console.log('✅ Transfer successful:', transfer.id);
+  }
+
+  // send notifications
+  // rider notification
+  if (rider) {
+    await sendNotifications({
+      title: 'Delivery Completed',
+      message: `Delivery for order ${order?._id} has been marked as completed.`,
+      receiver: rider._id.toString(),
+      data: { deliveryId, orderId: order?._id },
+    });
+  }
+
+  // customer notification
+  if (order?.user) {
+    await sendNotifications({
+      title: 'Your Order Delivered',
+      message: `Your order ${order._id} has been successfully delivered!`,
+      receiver: order.user.toString(),
+      data: { deliveryId, orderId: order._id },
+    });
   }
 
   return delivery;

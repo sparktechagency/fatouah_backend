@@ -34,6 +34,8 @@ const notificationSchema = new Schema(
       type: String,
       enum: Object.values(NotificationType),
     },
+
+    data: { type: Schema.Types.Mixed },
   },
   {
     timestamps: true,

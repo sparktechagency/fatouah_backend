@@ -114,12 +114,7 @@ const updateUserStatus = catchAsync(async (req, res) => {
 const updateProfile = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    let image = getSingleFilePath(req.files, 'image');
-
-    const data = {
-      image,
-      ...req.body,
-    };
+    const data = req.body;
     const result = await UserService.updateProfileToDB(user, data);
 
     sendResponse(res, {

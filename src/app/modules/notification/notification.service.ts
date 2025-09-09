@@ -3,7 +3,8 @@ import { Notification } from './notification.model';
 import QueryBuilder from '../../builder/QueryBuilder';
 
 const getNotificationFromDB = async (user: JwtPayload) => {
-  const result = await Notification.find({ receiver: user._id });
+  const result = await Notification.find({ receiver: user.id });
+ 
 
   const unreadCount = await Notification.countDocuments({
     receiver: user.id,
@@ -21,7 +22,7 @@ const getNotificationFromDB = async (user: JwtPayload) => {
 // read notifications only for user
 const readNotificationToDB = async (user: JwtPayload) => {
   const result = await Notification.updateMany(
-    { receiver: user._id, read: false },
+    { receiver: user.id, read: false },
     { $set: { read: true } },
   );
   return result;
