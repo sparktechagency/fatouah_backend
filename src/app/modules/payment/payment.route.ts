@@ -7,8 +7,11 @@ const router = express.Router();
 
 router.get(
   '/rider/stripe-login-link',
-  auth(USER_ROLES.RIDER),
+  auth(USER_ROLES.RIDER, USER_ROLES.USER),
   getStripeLoginLink,
 );
+
+
+
 
 export const PaymentRoutes = router;

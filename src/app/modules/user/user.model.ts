@@ -104,7 +104,12 @@ const userSchema = new Schema<IUser, UserModal>(
     },
     stripeAccountId: {
       type: String,
+      default: ""
     },
+    stripeValidated: {
+      type: Boolean,
+      default: false,
+    }
   },
   { timestamps: true },
 );

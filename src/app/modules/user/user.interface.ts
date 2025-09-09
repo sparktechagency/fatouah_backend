@@ -30,6 +30,7 @@ export type IUser = {
   drivingLicense?: string;
   isOnline: boolean;
   stripeAccountId: string;
+  stripeValidated:boolean;
 };
 
 export type IVehicle = {

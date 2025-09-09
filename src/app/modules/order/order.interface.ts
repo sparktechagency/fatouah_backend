@@ -16,6 +16,7 @@ export type IOrder = {
     coordinates: [number, number];
   };
   receiversName: string;
+  image: string;
   contact: string;
   additionalInformation?: string;
   parcelType: Parcel_Types;

@@ -140,17 +140,8 @@ function getDistanceFromLatLonInKm(
 // --------------------
 
 
-
-
-
-
-
-
-
-
-
-
 const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
+  console.log(payload,"Payload")
   const distance =
     Math.round(
       getDistanceFromLatLonInKm(
@@ -213,7 +204,6 @@ const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
 };
 
 
-
 const successMessage = async (id: string) => {
   const session = await stripe.checkout.sessions.retrieve(id);
   return session;
@@ -258,8 +248,6 @@ const getOrderDetailsByOrderId = async (orderId: string) => {
 
   return { delivery, payment };
 };
-
-
 
 export const OrderServices = {
   createStripeSessionOnly,

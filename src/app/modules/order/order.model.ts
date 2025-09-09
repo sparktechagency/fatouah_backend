@@ -50,6 +50,10 @@ const orderSchema = new Schema<IOrder>(
       required: true,
       trim: true,
     },
+    image: {
+      type: String,
+      default: ""
+    },
     contact: {
       type: String,
       required: true,

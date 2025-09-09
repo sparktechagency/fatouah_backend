@@ -1,13 +1,12 @@
 import Stripe from 'stripe';
-import { IPayment } from '../app/modules/payment/payment.interface';
 import { savePaymentInfo } from '../app/modules/payment/payment.service';
 import stripe from '../config/stripe';
 import config from '../config';
-import { IOrder } from '../app/modules/order/order.interface';
 import { generateOrderId } from '../helpers/generateOrderId';
 import { Order } from '../app/modules/order/order.model';
 import { Delivery } from '../app/modules/delivery/delivery.model';
 import { Payment } from '../app/modules/payment/payment.model';
+import { User } from '../app/modules/user/user.model';
 const WEBHOOK_SECRET = config.stripe_webhook_secret!;
 
 export async function transferToRider({
@@ -114,6 +113,18 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string) {
 
   try {
     let paymentIntent: Stripe.PaymentIntent | null = null;
+
+    if (event.type === 'account.updated') {
+      const account = event.data.object as Stripe.Account;
+
+      // Update DB only when account is fully validated
+      if (account.details_submitted && account.payouts_enabled) {
+        await User.findOneAndUpdate(
+          { stripeAccountId: account.id },
+          { stripeValidated: true }
+        );
+      }
+    }
 
     // --- Checkout session completed ---
     if (event.type === 'checkout.session.completed') {

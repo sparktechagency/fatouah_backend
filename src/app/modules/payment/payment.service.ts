@@ -35,10 +35,55 @@ export async function createOrGetStripeAccount(
     email: rider.email,
   });
 
+
+
   await User.findByIdAndUpdate(userId, { stripeAccountId: account.id });
 
   return account.id;
 }
+
+// export const createOrGetStripeAccountValidated = async (userId: string) => {
+//   const rider = await User.findById(userId);
+//   if (!rider) throw new Error('Rider not found');
+//   if (!rider.email) throw new Error('Rider email missing');
+
+//   let accountId = rider.stripeAccountId;
+
+//   if (!accountId) {
+//     // Start session to prevent double creation
+//     const session = await User.startSession();
+//     session.startTransaction();
+//     try {
+//       const freshRider = await User.findById(userId).session(session);
+//       if (!freshRider) throw new Error('Rider not found in transaction');
+
+//       if (!freshRider.stripeAccountId) {
+//         const account = await stripe.accounts.create({
+//           type: 'express',
+//           email: rider.email,
+//         });
+
+//         freshRider.stripeAccountId = account.id;
+//         await freshRider.save({ session });
+//         accountId = account.id;
+//       } else {
+//         accountId = freshRider.stripeAccountId;
+//       }
+
+//       await session.commitTransaction();
+//     } catch (err: any) {
+//       await session.abortTransaction();
+//       console.error("Stripe account creation failed:", err);
+//       return { valid: false, message: "Stripe connect account creation failed", error: err.message };
+//     } finally {
+//       session.endSession();
+//     }
+//   }
+
+//   // Validation may be pending at first
+//   return { accountId, valid: rider.stripeValidated ?? null, message: "Validation pending" };
+// };
+
 
 // generate Stripe onboarding link
 export async function createStripeOnboardingLink(
@@ -47,7 +92,7 @@ export async function createStripeOnboardingLink(
   const accountLink = await stripe.accountLinks.create({
     account: stripeAccountId,
     refresh_url: 'https://yourapp.com/reauth',
-    return_url: 'https://yourapp.com/success',
+    return_url: 'http://10.10.7.111:5000/stripe/success',
     type: 'account_onboarding',
   });
 

@@ -7,19 +7,19 @@ export interface DeliveryAttempt {
 
 export interface IDelivery {
   order: Types.ObjectId;
-  orderId?:string;
+  orderId?: string;
   rider?: Types.ObjectId;
   status:
-    | 'REQUESTED'
-    | 'ASSIGNED'
-    | 'ACCEPTED'
-    | 'ARRIVED_PICKED_UP'
-    | 'STARTED'
-    | 'ARRIVED_DESTINATION'
-    | 'DELIVERED'
-    | 'REJECTED'
-    | 'CANCELLED'
-    | 'FAILED';
+  | 'REQUESTED'
+  | 'ASSIGNED'
+  | 'ACCEPTED'
+  | 'ARRIVED_PICKED_UP'
+  | 'STARTED'
+  | 'ARRIVED_DESTINATION'
+  | 'DELIVERED'
+  | 'REJECTED'
+  | 'CANCELLED'
+  | 'FAILED';
   timestamps: {
     requestedAt?: Date;
     assignedAt?: Date;
@@ -33,6 +33,7 @@ export interface IDelivery {
     failedAt?: Date;
   };
   attempts: DeliveryAttempt[];
+  rejectedRiders?: Types.ObjectId[];
   isActive?: boolean;
 }
 

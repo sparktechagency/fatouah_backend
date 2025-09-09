@@ -30,6 +30,9 @@ const fileUploadHandler = () => {
         case 'drivingLicense':
           uploadDir = path.join(baseUploadDir, 'drivingLicense');
           break;
+        case 'receiversImage':
+          uploadDir = path.join(baseUploadDir, 'receiversImage');
+          break;
         case 'media':
           uploadDir = path.join(baseUploadDir, 'media');
           break;
@@ -103,6 +106,7 @@ const fileUploadHandler = () => {
     { name: 'media', maxCount: 3 },
     { name: 'doc', maxCount: 3 },
     { name: 'drivingLicense', maxCount: 3 },
+    { name: 'receiversImage', maxCount: 1 },
   ]);
   return upload;
 };

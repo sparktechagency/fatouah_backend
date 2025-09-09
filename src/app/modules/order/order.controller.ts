@@ -21,6 +21,7 @@ import { OrderServices } from './order.service';
 const createStripeSessionOnly = catchAsync(async (req, res) => {
   const user = req.user;
   const parcelOrderData = req.body;
+  console.log(parcelOrderData, "Parcel Order Data");
   const result = await OrderServices.createStripeSessionOnly(
     user,
     parcelOrderData,

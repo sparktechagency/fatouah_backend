@@ -16,8 +16,61 @@ import cryptoToken from '../../../util/cryptoToken';
 import generateOTP from '../../../util/generateOTP';
 import { ResetToken } from '../resetToken/resetToken.model';
 import { User } from '../user/user.model';
+import stripe from '../../../config/stripe';
 
 // login
+// const loginUserFromDB = async (payload: ILoginData) => {
+//   const { email, password } = payload;
+//   const isExistUser = await User.findOne({ email }).select('+password');
+//   console.log(isExistUser);
+//   if (!isExistUser) {
+//     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+//   }
+
+//   // check verified and status
+//   if (!isExistUser.verified) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Please verify your account, then try to login again',
+//     );
+//   }
+
+//   // check user status
+//   if (isExistUser.status === 'delete') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'You don’t have permission to access this content.It looks like your account has been deactivated.',
+//     );
+//   }
+
+//   // check match password
+//   if (
+//     password &&
+//     !(await User.isMatchPassword(password, isExistUser.password))
+//   ) {
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'Password is incorrect!');
+//   }
+
+//   // check stripe account (for riders only)
+//   let hasStripeAccount = false;
+//   if (isExistUser.role === 'RIDER') {
+//     hasStripeAccount = !!isExistUser.stripeAccountId;
+//   }
+
+//   // create token
+//   const createToken = jwtHelper.createToken(
+//     { id: isExistUser._id, role: isExistUser.role, email: isExistUser.email },
+//     config.jwt.jwt_secret as Secret,
+//     config.jwt.jwt_expire_in as string,
+//   );
+
+//   return {
+//     token: createToken,
+//     user: isExistUser,
+//     hasStripeAccount,
+//   };
+// };
+
 const loginUserFromDB = async (payload: ILoginData) => {
   const { email, password } = payload;
   const isExistUser = await User.findOne({ email }).select('+password');
@@ -38,7 +91,7 @@ const loginUserFromDB = async (payload: ILoginData) => {
   if (isExistUser.status === 'delete') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'You don’t have permission to access this content.It looks like your account has been deactivated.',
+      'You don’t have permission to access this content. It looks like your account has been deactivated.',
     );
   }
 
@@ -52,8 +105,24 @@ const loginUserFromDB = async (payload: ILoginData) => {
 
   // check stripe account (for riders only)
   let hasStripeAccount = false;
+  let stripeValidated = false;
   if (isExistUser.role === 'RIDER') {
     hasStripeAccount = !!isExistUser.stripeAccountId;
+
+    if (isExistUser.stripeAccountId) {
+      try {
+        const account = await stripe.accounts.retrieve(isExistUser.stripeAccountId);
+        stripeValidated = account.details_submitted && account.payouts_enabled;
+
+        // update DB cache
+        if (stripeValidated && !isExistUser.stripeValidated) {
+          await User.findByIdAndUpdate(isExistUser._id, { stripeValidated: true });
+        }
+
+      } catch (err) {
+        console.warn("⚠️ Stripe API error:", err);
+      }
+    }
   }
 
   // create token
@@ -65,10 +134,11 @@ const loginUserFromDB = async (payload: ILoginData) => {
 
   return {
     token: createToken,
-    user: isExistUser,
+    user: { ...isExistUser.toObject(), stripeValidated },
     hasStripeAccount,
   };
 };
+
 
 // forget password
 const forgetPasswordToDB = async (email: string) => {

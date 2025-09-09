@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, Types, model } from 'mongoose';
 import { IDelivery } from './delivery.interface';
 
 const deliverySchema = new Schema<IDelivery>(
@@ -41,6 +41,7 @@ const deliverySchema = new Schema<IDelivery>(
         attemptedAt: { type: Date, default: Date.now },
       },
     ],
+    rejectedRiders: [{ type: Types.ObjectId, ref: 'User' }],
     isActive: {
       type: Boolean,
     },

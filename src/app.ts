@@ -14,6 +14,8 @@ import auth from './app/middlewares/auth';
 import { USER_ROLES } from './enums/user';
 const app = express();
 import path from 'path';
+import { Delivery } from './app/modules/delivery/delivery.model';
+import { notifyNearestRiders } from './app/modules/delivery/delivery.service';
 
 // Set the view engine to EJS
 app.set('view engine', 'ejs');
@@ -46,6 +48,19 @@ app.post(
   auth(USER_ROLES.RIDER),
   createConnectLink,
 );
+
+Delivery.watch([{ $match: { 'fullDocument.status': 'REQUESTED' } }])
+  .on('change', async (change) => {
+    const deliveryId = change.fullDocument._id.toString();
+    await notifyNearestRiders(deliveryId);
+
+  });
+
+// Express.js route
+app.get('/stripe/success', (req, res) => {
+  res.send('<h1>Stripe Onboarding Complete!</h1><p>Successfully connected your stripe accounts</p>');
+});
+
 
 app.get('/check-balance', async (req, res) => {
   try {

@@ -7,6 +7,7 @@ import { Order } from '../order/order.model';
 import { userSearchableFields } from './report.constant';
 import mongoose from 'mongoose';
 import { Delivery } from '../delivery/delivery.model';
+import { USER_ROLES } from '../../../enums/user';
 const { startOfYear, endOfYear } = require('date-fns');
 
 
@@ -126,7 +127,7 @@ const userReport = async (query: any) => {
 const riderReport = async (query: any) => {
   const riders = await User.aggregate([
     {
-      $match: { role: 'RIDER' },
+      $match: { role: USER_ROLES.RIDER },
     },
     {
       $lookup: {
@@ -389,13 +390,13 @@ const totalBikeAndCars = async () => {
     User.countDocuments({
       vehicleType: 'BIKE',
       status: 'active',
-      role: 'RIDER',
+      role: USER_ROLES.RIDER,
       verified: true,
     }),
     User.countDocuments({
       vehicleType: 'CAR',
       status: 'active',
-      role: 'RIDER',
+      role: USER_ROLES.RIDER,
       verified: true,
     }),
   ]);
@@ -699,8 +700,8 @@ const getBalanceTransactions = async (query: any) => {
   const searchStage =
     searchTerm?.trim() !== ''
       ? {
-          $or: [{ transactionId: { $regex: searchTerm, $options: 'i' } }],
-        }
+        $or: [{ transactionId: { $regex: searchTerm, $options: 'i' } }],
+      }
       : {};
 
   const pipeline = [
@@ -860,8 +861,12 @@ const getUserOrderHistory = async (email: string, query: any) => {
             branches: [
               {
                 case: { $eq: ['$payment.refunded', true] },
-                then: 'returned',
+                then: 'canceled',
               },
+              // {
+              //   case: { $eq: ['$delivery.status', 'CANCELLED'] },
+              //   then: 'canceled',
+              // },
               {
                 case: { $eq: ['$delivery.status', 'DELIVERED'] },
                 then: 'completed',
@@ -881,7 +886,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
                 then: 'inprogress',
               },
             ],
-            default: 'unknown',
+            default: 'pending',
           },
         },
       },
@@ -894,6 +899,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
         orderId: 1,
         receiversName: 1,
         contact: 1,
+        image: 1,
         parcelType: 1,
         parcelValue: 1,
         parcelWeight: 1,
@@ -919,6 +925,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
           status: '$delivery.status',
           timestamps: '$delivery.timestamps',
         },
+        deliveryId: '$delivery._id',
         rider: {
           name: '$riderInfo.name',
           email: '$riderInfo.email',
@@ -938,6 +945,9 @@ const getUserOrderHistory = async (email: string, query: any) => {
 
   let filtered = [...history];
 
+
+
+
   // search on specific fields (case-insensitive)
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm, 'i');
@@ -951,6 +961,7 @@ const getUserOrderHistory = async (email: string, query: any) => {
       ].some(field => item[field]?.toString().match(searchRegex)),
     );
   }
+
 
   // filter by other fields (except meta)
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
@@ -979,9 +990,13 @@ const getUserOrderHistory = async (email: string, query: any) => {
 
   // pagination
   const page = Number(query.page) || 1;
+
   const limit = Number(query.limit) || 10;
+
   const skip = (page - 1) * limit;
+
   const paginated = filtered.slice(skip, skip + limit);
+
 
   const meta = {
     page,
@@ -1063,7 +1078,7 @@ const getRiderOrderHistory = async (email: string, query: any) => {
                 then: 'inprogress',
               },
             ],
-            default: 'unknown',
+            default: 'pending',
           },
         },
       },
@@ -1074,6 +1089,7 @@ const getRiderOrderHistory = async (email: string, query: any) => {
         orderId: 1,
         receiversName: 1,
         contact: 1,
+        image: 1,
         parcelType: 1,
         parcelValue: 1,
         parcelWeight: 1,
@@ -1099,6 +1115,7 @@ const getRiderOrderHistory = async (email: string, query: any) => {
           status: '$delivery.status',
           timestamps: '$delivery.timestamps',
         },
+        deliveryId: '$delivery._id',
       },
     },
   ]);
@@ -1119,6 +1136,8 @@ const getRiderOrderHistory = async (email: string, query: any) => {
       ].some(field => item[field]?.toString().match(searchRegex)),
     );
   }
+
+
 
   // filter out reserved query keys
   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
@@ -1163,7 +1182,7 @@ const getRiderOrderHistory = async (email: string, query: any) => {
 };
 
 const getUserOrderDetailsById = async (orderId: string, email: string) => {
- 
+
   const user = await User.findOne({ email: email }, { _id: 1 });
   if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
 
@@ -1287,7 +1306,7 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
                 then: 'inprogress',
               },
             ],
-            default: 'unknown',
+            default: 'pending',
           },
         },
       },
@@ -1296,6 +1315,7 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
       $project: {
         orderId: 1,
         receiversName: 1,
+        image: 1,
         contact: 1,
         parcelType: 1,
         parcelValue: 1,
@@ -1320,6 +1340,7 @@ const getUserOrderDetailsById = async (orderId: string, email: string) => {
           status: '$delivery.status',
           timestamps: '$delivery.timestamps',
         },
+        deliveryId: '$delivery._id',
         rider: {
           name: '$riderInfo.name',
           email: '$riderInfo.email',
@@ -1367,7 +1388,7 @@ const getRiderOrderDetailsById = async (orderId: string, email: string) => {
       $unwind: { path: '$delivery', preserveNullAndEmptyArrays: false },
     },
     {
-      $match: { 'delivery.rider': riderId }, 
+      $match: { 'delivery.rider': riderId },
     },
     {
       $lookup: {
@@ -1418,6 +1439,7 @@ const getRiderOrderDetailsById = async (orderId: string, email: string) => {
       $project: {
         orderId: 1,
         receiversName: 1,
+        image: 1,
         contact: 1,
         parcelType: 1,
         parcelValue: 1,
@@ -1443,6 +1465,7 @@ const getRiderOrderDetailsById = async (orderId: string, email: string) => {
           timestamps: '$delivery.timestamps',
           attempts: '$delivery.attempts',
         },
+        deliveryId: '$delivery._id',
       },
     },
   ]);
@@ -1506,6 +1529,8 @@ const getRiderWeeklyEarnings = async (email: string) => {
     { $sort: { _id: 1 } },
   ]);
 
+
+
   if (earnings.length === 0) {
     const result = [];
     for (let i = 0; i < 7; i++) {
@@ -1521,6 +1546,8 @@ const getRiderWeeklyEarnings = async (email: string) => {
     }
     return result;
   }
+
+
 
   const maxDateStr = earnings[earnings.length - 1]._id; // e.g. "2025-06-11"
   const maxDate = new Date(maxDateStr + 'T23:59:59.999Z');
@@ -1553,7 +1580,7 @@ const getRiderWeeklyEarnings = async (email: string) => {
 };
 
 const getRiderTransactionHistory = async (email: string) => {
- 
+
   const rider = await User.findOne({ email });
   if (!rider) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Rider not found');
