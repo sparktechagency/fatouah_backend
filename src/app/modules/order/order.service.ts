@@ -150,6 +150,11 @@ const createStripeSessionOnly = async (user: JwtPayload, payload: IOrder) => {
       ) * 100,
     ) / 100;
 
+
+  
+
+
+
   const ratePerKm = getRatePerKm(payload.ride);
   const deliveryCharge = Math.round(distance * ratePerKm * 100) / 100;
   const commissionRate = 0.1; // 10% commision

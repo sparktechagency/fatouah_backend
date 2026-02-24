@@ -47,6 +47,8 @@ router.patch(
   UserController.adminUpdateUserProfile,
 );
 
+router.patch("/rider-status/:id", auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN), UserController.changeRiderStatus)
+
 router.patch(
   '/:id/status',
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),

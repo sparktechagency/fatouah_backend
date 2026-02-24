@@ -1,6 +1,6 @@
 import { Model } from 'mongoose';
 import { USER_ROLES } from '../../../enums/user';
-import { VEHICLE_TYPE } from './user.constant';
+import { RIDER_STATUS, VEHICLE_TYPE } from './user.constant';
 
 export type IUser = {
   name: string;
@@ -16,6 +16,7 @@ export type IUser = {
   };
   image?: string;
   status: 'active' | 'delete';
+  riderStatus: RIDER_STATUS;
   verified: boolean;
   authentication?: {
     isResetPassword: boolean;
@@ -30,7 +31,7 @@ export type IUser = {
   drivingLicense?: string;
   isOnline: boolean;
   stripeAccountId: string;
-  stripeValidated:boolean;
+  stripeValidated: boolean;
 };
 
 export type IVehicle = {

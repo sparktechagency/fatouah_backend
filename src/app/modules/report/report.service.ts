@@ -8,6 +8,7 @@ import { userSearchableFields } from './report.constant';
 import mongoose from 'mongoose';
 import { Delivery } from '../delivery/delivery.model';
 import { USER_ROLES } from '../../../enums/user';
+import { RIDER_STATUS } from '../user/user.constant';
 const { startOfYear, endOfYear } = require('date-fns');
 
 
@@ -127,7 +128,7 @@ const userReport = async (query: any) => {
 const riderReport = async (query: any) => {
   const riders = await User.aggregate([
     {
-      $match: { role: USER_ROLES.RIDER },
+      $match: { role: USER_ROLES.RIDER, }, // filter out by riderStatus
     },
     {
       $lookup: {
@@ -382,6 +383,8 @@ const totalRiders = async (): Promise<number> => {
     verified: true,
     role: 'RIDER',
     status: 'active',
+    riderStatus: RIDER_STATUS.APPROVED,
+    // filterout by riderStatus
   });
 };
 

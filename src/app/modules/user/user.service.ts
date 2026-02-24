@@ -7,6 +7,8 @@ import unlinkFile from '../../../shared/unlinkFile';
 import generateOTP from '../../../util/generateOTP';
 import { IUser, IVehicle } from './user.interface';
 import { User } from './user.model';
+import { USER_ROLES } from '../../../enums/user';
+import { RIDER_STATUS } from './user.constant';
 
 const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
   const forbiddenRoles = ['ADMIN', 'SUPER_ADMIN'];
@@ -226,6 +228,22 @@ const deleteUserFromDB = async (id: string) => {
   return result;
 };
 
+const changeRiderStatusToDB = async (id: string, riderStatus: RIDER_STATUS.PENDING | RIDER_STATUS.APPROVED | RIDER_STATUS.REJECTED) => {
+
+  if (![RIDER_STATUS.PENDING, RIDER_STATUS.APPROVED, RIDER_STATUS.REJECTED].includes(riderStatus)) {
+    throw new ApiError(400, "Rider status must be a valid enum value 'PENDING', 'APPROVED' or 'REJECTED'")
+  }
+
+  const result = await User.findByIdAndUpdate(id, { riderStatus }, { new: true })
+
+  if (!result) {
+    throw new ApiError(400, "Failed to update rider status")
+  };
+
+  return result;
+
+}
+
 export const UserService = {
   createUserToDB,
   getUsersFromDB,
@@ -238,4 +256,5 @@ export const UserService = {
   updateVehicleToDB,
   updateProfileToDB,
   deleteUserFromDB,
+  changeRiderStatusToDB,
 };

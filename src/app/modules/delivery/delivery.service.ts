@@ -13,6 +13,7 @@ import stripe from '../../../config/stripe';
 import { refundIfNeeded } from '../payment/payment.service';
 import { NotificationServices } from '../notification/notification.service';
 import { sendNotifications } from '../../../helpers/notificationHelper';
+import { RIDER_STATUS } from '../user/user.constant';
 
 // find nearest riders
 // const findNearestOnlineRiders = async (location: {
@@ -495,6 +496,7 @@ import { sendNotifications } from '../../../helpers/notificationHelper';
 // };
 
 // find nearest riders
+
 const findNearestOnlineRiders = async (location: {
   coordinates: [number, number];
 }) => {
@@ -505,8 +507,9 @@ const findNearestOnlineRiders = async (location: {
   ) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid coordinates');
   }
-  const result = await User.find({
+  const result = await User.find({ // filterout by riderStatus
     role: 'RIDER',
+    riderStatus: RIDER_STATUS.APPROVED,
     isOnline: true,
     'geoLocation.coordinates': { $ne: [0, 0] },
     geoLocation: {

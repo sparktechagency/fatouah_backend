@@ -2,3 +2,10 @@ export enum VEHICLE_TYPE {
   BIKE = 'BIKE',
   CAR = 'CAR',
 }
+
+
+export enum RIDER_STATUS {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED"
+}

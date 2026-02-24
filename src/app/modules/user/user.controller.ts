@@ -191,6 +191,19 @@ const deleteUserFromDB = catchAsync(async (req, res) => {
   });
 });
 
+const changeRiderStatus = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { riderStatus } = req.body;
+
+  const result = await UserService.changeRiderStatusToDB(id, riderStatus);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Successfully update rider status",
+    data: result,
+  })
+})
+
 export const UserController = {
   createUser,
   getUserProfile,
@@ -203,4 +216,5 @@ export const UserController = {
   updateVehicle,
   adminUpdateUserProfile,
   deleteUserFromDB,
+  changeRiderStatus,
 };
