@@ -9,6 +9,7 @@
     "lint:fix": "lint . --fix",
     "prettier:check": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
     "prettier:fix": "prettier --write .",
+    "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc"
   },
